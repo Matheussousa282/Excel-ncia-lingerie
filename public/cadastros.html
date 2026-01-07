@@ -79,14 +79,10 @@ async function carregar() {
           onchange="editar(${c.id}, this.value, ${c.ativo})">
       </td>
       <td>
-        <span class="badge ${c.ativo ? 'ativo' : 'inativo'}">
-          ${c.ativo ? 'Ativo' : 'Inativo'}
-        </span>
+        <span class="badge ativo">Ativo</span>
       </td>
       <td>
-        ${c.ativo
-          ? `<button onclick="inativar(${c.id})">Inativar</button>`
-          : ''}
+        <button onclick="inativar(${c.id})">Inativar</button>
       </td>
     </tr>
   `).join("");
@@ -111,16 +107,15 @@ async function editar(id, nome, ativo) {
 }
 
 async function inativar(id) {
-  await fetch("/api/cargos", {
-    method: "DELETE",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({ id })
+  await fetch(`/api/cargos?id=${id}`, {
+    method: "DELETE"
   });
   carregar();
 }
 
 carregar();
 </script>
+
 
 </body>
 </html>
