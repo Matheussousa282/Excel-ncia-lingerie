@@ -147,27 +147,14 @@
 
     <div class="card-body">
       <form id="formCandidato" enctype="multipart/form-data">
-  <input type="text" name="nome" placeholder="Nome completo" required>
-  <input type="email" name="email" placeholder="E-mail" required>
-  <input type="tel" name="telefone" placeholder="Telefone">
-  
-  <select name="cargo_id" id="cargoSelect" required>
-    <option value="">Selecione um cargo</option>
-    <!-- opções preenchidas dinamicamente via JS -->
-  </select>
-
-  <select name="instituicao_id" id="instituicaoSelect" required>
-    <option value="">Selecione uma instituição</option>
-  </select>
-
-  <select name="unidade_id" id="unidadeSelect" required disabled>
-    <option value="">Selecione a unidade</option>
-  </select>
-
-  <textarea name="apresentacao" placeholder="Apresentação profissional"></textarea>
-
-  <input type="file" name="arquivo" accept=".pdf,.doc,.docx" required>
-
+  <input name="nome" type="text" required />
+  <input name="email" type="email" required />
+  <input name="telefone" type="tel" />
+  <select name="cargo_id" required></select>
+  <select name="instituicao_id" required></select>
+  <select name="unidade_id" required></select>
+  <textarea name="apresentacao"></textarea>
+  <input name="arquivo" type="file" accept=".pdf,.doc,.docx" required />
   <button type="submit">Enviar Currículo</button>
 </form>
 
@@ -275,24 +262,23 @@ const form = document.getElementById("formCandidato");
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  const formData = new FormData(form); // pega todos os campos + arquivo
+  const formData = new FormData(form);
 
   try {
     const res = await fetch("/api/candidatos", {
       method: "POST",
-      body: formData // NÃO colocar headers aqui
+      body: formData // ❌ NÃO coloca headers aqui
     });
 
     if (res.ok) {
       alert("Currículo enviado com sucesso!");
       form.reset();
     } else {
-      // tenta ler JSON, se não der, lê texto
       let data;
       try {
-        data = await res.json();
+        data = await res.json(); // tenta JSON
       } catch {
-        data = await res.text();
+        data = await res.text(); // se JSON falhar, pega texto
       }
       alert("Erro: " + data);
     }
@@ -302,11 +288,8 @@ form.addEventListener("submit", async (e) => {
   }
 });
 
-
-
 // Chama ao abrir a página
 carregarCargosAtivos();
-
 
 // Chama ao abrir a página
 carregarInstituicoesAtivas();
