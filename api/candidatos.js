@@ -1,70 +1,66 @@
+import { IncomingForm } from "formidable";
+import fs from "fs";
 import { Pool } from "pg";
-import formidable from "formidable";
 
-// Configura a conexão com Neon (PostgreSQL)
+// Configuração do Neon
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: process.env.DATABASE_URL, // coloque sua URL do Neon
   ssl: { rejectUnauthorized: false }
 });
 
-// Desativa o bodyParser padrão do Next.js para aceitar FormData
+// Desabilitar bodyParser do Vercel para Formidable
 export const config = {
-  api: {
-    bodyParser: false
-  }
+  api: { bodyParser: false }
 };
 
 export default async function handler(req, res) {
-  try {
-    if (req.method === "POST") {
-      const form = formidable({ multiples: false });
-
-      form.parse(req, async (err, fields, files) => {
-        if (err) {
-          console.error(err);
-          return res.status(500).send("Erro ao processar o arquivo");
-        }
-
-        const { nome, email, telefone, cargo_id, instituicao_id, unidade_id, apresentacao } = fields;
-        const arquivo = files.arquivo;
-
-        if (!nome || !email || !cargo_id || !instituicao_id || !unidade_id) {
-          return res.status(400).json({ error: "Campos obrigatórios faltando" });
-        }
-
-        // Salva o arquivo como buffer no banco
-        let arquivoBuffer = null;
-        let arquivoNome = null;
-        if (arquivo) {
-          arquivoBuffer = await arquivo.filepath ? await fs.promises.readFile(arquivo.filepath) : null;
-          arquivoNome = arquivo.originalFilename;
-        }
-
-        const query = `
-          INSERT INTO candidatos
-          (nome, email, telefone, cargo_id, instituicao_id, unidade_id, apresentacao, arquivo_nome, arquivo)
-          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
-        `;
-
-        await pool.query(query, [
-          nome,
-          email,
-          telefone || "",
-          cargo_id,
-          instituicao_id,
-          unidade_id,
-          apresentacao || "",
-          arquivoNome,
-          arquivoBuffer
-        ]);
-
-        return res.status(201).json({ success: true });
-      });
-    } else {
-      return res.status(405).json({ error: "Método não permitido" });
-    }
-  } catch (err) {
-    console.error("ERRO API CANDIDATOS:", err);
-    return res.status(500).send("Erro interno no servidor");
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Método não permitido" });
   }
+
+  const form = new IncomingForm({ multiples: false });
+
+  form.parse(req, async (err, fields, files) => {
+    if (err) {
+      console.error("Erro ao processar formulário:", err);
+      return res.status(500).json({ error: "Erro ao processar formulário" });
+    }
+
+    try {
+      const { nome, email, telefone, cargo_id, instituicao_id, unidade_id, apresentacao } = fields;
+      const arquivo = files.arquivo;
+
+      if (!nome || !email || !cargo_id || !instituicao_id || !unidade_id || !arquivo) {
+        return res.status(400).json({ error: "Campos obrigatórios faltando" });
+      }
+
+      // Lê arquivo como buffer
+      const fileBuffer = await fs.promises.readFile(arquivo.filepath);
+      const fileName = arquivo.originalFilename || "arquivo";
+
+      // Salva no banco
+      const query = `
+        INSERT INTO candidatos
+        (nome, email, telefone, cargo_id, instituicao_id, unidade_id, apresentacao, arquivo_nome, arquivo_dados)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+      `;
+
+      await pool.query(query, [
+        nome,
+        email,
+        telefone || "",
+        cargo_id,
+        instituicao_id,
+        unidade_id,
+        apresentacao || "",
+        fileName,
+        fileBuffer
+      ]);
+
+      return res.status(201).json({ success: true, message: "Currículo enviado com sucesso!" });
+    } catch (error) {
+      console.error("Erro API:", error);
+      return res.status(500).json({ error: "Erro interno no servidor", details: error.message });
+    }
+  });
 }
