@@ -12,7 +12,7 @@ export default async function handler(req, res) {
     // LISTAR (ativos)
     if (method === "GET") {
       const result = await pool.query(
-        "SELECT id, nome, ativo FROM cargos WHERE ativo = true ORDER BY nome"
+        "SELECT id, nome, ativo FROM cargos ORDER BY nome"
       );
       return res.status(200).json(result.rows);
     }
