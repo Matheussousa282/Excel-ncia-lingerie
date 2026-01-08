@@ -285,14 +285,14 @@ form.addEventListener("submit", async (e) => {
     });
 
     if (res.ok) {
-      alert("Currículo enviado com sucesso!");
-      form.reset();
-      unidadeSelect.disabled = true;
-    } else {
-      let data;
-      try { data = await res.json(); } catch { data = await res.text(); }
-      alert("Erro: " + JSON.stringify(data));
-    }
+  alert("Currículo enviado com sucesso!");
+  form.reset();
+  unidadeSelect.disabled = true;
+} else {
+  const textoErro = await res.text(); // pega a resposta como texto
+  console.error("Erro da API:", textoErro);
+  alert("Erro ao enviar currículo: " + textoErro);
+}
   } catch (err) {
     console.error(err);
     alert("Erro ao enviar currículo");
