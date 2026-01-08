@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Trabalhe Conosco</title>
-
 <style>
 :root {
   --primary: #0052cc;
@@ -15,7 +14,6 @@
   --border: #d1d5db;
   --white: #ffffff;
 }
-
 * { box-sizing: border-box; }
 body { margin: 0; font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--background); color: var(--text); }
 .page { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
@@ -27,8 +25,7 @@ body { margin: 0; font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 form { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 .full { grid-column: span 2; }
 label { font-size: 14px; font-weight: 600; margin-bottom: 6px; display: block; }
-input, select, textarea { width: 100%; padding: 12px 14px; font-size: 14px; border: 1px solid var(--border); border-radius: 6px; transition: 0.2s; font-family: inherit; }
-input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,82,204,0.15); }
+input, select, textarea { width: 100%; padding: 12px 14px; font-size: 14px; border: 1px solid var(--border); border-radius: 6px; font-family: inherit; }
 textarea { resize: vertical; min-height: 120px; }
 .actions { grid-column: span 2; }
 button { width: 100%; padding: 14px; background: var(--primary); color: #fff; font-size: 16px; font-weight: 600; border: none; border-radius: 8px; cursor: pointer; }
@@ -37,17 +34,16 @@ button:hover { background: var(--primary-dark); }
 @media (max-width: 640px) { form { grid-template-columns: 1fr; } .full { grid-column: span 1; } }
 </style>
 </head>
-
 <body>
+
 <div class="page">
   <div class="card">
     <div class="card-header">
       <h1>Trabalhe Conosco</h1>
       <p>Envie seu currículo e faça parte do nosso time</p>
     </div>
-
     <div class="card-body">
-      <form id="formCandidato" enctype="multipart/form-data">
+      <form id="formCandidato">
         <div><label for="nome">Nome completo</label><input id="nome" name="nome" type="text" placeholder="Digite seu nome" required /></div>
         <div><label for="telefone">Telefone</label><input id="telefone" name="telefone" type="tel" placeholder="(XX) XXXXX-XXXX" /></div>
         <div><label for="email">E-mail</label><input id="email" name="email" type="email" placeholder="seu@email.com" required /></div>
@@ -68,7 +64,7 @@ const cargoSelect = document.getElementById("cargoSelect");
 const instituicaoSelect = document.getElementById("instituicaoSelect");
 const unidadeSelect = document.getElementById("unidadeSelect");
 
-// ===== Carregar Cargos =====
+// Funções para carregar cargos, instituições e unidades
 async function carregarCargos() {
   try {
     const res = await fetch("/api/cargos");
@@ -76,14 +72,12 @@ async function carregarCargos() {
     cargoSelect.innerHTML = '<option value="">Selecione um cargo</option>';
     data.filter(c => c.ativo).forEach(c => {
       const o = document.createElement("option");
-      o.value = c.id;
-      o.textContent = c.nome;
+      o.value = c.id; o.textContent = c.nome;
       cargoSelect.appendChild(o);
     });
-  } catch (err) { console.error("Erro ao carregar cargos:", err); }
+  } catch (err) { console.error(err); }
 }
 
-// ===== Carregar Instituições =====
 async function carregarInstituicoes() {
   try {
     const res = await fetch("/api/instituicoes");
@@ -91,57 +85,76 @@ async function carregarInstituicoes() {
     instituicaoSelect.innerHTML = '<option value="">Selecione uma instituição</option>';
     data.filter(i => i.ativo).forEach(i => {
       const o = document.createElement("option");
-      o.value = i.id;
-      o.textContent = i.nome;
+      o.value = i.id; o.textContent = i.nome;
       instituicaoSelect.appendChild(o);
     });
-  } catch (err) { console.error("Erro ao carregar instituições:", err); }
+  } catch (err) { console.error(err); }
 }
 
-// ===== Carregar Unidades Dinâmicas =====
 instituicaoSelect.addEventListener("change", async () => {
   const id = instituicaoSelect.value;
   unidadeSelect.disabled = !id;
   unidadeSelect.innerHTML = '<option value="">Carregando unidades...</option>';
   if (!id) return unidadeSelect.innerHTML = '<option value="">Selecione uma instituição primeiro</option>';
-
   try {
     const res = await fetch(`/api/unidades?instituicao_id=${id}`);
     const data = await res.json();
     unidadeSelect.innerHTML = '<option value="">Selecione uma unidade</option>';
     data.filter(u => u.ativo).forEach(u => {
       const o = document.createElement("option");
-      o.value = u.id;
-      o.textContent = u.nome;
+      o.value = u.id; o.textContent = u.nome;
       unidadeSelect.appendChild(o);
     });
-  } catch (err) { console.error("Erro ao carregar unidades:", err); }
+  } catch (err) { console.error(err); }
 });
 
-// ===== Envio do Formulário =====
-const form = document.getElementById("formCandidato");
-form.addEventListener("submit", async e => {
+// Envio do formulário como Base64
+document.getElementById("formCandidato").addEventListener("submit", async (e) => {
   e.preventDefault();
-  const formData = new FormData(form);
+  const file = document.getElementById("arquivo").files[0];
+  if (!file) return alert("Selecione um arquivo");
 
-  try {
-    const res = await fetch("/api/candidatos", { method: "POST", body: formData });
-    if (res.ok) {
-      alert("Currículo enviado com sucesso!");
-      form.reset();
-      unidadeSelect.disabled = true;
-    } else {
-      const txt = await res.text();
-      console.error("Erro API:", txt);
-      alert("Erro ao enviar: " + txt);
+  const reader = new FileReader();
+  reader.onload = async () => {
+    const base64 = reader.result.split(",")[1];
+
+    const body = {
+      nome: document.getElementById("nome").value,
+      telefone: document.getElementById("telefone").value,
+      email: document.getElementById("email").value,
+      cargo_id: document.getElementById("cargoSelect").value,
+      instituicao_id: document.getElementById("instituicaoSelect").value,
+      unidade_id: document.getElementById("unidadeSelect").value,
+      apresentacao: document.getElementById("apresentacao").value,
+      arquivo_base64: base64,
+      arquivo_nome: file.name
+    };
+
+    try {
+      const res = await fetch("/api/candidatos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+
+      if (res.ok) {
+        alert("Currículo enviado com sucesso!");
+        document.getElementById("formCandidato").reset();
+        unidadeSelect.disabled = true;
+      } else {
+        const txt = await res.text();
+        alert("Erro ao enviar: " + txt);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Erro ao enviar formulário");
     }
-  } catch (err) {
-    console.error("Erro ao enviar:", err);
-    alert("Erro ao enviar formulário.");
-  }
+  };
+
+  reader.readAsDataURL(file);
 });
 
-// ===== Inicializar =====
+// Inicializar selects
 carregarCargos();
 carregarInstituicoes();
 </script>
