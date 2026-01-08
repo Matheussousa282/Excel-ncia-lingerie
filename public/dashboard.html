@@ -4,7 +4,6 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>RH | Dashboard de Currículos</title>
-
 <style>
 :root {
   --primary: #2563eb;
@@ -18,6 +17,7 @@
   --success: #16a34a;
   --warning: #d97706;
   --info: #2563eb;
+  --danger: #dc2626;
 }
 
 * { box-sizing: border-box; }
@@ -75,40 +75,43 @@ body {
   margin-bottom: 30px;
 }
 
-.header h1 { font-size: 26px; }
+.header h1 { font-size: 28px; }
 .header span { color: var(--muted); font-size: 14px; }
 
 /* CARDS */
 .cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 20px;
   margin-bottom: 30px;
 }
 
 .card {
   background: var(--card);
-  padding: 22px;
-  border-radius: 14px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  text-align: center;
+  transition: transform 0.2s;
 }
+.card:hover { transform: translateY(-3px); }
 
 .card h3 {
   font-size: 14px;
   color: var(--muted);
+  margin-bottom: 10px;
 }
-
 .card p {
-  font-size: 30px;
+  font-size: 28px;
   font-weight: bold;
 }
 
 /* TABLE */
 .table-wrapper {
   background: var(--card);
-  border-radius: 14px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-  overflow: hidden;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  overflow-x: auto;
 }
 
 table {
@@ -119,6 +122,7 @@ table {
 th, td {
   padding: 14px 16px;
   font-size: 14px;
+  text-align: left;
 }
 
 th {
@@ -128,22 +132,22 @@ th {
 }
 
 tr { border-bottom: 1px solid var(--border); }
-
-tbody tr:hover {
-  background: #f8fafc;
-}
+tbody tr:hover { background: #f1f5f9; }
 
 /* BADGES */
 .badge {
-  padding: 5px 10px;
+  padding: 5px 12px;
   border-radius: 20px;
   font-size: 12px;
   font-weight: 600;
   color: #fff;
+  display: inline-block;
 }
 
-.badge-ti { background: var(--info); }
-.badge-adm { background: var(--success); }
+.badge-TI { background: var(--info); }
+.badge-ADM { background: var(--success); }
+.badge-Financeiro { background: var(--warning); }
+.badge-Outros { background: var(--danger); }
 
 /* ACTIONS */
 .actions a {
@@ -159,6 +163,7 @@ tbody tr:hover {
 @media (max-width: 900px) {
   .sidebar { display: none; }
   .main { margin-left: 0; }
+  .cards { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
 }
 </style>
 </head>
@@ -178,13 +183,12 @@ tbody tr:hover {
 
   <div class="header">
     <h1>Currículos Recebidos</h1>
-    <span>Atualizado em 05/01/2026</span>
+    <span id="atualizacao">Atualizado em --/--/----</span>
   </div>
 
   <div class="cards" id="cardsResumo">
-  <!-- Cards serão inseridos aqui via JavaScript -->
-</div>
-
+    <!-- Cards gerados dinamicamente -->
+  </div>
 
   <div class="table-wrapper">
     <table>
@@ -200,144 +204,90 @@ tbody tr:hover {
           <th>Ações</th>
         </tr>
       </thead>
-
       <tbody id="listaCurriculos">
-    <!-- Currículos serão carregados aqui via JavaScript -->
-  </tbody>
+        <!-- Tabela gerada dinamicamente -->
+      </tbody>
     </table>
   </div>
 
 </div>
 
 <script>
-async function carregarCurriculos() {
-  try {
-    const res = await fetch("/api/candidatos");
-    if (!res.ok) throw new Error("Erro ao buscar currículos");
-    
-    const curriculos = await res.json();
-    const tbody = document.getElementById("listaCurriculos");
-    
-    tbody.innerHTML = curriculos.map(c => `
-      <tr>
-        <td>${c.nome}</td>
-        <td>${c.email}</td>
-        <td>${c.telefone}</td>
-        <td>${c.instituicao}</td>
-        <td>${c.unidade}</td>
-        <td><span class="badge ${c.cargo === "TI" ? "badge-ti" : "badge-adm"}">${c.cargo}</span></td>
-        <td>${new Date(c.data).toLocaleDateString()}</td>
-        <td class="actions">
-          <a href="#">Ver</a>
-          <a href="${c.arquivo}" download>Baixar currículo (PDF)</a>
-        </td>
-      </tr>
-    `).join("");
-
-    // Atualiza os cards de resumo
-    atualizarResumo(curriculos);
-
-  } catch (err) {
-    console.error(err);
-  }
-}
-
-// Atualiza os cards de estatísticas
-function atualizarResumo(curriculos) {
-  const total = curriculos.length;
-  const ti = curriculos.filter(c => c.cargo === "TI").length;
-  const adm = curriculos.filter(c => c.cargo === "ADM").length;
-  const financeiro = curriculos.filter(c => c.cargo === "Financeiro").length;
-
-  const cards = document.querySelectorAll(".cards .card p");
-  cards[0].textContent = total;
-  cards[1].textContent = ti;
-  cards[2].textContent = adm;
-  cards[3].textContent = financeiro;
-}
-
+// Função principal para carregar currículos
 async function carregarCurriculos() {
   try {
     const res = await fetch("/api/candidatos");
     if (!res.ok) throw new Error("Erro ao buscar currículos");
 
     const curriculos = await res.json();
-    const tbody = document.getElementById("listaCurriculos");
+    gerarCards(curriculos);
+    gerarTabela(curriculos);
 
-    tbody.innerHTML = curriculos.map(c => `
-      <tr>
-        <td>${c.nome}</td>
-        <td>${c.email}</td>
-        <td>${c.telefone || "-"}</td>
-        <td>${c.instituicao}</td>
-        <td>${c.unidade}</td>
-        <td><span class="badge ${c.cargo === "TI" ? "badge-ti" : "badge-adm"}">${c.cargo}</span></td>
-        <td>${new Date(c.data).toLocaleDateString()}</td>
-        <td class="actions">
-          <a href="#" onclick="alert('${c.apresentacao || "Sem apresentação"}')">Ver</a>
-          <a href="${c.arquivo}" download="${c.nome}-${c.arquivo_nome}">Baixar currículo</a>
-        </td>
-      </tr>
-    `).join("");
-
-    atualizarResumo(curriculos);
+    // Atualiza data de atualização
+    const agora = new Date();
+    document.getElementById("atualizacao").textContent = 
+      `Atualizado em ${agora.toLocaleDateString()} ${agora.toLocaleTimeString()}`;
 
   } catch (err) {
     console.error(err);
+    alert("Erro ao carregar currículos");
   }
 }
 
-function atualizarResumo(curriculos) {
-  const total = curriculos.length;
-  const ti = curriculos.filter(c => c.cargo === "TI").length;
-  const adm = curriculos.filter(c => c.cargo === "ADM").length;
-  const financeiro = curriculos.filter(c => c.cargo === "Financeiro").length;
-
-  const cards = document.querySelectorAll(".cards .card p");
-  cards[0].textContent = total;
-  cards[1].textContent = ti;
-  cards[2].textContent = adm;
-  cards[3].textContent = financeiro;
-}
-
-function atualizarResumo(curriculos) {
+// Gera os cards de resumo
+function gerarCards(curriculos) {
   const container = document.getElementById("cardsResumo");
-  container.innerHTML = ""; // Limpa os cards existentes
+  container.innerHTML = "";
 
-  // Card total
+  // Total
   const totalCard = document.createElement("div");
   totalCard.className = "card";
-  totalCard.innerHTML = `
-    <h3>Total de Currículos</h3>
-    <p>${curriculos.length}</p>
-  `;
+  totalCard.innerHTML = `<h3>Total de Currículos</h3><p>${curriculos.length}</p>`;
   container.appendChild(totalCard);
 
-  // Contar currículos por cargo
+  // Contagem por cargo
   const cargosMap = {};
   curriculos.forEach(c => {
-    if (!cargosMap[c.cargo]) cargosMap[c.cargo] = 0;
-    cargosMap[c.cargo]++;
+    const cargo = c.cargo || "Outros";
+    cargosMap[cargo] = (cargosMap[cargo] || 0) + 1;
   });
 
-  // Gerar cards apenas para cargos existentes
-  for (const [cargo, qtd] of Object.entries(cargosMap)) {
+  Object.entries(cargosMap).forEach(([cargo, qtd]) => {
     const card = document.createElement("div");
     card.className = "card";
-    card.innerHTML = `
-      <h3>${cargo}</h3>
-      <p>${qtd}</p>
-    `;
+    card.innerHTML = `<h3>${cargo}</h3><p>${qtd}</p>`;
     container.appendChild(card);
-  }
+  });
 }
 
-// Carrega ao abrir a página
-carregarCurriculos();
+// Gera tabela de currículos
+function gerarTabela(curriculos) {
+  const tbody = document.getElementById("listaCurriculos");
+  tbody.innerHTML = "";
 
+  curriculos.forEach(c => {
+    const tr = document.createElement("tr");
 
-// Chama ao abrir a página
+    tr.innerHTML = `
+      <td>${c.nome}</td>
+      <td>${c.email}</td>
+      <td>${c.telefone || "-"}</td>
+      <td>${c.instituicao}</td>
+      <td>${c.unidade}</td>
+      <td><span class="badge badge-${c.cargo.replace(/\s+/g,"")}">${c.cargo}</span></td>
+      <td>${new Date(c.data).toLocaleDateString()}</td>
+      <td class="actions">
+        <a href="#" onclick="alert('${c.apresentacao || "Sem apresentação"}')">Ver</a>
+        <a href="${c.arquivo}" download="${c.nome}-${c.arquivo_nome}">Baixar</a>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// Inicializa
 carregarCurriculos();
 </script>
+
 </body>
 </html>
