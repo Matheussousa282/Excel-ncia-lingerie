@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>RH | Dashboard de Currículos</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RH | Dashboard</title>
+
 <style>
 :root {
   --primary: #2563eb;
@@ -15,15 +16,12 @@
   --muted: #6b7280;
   --border: #e5e7eb;
   --success: #16a34a;
-  --warning: #d97706;
   --info: #2563eb;
-  --danger: #dc2626;
 }
 
-* { box-sizing: border-box; }
+* { box-sizing: border-box; margin:0; padding:0; }
 
 body {
-  margin: 0;
   font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   background: var(--bg);
   color: var(--text);
@@ -39,251 +37,163 @@ body {
   padding: 25px 20px;
 }
 
-.sidebar h2 {
-  text-align: center;
-  font-size: 20px;
-  margin-bottom: 40px;
-}
-
+.sidebar h2 { text-align:center; font-size:20px; margin-bottom:40px; }
 .sidebar a {
-  display: block;
-  color: #cbd5f5;
-  text-decoration: none;
-  padding: 12px 14px;
-  border-radius: 8px;
-  margin-bottom: 8px;
-  font-size: 14px;
+  display: block; color:#cbd5f5; text-decoration:none;
+  padding:12px 14px; border-radius:8px; margin-bottom:8px; font-size:14px;
+  cursor:pointer;
 }
-
-.sidebar a:hover,
-.sidebar a.active {
-  background: rgba(255,255,255,0.1);
-  color: #fff;
-}
+.sidebar a.active, .sidebar a:hover { background: rgba(255,255,255,0.1); color:#fff; }
 
 /* MAIN */
-.main {
-  margin-left: 260px;
-  padding: 30px;
-}
-
-/* HEADER */
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 30px;
-}
-
-.header h1 { font-size: 28px; }
-.header span { color: var(--muted); font-size: 14px; }
+.main { margin-left:260px; padding:30px; min-height:100vh; }
 
 /* CARDS */
-.cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 20px;
-  margin-bottom: 30px;
-}
-
-.card {
-  background: var(--card);
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
-  text-align: center;
-  transition: transform 0.2s;
-}
-.card:hover { transform: translateY(-3px); }
-
-.card h3 {
-  font-size: 14px;
-  color: var(--muted);
-  margin-bottom: 10px;
-}
-.card p {
-  font-size: 28px;
-  font-weight: bold;
-}
+.cards { display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:20px; margin-bottom:30px; }
+.card { background:var(--card); padding:22px; border-radius:14px; box-shadow:0 10px 25px rgba(0,0,0,0.05); }
+.card h3 { font-size:14px; color:var(--muted); }
+.card p { font-size:28px; font-weight:bold; text-align:center; }
 
 /* TABLE */
-.table-wrapper {
-  background: var(--card);
-  border-radius: 12px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
-  overflow-x: auto;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-th, td {
-  padding: 14px 16px;
-  font-size: 14px;
-  text-align: left;
-}
-
-th {
-  background: #f9fafb;
-  color: var(--muted);
-  font-weight: 600;
-}
-
-tr { border-bottom: 1px solid var(--border); }
-tbody tr:hover { background: #f1f5f9; }
+.table-wrapper { background: var(--card); border-radius:14px; box-shadow:0 10px 25px rgba(0,0,0,0.05); overflow-x:auto; }
+table { width:100%; border-collapse:collapse; }
+th, td { padding:12px 16px; font-size:14px; text-align:left; }
+th { background:#f9fafb; color:var(--muted); font-weight:600; }
+tr { border-bottom:1px solid var(--border); }
+tbody tr:hover { background:#f8fafc; }
 
 /* BADGES */
-.badge {
-  padding: 5px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 600;
-  color: #fff;
-  display: inline-block;
-}
-
-.badge-TI { background: var(--info); }
-.badge-ADM { background: var(--success); }
-.badge-Financeiro { background: var(--warning); }
-.badge-Outros { background: var(--danger); }
+.badge { padding:4px 10px; border-radius:20px; font-size:12px; font-weight:600; color:#fff; }
+.badge-ti { background: var(--info); }
+.badge-adm { background: var(--success); }
 
 /* ACTIONS */
-.actions a {
-  text-decoration: none;
-  font-size: 13px;
-  margin-right: 10px;
-  color: var(--primary);
-}
-
-.actions a:hover { text-decoration: underline; }
+.actions a { text-decoration:none; font-size:13px; margin-right:10px; color: var(--primary); }
+.actions a:hover { text-decoration:underline; }
 
 /* RESPONSIVE */
-@media (max-width: 900px) {
-  .sidebar { display: none; }
-  .main { margin-left: 0; }
-  .cards { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
-}
+@media (max-width:900px) { .sidebar { display:none; } .main { margin-left:0; } }
+
 </style>
 </head>
-
 <body>
 
 <div class="sidebar">
   <h2>RH System</h2>
-  <a href="#" class="active">Currículos</a>
-  <a href="cadastros.html" target="_blank">Gestão de Cargo</a>
-  <a href="instituicoes-unidades.html" target="_blank">Instituições e Unidades</a>
+  <a class="active" onclick="abrirPagina('curriculos')">Currículos</a>
+  <a onclick="abrirPagina('cadastro.html')">Gestão de Cargo</a>
+  <a onclick="abrirPagina('instituicoes.html')">Instituições e Unidades</a>
 </div>
 
-<div class="main">
-
-  <div class="header">
-    <h1>Currículos Recebidos</h1>
-    <span id="atualizacao">Atualizado em --/--/----</span>
-  </div>
-
-  <div class="cards" id="cardsResumo">
-    <!-- Cards gerados dinamicamente -->
-  </div>
-
+<div class="main" id="conteudoPrincipal">
+  <!-- Conteúdo inicial: Currículos -->
+  <h1>Currículos Recebidos</h1>
+  <div class="cards" id="cardsResumo"></div>
   <div class="table-wrapper">
     <table>
       <thead>
         <tr>
-          <th>Nome</th>
-          <th>E-mail</th>
-          <th>Telefone</th>
-          <th>Instituição</th>
-          <th>Unidade</th>
-          <th>Cargo</th>
-          <th>Data</th>
-          <th>Ações</th>
+          <th>Nome</th><th>E-mail</th><th>Telefone</th><th>Instituição</th>
+          <th>Unidade</th><th>Cargo</th><th>Data</th><th>Ações</th>
         </tr>
       </thead>
-      <tbody id="listaCurriculos">
-        <!-- Tabela gerada dinamicamente -->
-      </tbody>
+      <tbody id="listaCurriculos"></tbody>
     </table>
   </div>
-
 </div>
 
 <script>
-// Função principal para carregar currículos
+async function abrirPagina(pagina) {
+  const links = document.querySelectorAll('.sidebar a');
+  links.forEach(link => link.classList.remove('active'));
+  
+  event.target.classList.add('active');
+  const conteudo = document.getElementById("conteudoPrincipal");
+
+  if (pagina === 'curriculos') {
+    // Restaurar tela de currículos
+    conteudo.innerHTML = `
+      <h1>Currículos Recebidos</h1>
+      <div class="cards" id="cardsResumo"></div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Nome</th><th>E-mail</th><th>Telefone</th><th>Instituição</th>
+              <th>Unidade</th><th>Cargo</th><th>Data</th><th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="listaCurriculos"></tbody>
+        </table>
+      </div>
+    `;
+    carregarCurriculos();
+  } else {
+    // Carrega a página HTML dentro do container
+    try {
+      const res = await fetch(pagina);
+      if (!res.ok) throw new Error("Erro ao carregar a página");
+      const html = await res.text();
+      conteudo.innerHTML = html;
+    } catch (err) {
+      conteudo.innerHTML = `<p style="color:red;">Erro ao carregar a página: ${err.message}</p>`;
+    }
+  }
+}
+
+// Função para carregar currículos da API
 async function carregarCurriculos() {
   try {
     const res = await fetch("/api/candidatos");
     if (!res.ok) throw new Error("Erro ao buscar currículos");
-
     const curriculos = await res.json();
-    gerarCards(curriculos);
-    gerarTabela(curriculos);
 
-    // Atualiza data de atualização
-    const agora = new Date();
-    document.getElementById("atualizacao").textContent = 
-      `Atualizado em ${agora.toLocaleDateString()} ${agora.toLocaleTimeString()}`;
+    const tbody = document.getElementById("listaCurriculos");
+    tbody.innerHTML = curriculos.map(c => `
+      <tr>
+        <td>${c.nome}</td>
+        <td>${c.email}</td>
+        <td>${c.telefone || "-"}</td>
+        <td>${c.instituicao}</td>
+        <td>${c.unidade}</td>
+        <td><span class="badge ${c.cargo === "TI" ? "badge-ti" : "badge-adm"}">${c.cargo}</span></td>
+        <td>${new Date(c.data).toLocaleDateString()}</td>
+        <td class="actions">
+          <a href="#" onclick="alert('${c.apresentacao || "Sem apresentação"}')">Ver</a>
+          <a href="${c.arquivo}" download="${c.nome}-${c.arquivo_nome}">Baixar</a>
+        </td>
+      </tr>
+    `).join("");
 
-  } catch (err) {
-    console.error(err);
-    alert("Erro ao carregar currículos");
-  }
+    atualizarResumo(curriculos);
+  } catch(err) { console.error(err); }
 }
 
-// Gera os cards de resumo
-function gerarCards(curriculos) {
+// Atualiza os cards com estatísticas
+function atualizarResumo(curriculos) {
   const container = document.getElementById("cardsResumo");
   container.innerHTML = "";
 
-  // Total
   const totalCard = document.createElement("div");
   totalCard.className = "card";
   totalCard.innerHTML = `<h3>Total de Currículos</h3><p>${curriculos.length}</p>`;
   container.appendChild(totalCard);
 
-  // Contagem por cargo
   const cargosMap = {};
   curriculos.forEach(c => {
-    const cargo = c.cargo || "Outros";
-    cargosMap[cargo] = (cargosMap[cargo] || 0) + 1;
+    if (!cargosMap[c.cargo]) cargosMap[c.cargo] = 0;
+    cargosMap[c.cargo]++;
   });
 
-  Object.entries(cargosMap).forEach(([cargo, qtd]) => {
+  for (const [cargo, qtd] of Object.entries(cargosMap)) {
     const card = document.createElement("div");
     card.className = "card";
     card.innerHTML = `<h3>${cargo}</h3><p>${qtd}</p>`;
     container.appendChild(card);
-  });
+  }
 }
 
-// Gera tabela de currículos
-function gerarTabela(curriculos) {
-  const tbody = document.getElementById("listaCurriculos");
-  tbody.innerHTML = "";
-
-  curriculos.forEach(c => {
-    const tr = document.createElement("tr");
-
-    tr.innerHTML = `
-      <td>${c.nome}</td>
-      <td>${c.email}</td>
-      <td>${c.telefone || "-"}</td>
-      <td>${c.instituicao}</td>
-      <td>${c.unidade}</td>
-      <td><span class="badge badge-${c.cargo.replace(/\s+/g,"")}">${c.cargo}</span></td>
-      <td>${new Date(c.data).toLocaleDateString()}</td>
-      <td class="actions">
-        <a href="#" onclick="alert('${c.apresentacao || "Sem apresentação"}')">Ver</a>
-        <a href="${c.arquivo}" download="${c.nome}-${c.arquivo_nome}">Baixar</a>
-      </td>
-    `;
-    tbody.appendChild(tr);
-  });
-}
-
-// Inicializa
+// Carrega currículos ao abrir a página
 carregarCurriculos();
 </script>
 
