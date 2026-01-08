@@ -7,17 +7,19 @@ const pool = new Pool({
 
 export default async function handler(req, res) {
   try {
-    // 🔹 LISTAR (somente ativos)
-    if (req.method === "GET") {
+    const { method } = req;
+
+    // LISTAR (ativos)
+    if (method === "GET") {
       const result = await pool.query(
         "SELECT id, nome, ativo FROM cargos WHERE ativo = true ORDER BY nome"
       );
       return res.status(200).json(result.rows);
     }
 
-    // 🔹 CRIAR
-    if (req.method === "POST") {
-      const { nome } = req.body || {};
+    // CRIAR
+    if (method === "POST") {
+      const { nome } = req.body;
 
       if (!nome) {
         return res.status(400).json({ error: "Nome é obrigatório" });
@@ -31,13 +33,9 @@ export default async function handler(req, res) {
       return res.status(201).json({ success: true });
     }
 
-    // 🔹 EDITAR
-    if (req.method === "PUT") {
-      const { id, nome, ativo } = req.body || {};
-
-      if (!id || !nome) {
-        return res.status(400).json({ error: "Dados inválidos" });
-      }
+    // EDITAR
+    if (method === "PUT") {
+      const { id, nome, ativo } = req.body;
 
       await pool.query(
         "UPDATE cargos SET nome = $1, ativo = $2 WHERE id = $3",
@@ -47,26 +45,30 @@ export default async function handler(req, res) {
       return res.json({ success: true });
     }
 
-    // 🔹 INATIVAR (via query param)
-    if (req.method === "DELETE") {
-      const { id } = req.query;
+    // INATIVAR
+    if (method === "DELETE") {
+  const { id } = req.query;
 
-      if (!id) {
-        return res.status(400).json({ error: "ID é obrigatório" });
-      }
+  if (!id) {
+    return res.status(400).json({ error: "ID obrigatório" });
+  }
 
-      await pool.query(
-        "UPDATE cargos SET ativo = false WHERE id = $1",
-        [id]
-      );
+  await pool.query(
+    "UPDATE cargos SET ativo = false WHERE id = $1",
+    [id]
+  );
 
-      return res.json({ success: true });
-    }
+  return res.json({ success: true });
+}
+
 
     return res.status(405).json({ error: "Método não permitido" });
 
   } catch (error) {
-    console.error("Erro API cargos:", error);
-    return res.status(500).json({ error: "Erro interno no servidor" });
+    console.error("ERRO API CARGOS:", error);
+    return res.status(500).json({
+      error: "Erro interno no servidor",
+      details: error.message
+    });
   }
 }
