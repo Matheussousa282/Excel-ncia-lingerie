@@ -1,0 +1,41 @@
+<h1>Currículos Recebidos</h1>
+<div class="cards" id="cardsResumo"></div>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr>
+<th>Nome</th><th>E-mail</th><th>Telefone</th><th>Instituição</th>
+<th>Unidade</th><th>Cargo</th><th>Data</th><th>Ações</th>
+</tr>
+</thead>
+<tbody id="listaCurriculos"></tbody>
+</table>
+</div>
+
+<script>
+async function carregarCurriculos() {
+  try {
+    const res = await fetch("/api/candidatos");
+    const curriculos = await res.json();
+
+    const tbody = document.getElementById("listaCurriculos");
+    tbody.innerHTML = curriculos.map(c => `
+      <tr>
+        <td>${c.nome}</td>
+        <td>${c.email}</td>
+        <td>${c.telefone || "-"}</td>
+        <td>${c.instituicao}</td>
+        <td>${c.unidade}</td>
+        <td>${c.cargo}</td>
+        <td>${new Date(c.data).toLocaleDateString()}</td>
+        <td>
+          <a href="#" onclick="alert('${c.apresentacao || "Sem apresentação"}')">Ver</a>
+          <a href="${c.arquivo}" download="${c.nome}-${c.arquivo_nome}">Baixar</a>
+        </td>
+      </tr>
+    `).join("");
+
+  } catch(err){ console.error(err); }
+}
+carregarCurriculos();
+</script>
