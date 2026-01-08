@@ -80,9 +80,9 @@ tbody tr:hover { background:#f8fafc; }
 
 <div class="sidebar">
   <h2>RH System</h2>
-  <a class="active" onclick="abrirPagina('curriculos')">Currículos</a>
-  <a onclick="abrirPagina('cadastros.html')">Gestão de Cargo</a>
-  <a onclick="abrirPagina('instituicoes.html')">Instituições e Unidades</a>
+  <a class="active" onclick="abrirPagina('curriculos', event)">Currículos</a>
+  <a onclick="abrirPagina('cadastros.html', event)">Gestão de Cargo</a>
+  <a onclick="abrirPagina('instituicoes-unidades.html', event)">Instituições e Unidades</a>
 </div>
 
 <div class="main" id="conteudoPrincipal">
@@ -103,11 +103,14 @@ tbody tr:hover { background:#f8fafc; }
 </div>
 
 <script>
-async function abrirPagina(pagina) {
+async function abrirPagina(pagina, event) {
+  // Remove active de todos os links
   const links = document.querySelectorAll('.sidebar a');
   links.forEach(link => link.classList.remove('active'));
   
-  event.target.classList.add('active');
+  // Adiciona active no clicado
+  event.currentTarget.classList.add('active');
+
   const conteudo = document.getElementById("conteudoPrincipal");
 
   if (pagina === 'curriculos') {
