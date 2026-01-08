@@ -74,15 +74,21 @@ tbody tr:hover { background:#f8fafc; }
 /* RESPONSIVE */
 @media (max-width:900px) { .sidebar { display:none; } .main { margin-left:0; } }
 
+.main iframe {
+  width: 100%;
+  height: calc(100vh - 0px); /* ajuste se precisar */
+  border: none;
+}
+
 </style>
 </head>
 <body>
 
-<div class="sidebar">
+<div class="main">
   <h2>RH System</h2>
-  <a class="active" onclick="abrirPagina('curriculos', event)">Currículos</a>
-  <a onclick="abrirPagina('cadastros.html', event)">Gestão de Cargo</a>
-  <a onclick="abrirPagina('instituicoes-unidades.html', event)">Instituições e Unidades</a>
+  <iframe id="iframeConteudo" src="curriculos.html" style="width:100%; height:100vh; border:none;"></iframe>
+  <iframe id="iframeConteudo" src="cadastros.html" style="width:100%; height:100vh; border:none;"></iframe>
+  <iframe id="iframeConteudo" src="instituicoes-unidades.html" style="width:100%; height:100vh; border:none;"></iframe>
 </div>
 
 <div class="main" id="conteudoPrincipal">
@@ -195,6 +201,19 @@ function atualizarResumo(curriculos) {
     container.appendChild(card);
   }
 }
+
+function abrirPagina(pagina, event) {
+  // Remove a classe active de todos os links
+  const links = document.querySelectorAll('.sidebar a');
+  links.forEach(link => link.classList.remove('active'));
+
+  // Adiciona active no link clicado
+  event.currentTarget.classList.add('active');
+
+  // Muda o src do iframe
+  document.getElementById('iframeConteudo').src = pagina;
+}
+
 
 // Carrega currículos ao abrir a página
 carregarCurriculos();
