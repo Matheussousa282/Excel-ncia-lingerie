@@ -35,19 +35,25 @@ export default async function handler(req, res) {
 
     // EDITAR / ATIVAR / INATIVAR
     if (method === "PUT") {
-      const { id, nome, ativo } = req.body;
+  const { id, nome, ativo } = req.body;
 
-      if (!id) {
-        return res.status(400).json({ error: "ID obrigatório" });
-      }
+  if (!id) {
+    return res.status(400).json({ error: "ID obrigatório" });
+  }
 
-      await pool.query(
-        "UPDATE instituicoes SET nome = $1, ativo = $2 WHERE id = $3",
-        [nome, ativo, id]
-      );
+  await pool.query(
+    `
+    UPDATE instituicoes
+    SET
+      nome = COALESCE($1, nome),
+      ativo = COALESCE($2, ativo)
+    WHERE id = $3
+    `,
+    [nome, ativo, id]
+  );
 
-      return res.json({ success: true });
-    }
+  return res.json({ success: true });
+}
 
     return res.status(405).json({ error: "Método não permitido" });
 
