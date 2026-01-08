@@ -1,66 +1,58 @@
-import { IncomingForm } from "formidable";
-import fs from "fs";
-import { Pool } from "pg";
+const express = require("express");
+const multer = require("multer");
+const { Pool } = require("pg");
+const cors = require("cors");
 
-// Configuração do Neon
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+// Configurar multer para armazenar arquivo em memória
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
+
+// Conexão Neon
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL, // coloque sua URL do Neon
-  ssl: { rejectUnauthorized: false }
+  connectionString: process.env.DATABASE_URL, // URL do Neon
+  ssl: { rejectUnauthorized: false },
 });
 
-// Desabilitar bodyParser do Vercel para Formidable
-export const config = {
-  api: { bodyParser: false }
-};
+// Rota para receber formulário
+app.post("/api/candidatos", upload.single("arquivo"), async (req, res) => {
+  try {
+    const { nome, telefone, email, cargo_id, instituicao_id, unidade_id, apresentacao } = req.body;
 
-export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Método não permitido" });
+    if (!req.file) return res.status(400).send("Arquivo é obrigatório");
+
+    const arquivo = req.file.buffer;       // conteúdo do arquivo em bytes
+    const arquivo_nome = req.file.originalname; // nome original
+
+    const query = `
+      INSERT INTO candidatos 
+      (nome, telefone, email, cargo_id, instituicao_id, unidade_id, apresentacao, arquivo, arquivo_nome)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+      RETURNING id
+    `;
+
+    const result = await pool.query(query, [
+      nome,
+      telefone || null,
+      email,
+      cargo_id,
+      instituicao_id,
+      unidade_id,
+      apresentacao || null,
+      arquivo,
+      arquivo_nome
+    ]);
+
+    res.status(200).json({ success: true, id: result.rows[0].id });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Erro ao salvar candidato");
   }
+});
 
-  const form = new IncomingForm({ multiples: false });
-
-  form.parse(req, async (err, fields, files) => {
-    if (err) {
-      console.error("Erro ao processar formulário:", err);
-      return res.status(500).json({ error: "Erro ao processar formulário" });
-    }
-
-    try {
-      const { nome, email, telefone, cargo_id, instituicao_id, unidade_id, apresentacao } = fields;
-      const arquivo = files.arquivo;
-
-      if (!nome || !email || !cargo_id || !instituicao_id || !unidade_id || !arquivo) {
-        return res.status(400).json({ error: "Campos obrigatórios faltando" });
-      }
-
-      // Lê arquivo como buffer
-      const fileBuffer = await fs.promises.readFile(arquivo.filepath);
-      const fileName = arquivo.originalFilename || "arquivo";
-
-      // Salva no banco
-      const query = `
-        INSERT INTO candidatos
-        (nome, email, telefone, cargo_id, instituicao_id, unidade_id, apresentacao, arquivo_nome, arquivo_dados)
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
-      `;
-
-      await pool.query(query, [
-        nome,
-        email,
-        telefone || "",
-        cargo_id,
-        instituicao_id,
-        unidade_id,
-        apresentacao || "",
-        fileName,
-        fileBuffer
-      ]);
-
-      return res.status(201).json({ success: true, message: "Currículo enviado com sucesso!" });
-    } catch (error) {
-      console.error("Erro API:", error);
-      return res.status(500).json({ error: "Erro interno no servidor", details: error.message });
-    }
-  });
-}
+// Inicializar servidor
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
