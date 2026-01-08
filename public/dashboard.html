@@ -215,38 +215,65 @@ tbody tr:hover {
         </tr>
       </thead>
 
-      <tbody>
-        <tr>
-          <td>João Silva</td>
-          <td>joao@email.com</td>
-          <td>(11) 99999-0000</td>
-          <td>Fábrica</td>
-          <td>Fábrica Matriz</td>
-          <td><span class="badge badge-ti">TI</span></td>
-          <td>05/01/2026</td>
-          <td class="actions">
-            <a href="#">Ver</a>
-            <a href="docs/joao-silva.pdf" download>Baixar currículo (PDF)</a>
-          </td>
-        </tr>
-
-        <tr>
-          <td>Maria Souza</td>
-          <td>maria@email.com</td>
-          <td>(21) 98888-1111</td>
-          <td>Loja</td>
-          <td>Loja Shopping</td>
-          <td><span class="badge badge-adm">ADM</span></td>
-          <td>04/01/2026</td>
-          <td class="actions">
-            <a href="#">Ver</a>
-            <a href="docs/maria-souza.pdf" download>Baixar currículo (PDF)</a>
-          </td>
-        </tr>
-      </tbody>
+      <tbody id="listaCurriculos">
+    <!-- Currículos serão carregados aqui via JavaScript -->
+  </tbody>
     </table>
   </div>
 
 </div>
+
+<script>
+async function carregarCurriculos() {
+  try {
+    const res = await fetch("/api/candidatos");
+    if (!res.ok) throw new Error("Erro ao buscar currículos");
+    
+    const curriculos = await res.json();
+    const tbody = document.getElementById("listaCurriculos");
+    
+    tbody.innerHTML = curriculos.map(c => `
+      <tr>
+        <td>${c.nome}</td>
+        <td>${c.email}</td>
+        <td>${c.telefone}</td>
+        <td>${c.instituicao}</td>
+        <td>${c.unidade}</td>
+        <td><span class="badge ${c.cargo === "TI" ? "badge-ti" : "badge-adm"}">${c.cargo}</span></td>
+        <td>${new Date(c.data).toLocaleDateString()}</td>
+        <td class="actions">
+          <a href="#">Ver</a>
+          <a href="${c.arquivo}" download>Baixar currículo (PDF)</a>
+        </td>
+      </tr>
+    `).join("");
+
+    // Atualiza os cards de resumo
+    atualizarResumo(curriculos);
+
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+// Atualiza os cards de estatísticas
+function atualizarResumo(curriculos) {
+  const total = curriculos.length;
+  const ti = curriculos.filter(c => c.cargo === "TI").length;
+  const adm = curriculos.filter(c => c.cargo === "ADM").length;
+  const financeiro = curriculos.filter(c => c.cargo === "Financeiro").length;
+
+  const cards = document.querySelectorAll(".cards .card p");
+  cards[0].textContent = total;
+  cards[1].textContent = ti;
+  cards[2].textContent = adm;
+  cards[3].textContent = financeiro;
+}
+
+// Chama ao abrir a página
+carregarCurriculos();
+</script>
+
+
 </body>
 </html>
