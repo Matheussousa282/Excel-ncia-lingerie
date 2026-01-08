@@ -1,20 +1,18 @@
+// /api/candidatos.js
 import { Pool } from "pg";
 import formidable from "formidable";
-import { promises as fs } from "fs";
 
-export const config = {
-  api: { bodyParser: false } // obrigatório para receber arquivos
-};
+export const config = { api: { bodyParser: false } };
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
+  ssl: { rejectUnauthorized: false },
 });
 
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).send("Método não permitido");
 
-  const form = new formidable.IncomingForm({ multiples: false });
+  const form = formidable({ multiples: false });
 
   form.parse(req, async (err, fields, files) => {
     if (err) return res.status(500).send("Erro ao processar formulário: " + err.message);
@@ -31,8 +29,8 @@ export default async function handler(req, res) {
       const arquivoFile = files.arquivo;
       if (!arquivoFile) return res.status(400).send("Arquivo é obrigatório");
 
-      // leitura do buffer do arquivo
-      const arquivoBuffer = await fs.readFile(arquivoFile.filepath);
+      // buffer direto do formidable
+      const arquivoBuffer = await fs.promises.readFile(arquivoFile.filepath);
       const arquivo_nome = arquivoFile.originalFilename;
 
       const query = `
@@ -47,10 +45,9 @@ export default async function handler(req, res) {
       ]);
 
       res.status(200).json({ success: true, id: result.rows[0].id });
-
-    } catch (error) {
-      console.error("Erro na API:", error);
-      res.status(500).send("Erro ao salvar candidato: " + error.message);
+    } catch (err) {
+      console.error("Erro na API:", err);
+      res.status(500).send("Erro ao salvar candidato: " + err.message);
     }
   });
 }
