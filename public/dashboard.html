@@ -270,10 +270,56 @@ function atualizarResumo(curriculos) {
   cards[3].textContent = financeiro;
 }
 
+async function carregarCurriculos() {
+  try {
+    const res = await fetch("/api/candidatos");
+    if (!res.ok) throw new Error("Erro ao buscar currículos");
+
+    const curriculos = await res.json();
+    const tbody = document.getElementById("listaCurriculos");
+
+    tbody.innerHTML = curriculos.map(c => `
+      <tr>
+        <td>${c.nome}</td>
+        <td>${c.email}</td>
+        <td>${c.telefone || "-"}</td>
+        <td>${c.instituicao}</td>
+        <td>${c.unidade}</td>
+        <td><span class="badge ${c.cargo === "TI" ? "badge-ti" : "badge-adm"}">${c.cargo}</span></td>
+        <td>${new Date(c.data).toLocaleDateString()}</td>
+        <td class="actions">
+          <a href="#" onclick="alert('${c.apresentacao || "Sem apresentação"}')">Ver</a>
+          <a href="${c.arquivo}" download="${c.nome}-${c.arquivo_nome}">Baixar currículo</a>
+        </td>
+      </tr>
+    `).join("");
+
+    atualizarResumo(curriculos);
+
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+function atualizarResumo(curriculos) {
+  const total = curriculos.length;
+  const ti = curriculos.filter(c => c.cargo === "TI").length;
+  const adm = curriculos.filter(c => c.cargo === "ADM").length;
+  const financeiro = curriculos.filter(c => c.cargo === "Financeiro").length;
+
+  const cards = document.querySelectorAll(".cards .card p");
+  cards[0].textContent = total;
+  cards[1].textContent = ti;
+  cards[2].textContent = adm;
+  cards[3].textContent = financeiro;
+}
+
+// Carrega ao abrir a página
+carregarCurriculos();
+
+
 // Chama ao abrir a página
 carregarCurriculos();
 </script>
-
-
 </body>
 </html>
