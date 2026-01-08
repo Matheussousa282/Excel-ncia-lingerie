@@ -146,62 +146,32 @@
     </div>
 
     <div class="card-body">
-      <form>
-
-        <div>
-          <label>Nome completo</label>
-          <input type="text" required>
-        </div>
-
-        <div>
-          <label>Telefone</label>
-          <input type="tel">
-        </div>
-
-        <div>
-          <label>E-mail</label>
-          <input type="email" required>
-        </div>
-
-        <div>
-  <label>Cargo de interesse</label>
-  <select id="cargoSelect" required>
-    <option value="">Carregando cargos...</option>
+      <form id="formCandidato" enctype="multipart/form-data">
+  <input type="text" name="nome" placeholder="Nome completo" required>
+  <input type="email" name="email" placeholder="E-mail" required>
+  <input type="tel" name="telefone" placeholder="Telefone">
+  
+  <select name="cargo_id" id="cargoSelect" required>
+    <option value="">Selecione um cargo</option>
+    <!-- opções preenchidas dinamicamente via JS -->
   </select>
-</div>
 
-
-        <div>
-  <label>Instituição</label>
-  <select id="instituicaoSelect" required>
-    <option value="">Carregando instituições...</option>
+  <select name="instituicao_id" id="instituicaoSelect" required>
+    <option value="">Selecione uma instituição</option>
   </select>
-</div>
 
-<div>
-  <label>Unidade</label>
-  <select id="unidadeSelect" required disabled>
-    <option value="">Selecione primeiro a instituição</option>
+  <select name="unidade_id" id="unidadeSelect" required disabled>
+    <option value="">Selecione a unidade</option>
   </select>
-</div>
 
-        <div class="full">
-          <label>Apresentação profissional</label>
-          <textarea></textarea>
-        </div>
+  <textarea name="apresentacao" placeholder="Apresentação profissional"></textarea>
 
-        <div class="full">
-          <label>Currículo (PDF ou DOC)</label>
-          <div class="file-input">
-            <input type="file" accept=".pdf,.doc,.docx" required>
-          </div>
-        </div>
+  <input type="file" name="arquivo" accept=".pdf,.doc,.docx" required>
 
-        <div class="actions">
-          <button type="submit">Enviar Currículo</button>
-        </div>
+  <button type="submit">Enviar Currículo</button>
+</form>
 
-      </form>
+
 
       <p class="privacy">
         Seus dados serão utilizados exclusivamente para fins de recrutamento e seleção.
@@ -299,6 +269,33 @@ async function carregarCargosAtivos() {
     alert("Erro ao carregar cargos");
   }
 }
+
+const form = document.getElementById("formCandidato");
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault(); // evita o reload da página
+
+  const formData = new FormData(form); // pega todos os campos + arquivo
+
+  try {
+    const res = await fetch("/api/candidatos", {
+      method: "POST",
+      body: formData
+    });
+
+    const data = await res.json();
+    if (res.ok) {
+      alert("Currículo enviado com sucesso!");
+      form.reset();
+    } else {
+      alert("Erro: " + data.error);
+    }
+  } catch (err) {
+    console.error(err);
+    alert("Erro ao enviar currículo");
+  }
+});
+
 
 // Chama ao abrir a página
 carregarCargosAtivos();
