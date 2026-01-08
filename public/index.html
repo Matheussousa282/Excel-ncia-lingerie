@@ -275,6 +275,35 @@ instituicaoSelect.addEventListener("change", async () => {
   }
 });
 
+async function carregarCargosAtivos() {
+  try {
+    const response = await fetch("/api/cargos");
+    if (!response.ok) throw new Error("Erro ao buscar cargos");
+
+    const cargos = await response.json();
+    const select = document.getElementById("cargoSelect");
+
+    // Limpa opções antigas
+    select.innerHTML = '<option value="">Selecione um cargo</option>';
+
+    // Adiciona somente cargos ativos
+    cargos.filter(c => c.ativo).forEach(cargo => {
+      const option = document.createElement("option");
+      option.value = cargo.id;      // salva o ID
+      option.textContent = cargo.nome;
+      select.appendChild(option);
+    });
+
+  } catch (err) {
+    console.error("Erro ao carregar cargos:", err);
+    alert("Erro ao carregar cargos");
+  }
+}
+
+// Chama ao abrir a página
+carregarCargosAtivos();
+
+
 // Chama ao abrir a página
 carregarInstituicoesAtivas();
 </script>
