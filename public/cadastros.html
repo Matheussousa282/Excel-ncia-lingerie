@@ -161,8 +161,14 @@ async function carregar() {
       <td class="actions">
         ${
           c.ativo
-          ? `<button class="btn-danger" onclick="alterarStatus(${c.id}, false)">Inativar</button>`
-          : `<button class="btn-success" onclick="alterarStatus(${c.id}, true)">Ativar</button>`
+          ? `<button class="btn-danger"
+  onclick="alterarStatus(${c.id}, '${c.nome}', false)">
+  Inativar
+</button>`
+          : `<button class="btn-success"
+  onclick="alterarStatus(${c.id}, '${c.nome}', true)">
+  Ativar
+</button>`
         }
       </td>
     </tr>
@@ -190,11 +196,11 @@ async function editar(id, nome, ativo) {
   });
 }
 
-async function alterarStatus(id, ativo) {
+async function alterarStatus(id, nome, ativo) {
   await fetch("/api/cargos", {
     method: "PUT",
     headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({ id, ativo })
+    body: JSON.stringify({ id, nome, ativo })
   });
   carregar();
 }
