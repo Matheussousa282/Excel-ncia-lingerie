@@ -1,29 +1,273 @@
-<h1>Instituições e Unidades</h1>
-<div class="table-wrapper">
-  <table>
-    <thead>
-      <tr>
-        <th>ID</th><th>Instituição</th><th>Unidade</th><th>Ações</th>
-      </tr>
-    </thead>
-    <tbody id="listaInstituicoes"></tbody>
-  </table>
-</div>
-<script>
-async function carregarInstituicoes() {
-  try {
-    const res = await fetch("/api/instituicoes");
-    const insts = await res.json();
-    const tbody = document.getElementById("listaInstituicoes");
-    tbody.innerHTML = insts.map(i => `
-      <tr>
-        <td>${i.id}</td>
-        <td>${i.nome}</td>
-        <td>${i.unidade}</td>
-        <td><a href="#" onclick="alert('Editar ${i.nome}')">Editar</a></td>
-      </tr>
-    `).join("");
-  } catch(err) { console.error(err); }
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>RH | Instituições e Unidades</title>
+
+<style>
+:root {
+  --primary: #2563eb;
+  --success: #16a34a;
+  --danger: #dc2626;
+  --muted: #6b7280;
+  --bg: #f3f4f6;
+  --card: #ffffff;
+  --border: #e5e7eb;
 }
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", Arial;
+  background: var(--bg);
+}
+
+.container {
+  max-width: 1200px;
+  margin: auto;
+  padding: 30px;
+}
+
+h1 {
+  margin-bottom: 25px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 25px;
+}
+
+.card {
+  background: var(--card);
+  padding: 25px;
+  border-radius: 14px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+}
+
+.form {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+input, select {
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  font-size: 14px;
+  flex: 1;
+}
+
+button {
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-success { background: var(--success); color: #fff; }
+.btn-danger { background: var(--danger); color: #fff; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 12px;
+  font-size: 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+th {
+  background: #f9fafb;
+  color: var(--muted);
+  text-align: left;
+}
+
+.badge {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  color: #fff;
+}
+
+.ativo { background: var(--success); }
+.inativo { background: var(--muted); }
+
+.actions button {
+  margin-right: 6px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <h1>Instituições & Unidades</h1>
+
+  <div class="grid">
+
+    <!-- INSTITUIÇÕES -->
+    <div class="card">
+      <h3>Instituições</h3>
+
+      <div class="form">
+        <input id="instNome" placeholder="Nova instituição">
+        <button class="btn-primary" onclick="salvarInstituicao()">Salvar</button>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Status</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="listaInstituicoes"></tbody>
+      </table>
+    </div>
+
+    <!-- UNIDADES -->
+    <div class="card">
+      <h3>Unidades</h3>
+
+      <div class="form">
+        <select id="instituicaoSelect"></select>
+        <input id="unidadeNome" placeholder="Nova unidade">
+        <button class="btn-primary" onclick="salvarUnidade()">Salvar</button>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Status</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="listaUnidades"></tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<script>
+let instituicoes = [];
+
+async function carregarInstituicoes() {
+  const res = await fetch("/api/instituicoes");
+  instituicoes = await res.json();
+
+  listaInstituicoes.innerHTML = instituicoes.map(i => `
+    <tr>
+      <td>${i.nome}</td>
+      <td>
+        <span class="badge ${i.ativo ? 'ativo' : 'inativo'}">
+          ${i.ativo ? 'Ativo' : 'Inativo'}
+        </span>
+      </td>
+      <td class="actions">
+        <button class="${i.ativo ? 'btn-danger' : 'btn-success'}"
+          onclick="alterarInstituicao(${i.id}, ${!i.ativo})">
+          ${i.ativo ? 'Inativar' : 'Ativar'}
+        </button>
+      </td>
+    </tr>
+  `).join("");
+
+  instituicaoSelect.innerHTML = `
+    <option value="">Selecione a instituição</option>
+    ${instituicoes.filter(i => i.ativo).map(i =>
+      `<option value="${i.id}">${i.nome}</option>`
+    ).join("")}
+  `;
+}
+
+async function salvarInstituicao() {
+  if (!instNome.value) return;
+
+  await fetch("/api/instituicoes", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ nome: instNome.value })
+  });
+
+  instNome.value = "";
+  carregarInstituicoes();
+}
+
+async function alterarInstituicao(id, ativo) {
+  await fetch("/api/instituicoes", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id, ativo })
+  });
+
+  carregarInstituicoes();
+}
+
+instituicaoSelect.addEventListener("change", carregarUnidades);
+
+async function carregarUnidades() {
+  const id = instituicaoSelect.value;
+  if (!id) {
+    listaUnidades.innerHTML = "";
+    return;
+  }
+
+  const res = await fetch(`/api/unidades?instituicao_id=${id}`);
+  const data = await res.json();
+
+  listaUnidades.innerHTML = data.map(u => `
+    <tr>
+      <td>${u.nome}</td>
+      <td>
+        <span class="badge ${u.ativo ? 'ativo' : 'inativo'}">
+          ${u.ativo ? 'Ativo' : 'Inativo'}
+        </span>
+      </td>
+      <td class="actions">
+        <button class="${u.ativo ? 'btn-danger' : 'btn-success'}"
+          onclick="alterarUnidade(${u.id}, ${!u.ativo})">
+          ${u.ativo ? 'Inativar' : 'Ativar'}
+        </button>
+      </td>
+    </tr>
+  `).join("");
+}
+
+async function salvarUnidade() {
+  if (!instituicaoSelect.value || !unidadeNome.value) return;
+
+  await fetch("/api/unidades", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      nome: unidadeNome.value,
+      instituicao_id: instituicaoSelect.value
+    })
+  });
+
+  unidadeNome.value = "";
+  carregarUnidades();
+}
+
+async function alterarUnidade(id, ativo) {
+  await fetch("/api/unidades", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id, ativo })
+  });
+
+  carregarUnidades();
+}
+
 carregarInstituicoes();
 </script>
+</body>
+</html>

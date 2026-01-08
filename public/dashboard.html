@@ -4,20 +4,45 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>RH | Dashboard</title>
+
 <style>
 :root {
-  --primary: #2563eb; --primary-dark: #1e40af;
-  --bg: #f3f4f6; --sidebar: #0f172a; --card: #ffffff;
-  --text: #111827; --muted: #6b7280; --border: #e5e7eb;
-  --success: #16a34a; --info: #2563eb;
+  --primary: #2563eb;
+  --primary-dark: #1e40af;
+  --bg: #f3f4f6;
+  --sidebar: #0f172a;
+  --card: #ffffff;
+  --text: #111827;
+  --muted: #6b7280;
+  --border: #e5e7eb;
+  --success: #16a34a;
+  --info: #2563eb;
 }
-* { box-sizing:border-box; margin:0; padding:0; }
-body { font-family:"Segoe UI", Roboto, Helvetica, Arial; background:var(--bg); color:var(--text); }
+
+* { box-sizing: border-box; margin:0; padding:0; }
+
+body {
+  font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
 
 /* SIDEBAR */
-.sidebar { width:240px; height:100vh; background:var(--sidebar); color:#fff; position:fixed; padding:25px 20px; }
+.sidebar {
+  width: 240px;
+  height: 100vh;
+  background: var(--sidebar);
+  color: #fff;
+  position: fixed;
+  padding: 25px 20px;
+}
+
 .sidebar h2 { text-align:center; font-size:20px; margin-bottom:40px; }
-.sidebar a { display:block; color:#cbd5f5; text-decoration:none; padding:12px 14px; border-radius:8px; margin-bottom:8px; font-size:14px; cursor:pointer; }
+.sidebar a {
+  display: block; color:#cbd5f5; text-decoration:none;
+  padding:12px 14px; border-radius:8px; margin-bottom:8px; font-size:14px;
+  cursor:pointer;
+}
 .sidebar a.active, .sidebar a:hover { background: rgba(255,255,255,0.1); color:#fff; }
 
 /* MAIN */
@@ -30,7 +55,7 @@ body { font-family:"Segoe UI", Roboto, Helvetica, Arial; background:var(--bg); c
 .card p { font-size:28px; font-weight:bold; text-align:center; }
 
 /* TABLE */
-.table-wrapper { background:var(--card); border-radius:14px; box-shadow:0 10px 25px rgba(0,0,0,0.05); overflow-x:auto; }
+.table-wrapper { background: var(--card); border-radius:14px; box-shadow:0 10px 25px rgba(0,0,0,0.05); overflow-x:auto; }
 table { width:100%; border-collapse:collapse; }
 th, td { padding:12px 16px; font-size:14px; text-align:left; }
 th { background:#f9fafb; color:var(--muted); font-weight:600; }
@@ -48,6 +73,7 @@ tbody tr:hover { background:#f8fafc; }
 
 /* RESPONSIVE */
 @media (max-width:900px) { .sidebar { display:none; } .main { margin-left:0; } }
+
 </style>
 </head>
 <body>
@@ -77,12 +103,11 @@ tbody tr:hover { background:#f8fafc; }
 </div>
 
 <script>
-// ==================== FUNÇÃO PARA ABRIR PÁGINAS SPA ====================
 async function abrirPagina(pagina) {
   const links = document.querySelectorAll('.sidebar a');
   links.forEach(link => link.classList.remove('active'));
+  
   event.target.classList.add('active');
-
   const conteudo = document.getElementById("conteudoPrincipal");
 
   if (pagina === 'curriculos') {
@@ -104,27 +129,19 @@ async function abrirPagina(pagina) {
     `;
     carregarCurriculos();
   } else {
-    // Carrega componente SPA
+    // Carrega a página HTML dentro do container
     try {
       const res = await fetch(pagina);
       if (!res.ok) throw new Error("Erro ao carregar a página");
       const html = await res.text();
       conteudo.innerHTML = html;
-
-      // Executa scripts do componente
-      conteudo.querySelectorAll("script").forEach(oldScript => {
-        const newScript = document.createElement("script");
-        if (oldScript.src) { newScript.src = oldScript.src; }
-        else { newScript.textContent = oldScript.textContent; }
-        document.body.appendChild(newScript);
-      });
-    } catch(err) {
+    } catch (err) {
       conteudo.innerHTML = `<p style="color:red;">Erro ao carregar a página: ${err.message}</p>`;
     }
   }
 }
 
-// ==================== CURRÍCULOS ====================
+// Função para carregar currículos da API
 async function carregarCurriculos() {
   try {
     const res = await fetch("/api/candidatos");
@@ -152,7 +169,7 @@ async function carregarCurriculos() {
   } catch(err) { console.error(err); }
 }
 
-// ==================== ATUALIZA CARDS ====================
+// Atualiza os cards com estatísticas
 function atualizarResumo(curriculos) {
   const container = document.getElementById("cardsResumo");
   container.innerHTML = "";
@@ -163,9 +180,12 @@ function atualizarResumo(curriculos) {
   container.appendChild(totalCard);
 
   const cargosMap = {};
-  curriculos.forEach(c => { if(!cargosMap[c.cargo]) cargosMap[c.cargo]=0; cargosMap[c.cargo]++; });
+  curriculos.forEach(c => {
+    if (!cargosMap[c.cargo]) cargosMap[c.cargo] = 0;
+    cargosMap[c.cargo]++;
+  });
 
-  for (const [cargo,qtd] of Object.entries(cargosMap)) {
+  for (const [cargo, qtd] of Object.entries(cargosMap)) {
     const card = document.createElement("div");
     card.className = "card";
     card.innerHTML = `<h3>${cargo}</h3><p>${qtd}</p>`;
@@ -173,7 +193,7 @@ function atualizarResumo(curriculos) {
   }
 }
 
-// Carrega currículos ao abrir
+// Carrega currículos ao abrir a página
 carregarCurriculos();
 </script>
 
