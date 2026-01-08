@@ -2,26 +2,74 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Cadastro de Cargos</title>
+<title>RH | Gestão de Cargos</title>
 
 <style>
+:root {
+  --primary: #2563eb;
+  --success: #16a34a;
+  --danger: #dc2626;
+  --muted: #6b7280;
+  --bg: #f3f4f6;
+  --card: #ffffff;
+  --border: #e5e7eb;
+}
+
 body {
+  margin: 0;
   font-family: "Segoe UI", Arial;
-  background: #f3f4f6;
+  background: var(--bg);
 }
 
 .container {
-  max-width: 900px;
+  max-width: 1100px;
   margin: auto;
   padding: 30px;
 }
 
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.header h1 {
+  font-size: 26px;
+}
+
 .card {
-  background: #fff;
+  background: var(--card);
   padding: 25px;
   border-radius: 14px;
   box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+  margin-bottom: 30px;
 }
+
+.form {
+  display: flex;
+  gap: 15px;
+}
+
+input {
+  flex: 1;
+  padding: 12px;
+  font-size: 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+button {
+  padding: 12px 18px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-success { background: var(--success); color: #fff; }
 
 table {
   width: 100%;
@@ -29,31 +77,55 @@ table {
 }
 
 th, td {
-  padding: 12px;
+  padding: 14px;
+  font-size: 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+th {
+  background: #f9fafb;
+  color: var(--muted);
+  text-align: left;
 }
 
 .badge {
-  padding: 4px 10px;
+  padding: 5px 12px;
   border-radius: 20px;
-  color: #fff;
   font-size: 12px;
+  color: #fff;
+  font-weight: 600;
 }
-.ativo { background: #16a34a; }
-.inativo { background: #6b7280; }
+
+.ativo { background: var(--success); }
+.inativo { background: var(--muted); }
+
+.actions button {
+  margin-right: 8px;
+}
 </style>
 </head>
 
 <body>
 
 <div class="container">
-  <div class="card">
-    <h2>Novo Cargo</h2>
-    <input id="nome" placeholder="Nome">
-    <button onclick="salvar()">Salvar</button>
+
+  <div class="header">
+    <h1>Gestão de Cargos</h1>
   </div>
 
+  <!-- CADASTRO -->
   <div class="card">
-    <h2>Cargos</h2>
+    <h3>Novo Cargo</h3>
+    <div class="form">
+      <input id="nome" placeholder="Digite o nome do cargo">
+      <button class="btn-primary" onclick="salvar()">Salvar</button>
+    </div>
+  </div>
+
+  <!-- LISTA -->
+  <div class="card">
+    <h3>Cargos Cadastrados</h3>
+
     <table>
       <thead>
         <tr>
@@ -65,15 +137,12 @@ th, td {
       <tbody id="lista"></tbody>
     </table>
   </div>
+
 </div>
 
 <script>
 async function carregar() {
   const res = await fetch("/api/cargos");
-  if (!res.ok) {
-    console.error("Erro API cargos");
-    return;
-  }
   const data = await res.json();
 
   lista.innerHTML = data.map(c => `
@@ -82,22 +151,33 @@ async function carregar() {
         <input value="${c.nome}"
           onchange="editar(${c.id}, this.value, ${c.ativo})">
       </td>
+
       <td>
-        <span class="badge ativo">Ativo</span>
+        <span class="badge ${c.ativo ? 'ativo' : 'inativo'}">
+          ${c.ativo ? 'Ativo' : 'Inativo'}
+        </span>
       </td>
-      <td>
-        <button onclick="inativar(${c.id})">Inativar</button>
+
+      <td class="actions">
+        ${
+          c.ativo
+          ? `<button class="btn-danger" onclick="alterarStatus(${c.id}, false)">Inativar</button>`
+          : `<button class="btn-success" onclick="alterarStatus(${c.id}, true)">Ativar</button>`
+        }
       </td>
     </tr>
   `).join("");
 }
 
 async function salvar() {
+  if (!nome.value) return;
+
   await fetch("/api/cargos", {
     method: "POST",
     headers: {"Content-Type": "application/json"},
     body: JSON.stringify({ nome: nome.value })
   });
+
   nome.value = "";
   carregar();
 }
@@ -110,17 +190,17 @@ async function editar(id, nome, ativo) {
   });
 }
 
-async function inativar(id) {
-  await fetch(`/api/cargos?id=${id}`, {
-    method: "DELETE"
+async function alterarStatus(id, ativo) {
+  await fetch("/api/cargos", {
+    method: "PUT",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ id, ativo })
   });
   carregar();
-carregar();
 }
 
 carregar();
 </script>
-
 
 </body>
 </html>
