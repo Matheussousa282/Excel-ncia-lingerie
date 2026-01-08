@@ -1,33 +1,36 @@
+// /api/candidatos.js
 import { Pool } from "pg";
-import multiparty from "multiparty";
-import fs from "fs";
+import formidable from "formidable";
+
+export const config = { api: { bodyParser: false } };
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false },
 });
 
-export const config = { api: { bodyParser: false } };
-
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).send("Método não permitido");
 
-  const form = new multiparty.Form();
+  const form = formidable({ multiples: false });
 
   form.parse(req, async (err, fields, files) => {
-    if (err) return res.status(500).send(err.message);
+    if (err) return res.status(500).send("Erro ao processar formulário: " + err.message);
 
     try {
-      const nome = fields.nome[0];
-      const telefone = fields.telefone ? fields.telefone[0] : null;
-      const email = fields.email[0];
-      const cargo_id = fields.cargo_id[0];
-      const instituicao_id = fields.instituicao_id[0];
-      const unidade_id = fields.unidade_id[0];
-      const apresentacao = fields.apresentacao ? fields.apresentacao[0] : null;
+      const nome = fields.nome;
+      const telefone = fields.telefone || null;
+      const email = fields.email;
+      const cargo_id = fields.cargo_id;
+      const instituicao_id = fields.instituicao_id;
+      const unidade_id = fields.unidade_id;
+      const apresentacao = fields.apresentacao || null;
 
-      const arquivoFile = files.arquivo[0];
-      const arquivoBuffer = fs.readFileSync(arquivoFile.path);
+      const arquivoFile = files.arquivo;
+      if (!arquivoFile) return res.status(400).send("Arquivo é obrigatório");
+
+      // buffer direto do formidable
+      const arquivoBuffer = await fs.promises.readFile(arquivoFile.filepath);
       const arquivo_nome = arquivoFile.originalFilename;
 
       const query = `
@@ -42,10 +45,9 @@ export default async function handler(req, res) {
       ]);
 
       res.status(200).json({ success: true, id: result.rows[0].id });
-
     } catch (err) {
-      console.error(err);
-      res.status(500).send("Erro ao salvar candidato");
+      console.error("Erro na API:", err);
+      res.status(500).send("Erro ao salvar candidato: " + err.message);
     }
   });
 }
