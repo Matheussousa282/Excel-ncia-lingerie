@@ -173,7 +173,7 @@ async function carregarInstituicoes() {
       </td>
       <td class="actions">
         <button class="${i.ativo ? 'btn-danger' : 'btn-success'}"
-          onclick="alterarInstituicao(${i.id}, '${i.nome}', ${!i.ativo})">
+          onclick="alterarInstituicao(${i.id}, ${!i.ativo})">
           ${i.ativo ? 'Inativar' : 'Ativar'}
         </button>
       </td>
@@ -193,7 +193,7 @@ async function salvarInstituicao() {
 
   await fetch("/api/instituicoes", {
     method: "POST",
-    headers: {"Content-Type": "application/json"},
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ nome: instNome.value })
   });
 
@@ -201,13 +201,73 @@ async function salvarInstituicao() {
   carregarInstituicoes();
 }
 
-async function alterarInstituicao(id, nome, ativo) {
+async function alterarInstituicao(id, ativo) {
   await fetch("/api/instituicoes", {
     method: "PUT",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({ id, nome, ativo })
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id, ativo })
   });
+
   carregarInstituicoes();
 }
 
-instituicaoSelect.ad
+instituicaoSelect.addEventListener("change", carregarUnidades);
+
+async function carregarUnidades() {
+  const id = instituicaoSelect.value;
+  if (!id) {
+    listaUnidades.innerHTML = "";
+    return;
+  }
+
+  const res = await fetch(`/api/unidades?instituicao_id=${id}`);
+  const data = await res.json();
+
+  listaUnidades.innerHTML = data.map(u => `
+    <tr>
+      <td>${u.nome}</td>
+      <td>
+        <span class="badge ${u.ativo ? 'ativo' : 'inativo'}">
+          ${u.ativo ? 'Ativo' : 'Inativo'}
+        </span>
+      </td>
+      <td class="actions">
+        <button class="${u.ativo ? 'btn-danger' : 'btn-success'}"
+          onclick="alterarUnidade(${u.id}, ${!u.ativo})">
+          ${u.ativo ? 'Inativar' : 'Ativar'}
+        </button>
+      </td>
+    </tr>
+  `).join("");
+}
+
+async function salvarUnidade() {
+  if (!instituicaoSelect.value || !unidadeNome.value) return;
+
+  await fetch("/api/unidades", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      nome: unidadeNome.value,
+      instituicao_id: instituicaoSelect.value
+    })
+  });
+
+  unidadeNome.value = "";
+  carregarUnidades();
+}
+
+async function alterarUnidade(id, ativo) {
+  await fetch("/api/unidades", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id, ativo })
+  });
+
+  carregarUnidades();
+}
+
+carregarInstituicoes();
+</script>
+</body>
+</html>
