@@ -18,8 +18,11 @@
 body {
   margin: 0;
   font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  background: url('assets/fundo.jpg') no-repeat center center fixed;
-  background-size: cover; /* Faz a imagem cobrir toda a tela */
+  background-image: url('/assets/fundo.jpg');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+  background-attachment: fixed;
   color: var(--text);
 }
 .page {
@@ -28,11 +31,15 @@ body {
   align-items: center;
   justify-content: center;
   padding: 20px;
-  background-color: rgba(255, 255, 255, 0.85); /* fundo branco semi-transparente */
-  border-radius: 12px;
-  box-shadow: 0 15px 40px rgba(0,0,0,0.08);
 }
-.card { width: 100%; max-width: 720px; background: var(--white); border-radius: 12px; box-shadow: 0 15px 40px rgba(0,0,0,0.08); overflow: hidden; }
+.card {
+  width: 100%;
+  max-width: 720px;
+  background: rgba(255, 255, 255, 0.92); /* fundo branco translúcido */
+  border-radius: 12px;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+  overflow: hidden;
+}
 .card-header { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); padding: 30px; color: #fff; }
 .card-header h1 { margin: 0; font-size: 26px; }
 .card-header p { margin-top: 8px; font-size: 15px; opacity: 0.9; }
