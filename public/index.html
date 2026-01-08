@@ -172,20 +172,18 @@
 
 
         <div>
-          <label>Instituição</label>
-          <select id="tipoInstituicao" required>
-            <option value="">Selecione</option>
-            <option value="fabrica">Fábrica</option>
-            <option value="loja">Loja</option>
-          </select>
-        </div>
+  <label>Instituição</label>
+  <select id="instituicaoSelect" required>
+    <option value="">Carregando instituições...</option>
+  </select>
+</div>
 
-        <div>
-          <label>Unidade</label>
-          <select id="unidade" required disabled>
-            <option value="">Selecione primeiro a instituição</option>
-          </select>
-        </div>
+<div>
+  <label>Unidade</label>
+  <select id="unidadeSelect" required disabled>
+    <option value="">Selecione primeiro a instituição</option>
+  </select>
+</div>
 
         <div class="full">
           <label>Apresentação profissional</label>
@@ -212,67 +210,73 @@
   </div>
 </div>
 
+
 <script>
-const tipo = document.getElementById("tipoInstituicao");
-const unidade = document.getElementById("unidade");
+// Elementos
+const instituicaoSelect = document.getElementById("instituicaoSelect");
+const unidadeSelect = document.getElementById("unidadeSelect");
 
-const fabricas = [
-  "Fábrica Matriz",
-  "Fábrica Rafael Arruda",
-  
-];
-
-const lojas = [
-  "Loja Centro",
-  "Loja Shopping",
-  "Loja Bairro"
-];
-
-tipo.addEventListener("change", () => {
-  unidade.innerHTML = '<option value="">Selecione a unidade</option>';
-  unidade.disabled = false;
-
-  const lista = tipo.value === "fabrica" ? fabricas : lojas;
-
-  lista.forEach(item => {
-    const option = document.createElement("option");
-    option.textContent = item;
-    option.value = item;
-    unidade.appendChild(option);
-  });
-});
-
-// ===== CARGOS DINÂMICOS (BANCO DE DADOS) =====
-async function carregarCargosAtivos() {
+// ===== INSTITUIÇÕES DINÂMICAS =====
+async function carregarInstituicoesAtivas() {
   try {
-    const response = await fetch("/api/cargos");
+    const response = await fetch("/api/instituicoes");
+    if (!response.ok) throw new Error("Erro ao buscar instituições");
+    const instituicoes = await response.json();
 
-    if (!response.ok) {
-      throw new Error("Erro ao buscar cargos");
-    }
+    // Limpa e adiciona opção padrão
+    instituicaoSelect.innerHTML = '<option value="">Selecione uma instituição</option>';
 
-    const cargos = await response.json();
-    const select = document.getElementById("cargoSelect");
-
-    select.innerHTML = '<option value="">Selecione um cargo</option>';
-
-    cargos
-      .filter(cargo => cargo.ativo === true)
-      .forEach(cargo => {
+    // Popula apenas as ativas
+    instituicoes
+      .filter(i => i.ativo)
+      .forEach(i => {
         const option = document.createElement("option");
-        option.value = cargo.id;     // salva o ID
-        option.textContent = cargo.nome;
-        select.appendChild(option);
+        option.value = i.id;
+        option.textContent = i.nome;
+        instituicaoSelect.appendChild(option);
       });
 
   } catch (error) {
     console.error(error);
-    alert("Erro ao carregar cargos");
+    alert("Erro ao carregar instituições");
   }
 }
 
-// CHAMA AO ABRIR A PÁGINA
-carregarCargosAtivos();
+// ===== UNIDADES DINÂMICAS =====
+instituicaoSelect.addEventListener("change", async () => {
+  const id = instituicaoSelect.value;
+  unidadeSelect.disabled = !id;
+  unidadeSelect.innerHTML = '<option value="">Carregando unidades...</option>';
+
+  if (!id) {
+    unidadeSelect.innerHTML = '<option value="">Selecione primeiro a instituição</option>';
+    return;
+  }
+
+  try {
+    const res = await fetch(`/api/unidades?instituicao_id=${id}`);
+    if (!res.ok) throw new Error("Erro ao buscar unidades");
+    const unidades = await res.json();
+
+    // Limpa e popula apenas unidades ativas
+    unidadeSelect.innerHTML = '<option value="">Selecione uma unidade</option>';
+    unidades
+      .filter(u => u.ativo)
+      .forEach(u => {
+        const option = document.createElement("option");
+        option.value = u.id;
+        option.textContent = u.nome;
+        unidadeSelect.appendChild(option);
+      });
+
+  } catch (error) {
+    console.error(error);
+    alert("Erro ao carregar unidades");
+  }
+});
+
+// Chama ao abrir a página
+carregarInstituicoesAtivas();
 </script>
 </body>
 </html>
