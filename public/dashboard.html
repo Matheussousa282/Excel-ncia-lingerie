@@ -181,24 +181,10 @@ tbody tr:hover {
     <span>Atualizado em 05/01/2026</span>
   </div>
 
-  <div class="cards">
-    <div class="card">
-      <h3>Total de Currículos</h3>
-      <p>128</p>
-    </div>
-    <div class="card">
-      <h3>TI</h3>
-      <p>46</p>
-    </div>
-    <div class="card">
-      <h3>Administrativo</h3>
-      <p>32</p>
-    </div>
-    <div class="card">
-      <h3>Financeiro</h3>
-      <p>18</p>
-    </div>
-  </div>
+  <div class="cards" id="cardsResumo">
+  <!-- Cards serão inseridos aqui via JavaScript -->
+</div>
+
 
   <div class="table-wrapper">
     <table>
@@ -312,6 +298,38 @@ function atualizarResumo(curriculos) {
   cards[1].textContent = ti;
   cards[2].textContent = adm;
   cards[3].textContent = financeiro;
+}
+
+function atualizarResumo(curriculos) {
+  const container = document.getElementById("cardsResumo");
+  container.innerHTML = ""; // Limpa os cards existentes
+
+  // Card total
+  const totalCard = document.createElement("div");
+  totalCard.className = "card";
+  totalCard.innerHTML = `
+    <h3>Total de Currículos</h3>
+    <p>${curriculos.length}</p>
+  `;
+  container.appendChild(totalCard);
+
+  // Contar currículos por cargo
+  const cargosMap = {};
+  curriculos.forEach(c => {
+    if (!cargosMap[c.cargo]) cargosMap[c.cargo] = 0;
+    cargosMap[c.cargo]++;
+  });
+
+  // Gerar cards apenas para cargos existentes
+  for (const [cargo, qtd] of Object.entries(cargosMap)) {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `
+      <h3>${cargo}</h3>
+      <p>${qtd}</p>
+    `;
+    container.appendChild(card);
+  }
 }
 
 // Carrega ao abrir a página
