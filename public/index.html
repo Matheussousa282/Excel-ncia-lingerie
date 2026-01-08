@@ -164,16 +164,12 @@
         </div>
 
         <div>
-          <label>Cargo de interesse</label>
-          <select required>
-            <option value="">Selecione</option>
-            <option>Administrativo</option>
-            <option>Tecnologia da Informação</option>
-            <option>Financeiro</option>
-            <option>Marketing</option>
-            <option>Outros</option>
-          </select>
-        </div>
+  <label>Cargo de interesse</label>
+  <select id="cargoSelect" required>
+    <option value="">Carregando cargos...</option>
+  </select>
+</div>
+
 
         <div>
           <label>Instituição</label>
@@ -245,6 +241,38 @@ tipo.addEventListener("change", () => {
     unidade.appendChild(option);
   });
 });
+
+// ===== CARGOS DINÂMICOS (BANCO DE DADOS) =====
+async function carregarCargosAtivos() {
+  try {
+    const response = await fetch("/api/cargos");
+
+    if (!response.ok) {
+      throw new Error("Erro ao buscar cargos");
+    }
+
+    const cargos = await response.json();
+    const select = document.getElementById("cargoSelect");
+
+    select.innerHTML = '<option value="">Selecione um cargo</option>';
+
+    cargos
+      .filter(cargo => cargo.ativo === true)
+      .forEach(cargo => {
+        const option = document.createElement("option");
+        option.value = cargo.id;     // salva o ID
+        option.textContent = cargo.nome;
+        select.appendChild(option);
+      });
+
+  } catch (error) {
+    console.error(error);
+    alert("Erro ao carregar cargos");
+  }
+}
+
+// CHAMA AO ABRIR A PÁGINA
+carregarCargosAtivos();
 </script>
 </body>
 </html>
