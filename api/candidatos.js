@@ -1,58 +1,51 @@
-const express = require("express");
-const multer = require("multer");
-const { Pool } = require("pg");
-const cors = require("cors");
+import { Pool } from "pg";
+import multiparty from "multiparty";
+import fs from "fs";
 
-const app = express();
-app.use(cors());
-app.use(express.json());
-
-// Configurar multer para armazenar arquivo em memória
-const storage = multer.memoryStorage();
-const upload = multer({ storage });
-
-// Conexão Neon
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL, // URL do Neon
+  connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false },
 });
 
-// Rota para receber formulário
-app.post("/api/candidatos", upload.single("arquivo"), async (req, res) => {
-  try {
-    const { nome, telefone, email, cargo_id, instituicao_id, unidade_id, apresentacao } = req.body;
+export const config = { api: { bodyParser: false } };
 
-    if (!req.file) return res.status(400).send("Arquivo é obrigatório");
+export default async function handler(req, res) {
+  if (req.method !== "POST") return res.status(405).send("Método não permitido");
 
-    const arquivo = req.file.buffer;       // conteúdo do arquivo em bytes
-    const arquivo_nome = req.file.originalname; // nome original
+  const form = new multiparty.Form();
 
-    const query = `
-      INSERT INTO candidatos 
-      (nome, telefone, email, cargo_id, instituicao_id, unidade_id, apresentacao, arquivo, arquivo_nome)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
-      RETURNING id
-    `;
+  form.parse(req, async (err, fields, files) => {
+    if (err) return res.status(500).send(err.message);
 
-    const result = await pool.query(query, [
-      nome,
-      telefone || null,
-      email,
-      cargo_id,
-      instituicao_id,
-      unidade_id,
-      apresentacao || null,
-      arquivo,
-      arquivo_nome
-    ]);
+    try {
+      const nome = fields.nome[0];
+      const telefone = fields.telefone ? fields.telefone[0] : null;
+      const email = fields.email[0];
+      const cargo_id = fields.cargo_id[0];
+      const instituicao_id = fields.instituicao_id[0];
+      const unidade_id = fields.unidade_id[0];
+      const apresentacao = fields.apresentacao ? fields.apresentacao[0] : null;
 
-    res.status(200).json({ success: true, id: result.rows[0].id });
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Erro ao salvar candidato");
-  }
-});
+      const arquivoFile = files.arquivo[0];
+      const arquivoBuffer = fs.readFileSync(arquivoFile.path);
+      const arquivo_nome = arquivoFile.originalFilename;
 
-// Inicializar servidor
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
+      const query = `
+        INSERT INTO candidatos
+        (nome, telefone, email, cargo_id, instituicao_id, unidade_id, apresentacao, arquivo, arquivo_nome)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+        RETURNING id
+      `;
+
+      const result = await pool.query(query, [
+        nome, telefone, email, cargo_id, instituicao_id, unidade_id, apresentacao, arquivoBuffer, arquivo_nome
+      ]);
+
+      res.status(200).json({ success: true, id: result.rows[0].id });
+
+    } catch (err) {
+      console.error(err);
+      res.status(500).send("Erro ao salvar candidato");
+    }
+  });
+}
