@@ -5,14 +5,16 @@ import { Pool } from "pg";
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 export const config = {
-  api: {
-    bodyParser: false // preciso para usar FormData / multipart
-  }
+  api: { bodyParser: false } // necessário para arquivos
 };
 
 export default async function handler(req, res) {
   if (req.method === "POST") {
-    const form = formidable({ multiples: false, uploadDir: "./public/uploads", keepExtensions: true });
+    const form = formidable({
+      multiples: false,
+      uploadDir: "./public/uploads", // onde o arquivo será salvo
+      keepExtensions: true
+    });
 
     form.parse(req, async (err, fields, files) => {
       if (err) {
