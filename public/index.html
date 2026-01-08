@@ -70,42 +70,75 @@ const unidadeSelect = document.getElementById("unidadeSelect");
 
 // ===== Carregar Cargos =====
 async function carregarCargos() {
-  const res = await fetch("/api/cargos");
-  const data = await res.json();
-  cargoSelect.innerHTML = '<option value="">Selecione um cargo</option>';
-  data.filter(c=>c.ativo).forEach(c=>{ const o=document.createElement("option"); o.value=c.id; o.textContent=c.nome; cargoSelect.appendChild(o); });
+  try {
+    const res = await fetch("/api/cargos");
+    const data = await res.json();
+    cargoSelect.innerHTML = '<option value="">Selecione um cargo</option>';
+    data.filter(c => c.ativo).forEach(c => {
+      const o = document.createElement("option");
+      o.value = c.id;
+      o.textContent = c.nome;
+      cargoSelect.appendChild(o);
+    });
+  } catch (err) { console.error("Erro ao carregar cargos:", err); }
 }
 
 // ===== Carregar Instituições =====
 async function carregarInstituicoes() {
-  const res = await fetch("/api/instituicoes");
-  const data = await res.json();
-  instituicaoSelect.innerHTML = '<option value="">Selecione uma instituição</option>';
-  data.filter(i=>i.ativo).forEach(i=>{ const o=document.createElement("option"); o.value=i.id; o.textContent=i.nome; instituicaoSelect.appendChild(o); });
+  try {
+    const res = await fetch("/api/instituicoes");
+    const data = await res.json();
+    instituicaoSelect.innerHTML = '<option value="">Selecione uma instituição</option>';
+    data.filter(i => i.ativo).forEach(i => {
+      const o = document.createElement("option");
+      o.value = i.id;
+      o.textContent = i.nome;
+      instituicaoSelect.appendChild(o);
+    });
+  } catch (err) { console.error("Erro ao carregar instituições:", err); }
 }
 
 // ===== Carregar Unidades Dinâmicas =====
-instituicaoSelect.addEventListener("change", async ()=>{
+instituicaoSelect.addEventListener("change", async () => {
   const id = instituicaoSelect.value;
   unidadeSelect.disabled = !id;
   unidadeSelect.innerHTML = '<option value="">Carregando unidades...</option>';
-  if(!id) return unidadeSelect.innerHTML = '<option value="">Selecione uma instituição primeiro</option>';
-  const res = await fetch(`/api/unidades?instituicao_id=${id}`);
-  const data = await res.json();
-  unidadeSelect.innerHTML = '<option value="">Selecione uma unidade</option>';
-  data.filter(u=>u.ativo).forEach(u=>{ const o=document.createElement("option"); o.value=u.id; o.textContent=u.nome; unidadeSelect.appendChild(o); });
+  if (!id) return unidadeSelect.innerHTML = '<option value="">Selecione uma instituição primeiro</option>';
+
+  try {
+    const res = await fetch(`/api/unidades?instituicao_id=${id}`);
+    const data = await res.json();
+    unidadeSelect.innerHTML = '<option value="">Selecione uma unidade</option>';
+    data.filter(u => u.ativo).forEach(u => {
+      const o = document.createElement("option");
+      o.value = u.id;
+      o.textContent = u.nome;
+      unidadeSelect.appendChild(o);
+    });
+  } catch (err) { console.error("Erro ao carregar unidades:", err); }
 });
 
 // ===== Envio do Formulário =====
 const form = document.getElementById("formCandidato");
-form.addEventListener("submit", async e=>{
+form.addEventListener("submit", async e => {
   e.preventDefault();
   const formData = new FormData(form);
+
   try {
-    const res = await fetch("/api/candidatos", { method: "POST", body: formData });;
-    if(res.ok){ alert("Currículo enviado com sucesso!"); form.reset(); unidadeSelect.disabled=true; }
-    else { const txt = await res.text(); console.error("Erro API:",txt); alert("Erro ao enviar: "+txt); }
-  } catch(err){ console.error(err); alert("Erro ao enviar"); }
+    const res = await fetch("/api/candidatos", { method: "POST", body: formData });
+    if (res.ok) {
+      alert("Currículo enviado com sucesso!");
+      form.reset();
+      unidadeSelect.disabled = true;
+    } else {
+      const txt = await res.text();
+      console.error("Erro API:", txt);
+      alert("Erro ao enviar: " + txt);
+    }
+  } catch (err) {
+    console.error("Erro ao enviar:", err);
+    alert("Erro ao enviar formulário.");
+  }
 });
 
 // ===== Inicializar =====
