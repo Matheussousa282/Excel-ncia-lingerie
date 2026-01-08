@@ -70,6 +70,10 @@ th, td {
 <script>
 async function carregar() {
   const res = await fetch("/api/cargos");
+  if (!res.ok) {
+    console.error("Erro API cargos");
+    return;
+  }
   const data = await res.json();
 
   lista.innerHTML = data.map(c => `
@@ -111,6 +115,7 @@ async function inativar(id) {
     method: "DELETE"
   });
   carregar();
+carregar();
 }
 
 carregar();
