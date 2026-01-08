@@ -84,12 +84,16 @@ tbody tr:hover { background:#f8fafc; }
 </head>
 <body>
 
-<div class="main">
-  <h2>RH System</h2>
-  <iframe id="iframeConteudo" src="curriculos.html" style="width:100%; height:100vh; border:none;"></iframe>
-  <iframe id="iframeConteudo" src="cadastros.html" style="width:100%; height:100vh; border:none;"></iframe>
-  <iframe id="iframeConteudo" src="instituicoes-unidades.html" style="width:100%; height:100vh; border:none;"></iframe>
-</div>
+<div class="sidebar">
+    <h2>RH System</h2>
+    <a class="active" onclick="abrirPagina('curriculos.html', event)">Currículos</a>
+    <a onclick="abrirPagina('cadastros.html', event)">Gestão de Cargo</a>
+    <a onclick="abrirPagina('instituicoes-unidades.html', event)">Instituições e Unidades</a>
+  </div>
+
+  <div class="main">
+    <iframe id="iframeConteudo" src="curriculos.html" style="width:100%; height:100vh; border:none;"></iframe>
+  </div>
 
 <div class="main" id="conteudoPrincipal">
   <!-- Conteúdo inicial: Currículos -->
