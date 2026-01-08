@@ -273,28 +273,35 @@ async function carregarCargosAtivos() {
 const form = document.getElementById("formCandidato");
 
 form.addEventListener("submit", async (e) => {
-  e.preventDefault(); // evita o reload da página
+  e.preventDefault();
 
   const formData = new FormData(form); // pega todos os campos + arquivo
 
   try {
     const res = await fetch("/api/candidatos", {
       method: "POST",
-      body: formData
+      body: formData // NÃO colocar headers aqui
     });
 
-    const data = await res.json();
     if (res.ok) {
       alert("Currículo enviado com sucesso!");
       form.reset();
     } else {
-      alert("Erro: " + data.error);
+      // tenta ler JSON, se não der, lê texto
+      let data;
+      try {
+        data = await res.json();
+      } catch {
+        data = await res.text();
+      }
+      alert("Erro: " + data);
     }
   } catch (err) {
     console.error(err);
     alert("Erro ao enviar currículo");
   }
 });
+
 
 
 // Chama ao abrir a página
