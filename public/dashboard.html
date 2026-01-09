@@ -39,7 +39,7 @@ body {
 }
 
 .sidebar h2 { text-align:center; font-size:20px; margin-bottom:20px; }
-#usuarioLogado { text-align:center; font-size:13px; color:#eba845; margin-bottom:30px; }
+#usuarioLogado { text-align:center; font-size:13px; color:#f10000; margin-bottom:30px; }
 
 /* MENU LINKS */
 .menu a {
@@ -132,14 +132,6 @@ tbody tr:hover { background:#f8fafc; }
   </div>
 </div>
 
-<div id="modalApresentacao" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);align-items:center;justify-content:center;z-index:9999;">
-  <div style="background:#fff;padding:25px;border-radius:12px;max-width:600px;width:90%;position:relative;">
-    <span id="fecharModal" style="position:absolute;top:10px;right:15px;font-size:20px;font-weight:bold;cursor:pointer;">&times;</span>
-    <h2>Apresentação Profissional</h2>
-    <p id="conteudoApresentacao" style="margin-top:15px;white-space:pre-wrap;"></p>
-  </div>
-</div>
-
 <script>
 const usuario = localStorage.getItem("usuario");
 if (!usuario) {
@@ -191,7 +183,7 @@ async function carregarCurriculos(){
         <td><span class="badge ${c.cargo === "TI" ? "badge-ti" : "badge-adm"}">${c.cargo}</span></td>
         <td>${new Date(c.data).toLocaleDateString()}</td>
         <td class="actions">
-          <a href="javascript:void(0)" onclick='abrirModal(${JSON.stringify(c.apresentacao)})'>Ver</a>
+          <a href="#" onclick="alert('${c.apresentacao || "Sem apresentação"}')">Ver</a>
           <a href="${c.arquivo}" download="${c.nome}-${c.arquivo_nome}">Baixar</a>
         </td>
       </tr>
@@ -226,59 +218,7 @@ function atualizarResumo(curriculos){
   }
 }
 
-// Mostrar botão "Usuários" somente para Matheus
-if(dadosUsuario.nome === "Matheus"){
-  document.getElementById("usuariosLink").style.display = "block";
-}
 
-// Atualiza a função abrirPagina para lidar com 'usuarios'
-function abrirPagina(pagina){
-  const titulo = document.getElementById("tituloPagina");
-  
-  if(pagina === 'curriculos'){
-    titulo.textContent = "Currículos Recebidos";
-    carregarCurriculos();
-    document.getElementById("cardsResumo").style.display = "grid";
-    document.getElementById("listaCurriculos").parentElement.style.display = "block";
-  } 
-  else if(pagina === 'usuarios'){
-    titulo.textContent = "Criar Usuário";
-    // Exibir iframe ou conteúdo do criar-usuario.html
-    document.getElementById("cardsResumo").style.display = "none";
-    document.getElementById("listaCurriculos").parentElement.style.display = "none";
-    
-    // Carrega criar-usuario.html dentro da main
-    const main = document.querySelector('.main');
-    main.innerHTML = `<iframe src="criar-usuario.html" style="width:100%;height:80vh;border:none;"></iframe>`;
-  }
-  else {
-    titulo.textContent = pagina === 'gestao' ? "Gestão de Cargo" : "Instituições e Unidades";
-    document.getElementById("cardsResumo").style.display = "none";
-    document.getElementById("listaCurriculos").parentElement.innerHTML = "<tr><td colspan='8' style='text-align:center;'>Conteúdo não disponível nesta demo</td></tr>";
-  }
-
-  // Atualiza classe active
-  document.querySelectorAll('.menu a').forEach(a => a.classList.remove('active'));
-  const links = Array.from(document.querySelectorAll('.menu a'));
-  links.forEach(a => {
-    if(a.textContent.replace(/\s/g,'').toLowerCase() === pagina.replace(/\s/g,'').toLowerCase())
-      a.classList.add('active');
-  });
-}
-
-// Modal
-const modal = document.getElementById("modalApresentacao");
-const fecharModal = document.getElementById("fecharModal");
-const conteudoModal = document.getElementById("conteudoApresentacao");
-
-function abrirModal(texto) {
-  conteudoModal.textContent = texto || "Sem apresentação";
-  modal.style.display = "flex";
-}
-
-// Fechar modal
-fecharModal.onclick = () => { modal.style.display = "none"; };
-window.onclick = (e) => { if(e.target == modal) modal.style.display = "none"; };
 
 // Inicializa com currículos
 abrirPagina('curriculos');
