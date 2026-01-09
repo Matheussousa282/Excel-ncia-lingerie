@@ -1,4 +1,5 @@
 import { Pool } from "pg";
+import { autenticar } from "./auth";
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -6,6 +7,12 @@ const pool = new Pool({
 });
 
 export default async function handler(req, res) {
+
+  // 🔐 PROTEÇÃO SIMPLES
+  const usuario = autenticar(req);
+  if (!usuario) {
+    return res.status(401).json({ error: "Não autorizado" });
+  }
 
   if (req.method === "POST") {
     // === Inserir candidato ===
@@ -22,7 +29,9 @@ export default async function handler(req, res) {
         arquivo_nome
       } = req.body;
 
-      if (!arquivo_base64) return res.status(400).send("Arquivo é obrigatório");
+      if (!arquivo_base64) {
+        return res.status(400).send("Arquivo é obrigatório");
+      }
 
       const arquivoBuffer = Buffer.from(arquivo_base64, "base64");
 
@@ -34,14 +43,25 @@ export default async function handler(req, res) {
       `;
 
       const result = await pool.query(query, [
-        nome, telefone || null, email, cargo_id, instituicao_id, unidade_id, apresentacao || null, arquivoBuffer, arquivo_nome
+        nome,
+        telefone || null,
+        email,
+        cargo_id,
+        instituicao_id,
+        unidade_id,
+        apresentacao || null,
+        arquivoBuffer,
+        arquivo_nome
       ]);
 
-      return res.status(200).json({ success: true, id: result.rows[0].id });
+      return res.status(200).json({
+        success: true,
+        id: result.rows[0].id
+      });
 
     } catch (err) {
-      console.error(err);
-      return res.status(500).send("Erro ao salvar candidato: " + err.message);
+      console.error("ERRO POST:", err);
+      return res.status(500).send("Erro ao salvar candidato");
     }
 
   } else if (req.method === "GET") {
@@ -86,8 +106,8 @@ export default async function handler(req, res) {
       return res.status(200).json(curriculos);
 
     } catch (err) {
-      console.error(err);
-      return res.status(500).send("Erro ao buscar candidatos: " + err.message);
+      console.error("ERRO GET:", err);
+      return res.status(500).send("Erro ao buscar candidatos");
     }
 
   } else {
