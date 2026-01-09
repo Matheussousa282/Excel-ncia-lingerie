@@ -52,7 +52,25 @@ tbody tr:hover { background:#f8fafc; }
 
 <h1>Currículos Recebidos</h1>
 
+<div class="cards" id="cardsResumo"></div>
 
+<div class="table-wrapper">
+  <table>
+    <thead>
+      <tr>
+        <th>Nome</th>
+        <th>E-mail</th>
+        <th>Telefone</th>
+        <th>Instituição</th>
+        <th>Unidade</th>
+        <th>Cargo</th>
+        <th>Data</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody id="listaCurriculos"></tbody>
+  </table>
+</div>
 
 <script>
   const usuario = localStorage.getItem("usuario");
