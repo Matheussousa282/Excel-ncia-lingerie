@@ -193,7 +193,18 @@ async function abrirPagina(pagina, event) {
       </div>
     `;
     carregarCurriculos();
-  } else {
+  } 
+  else if(pagina === 'usuarios'){
+    titulo.textContent = "Criar Usuário";
+    // Exibir iframe ou conteúdo do criar-usuario.html
+    document.getElementById("cardsResumo").style.display = "none";
+    document.getElementById("listaCurriculos").parentElement.style.display = "none";
+    
+    // Carrega criar-usuario.html dentro da main
+    const main = document.querySelector('.main');
+    main.innerHTML = `<iframe src="criar-usuario.html" style="width:100%;height:80vh;border:none;"></iframe>`;
+  }
+  else {
     // Carrega a página HTML dentro do container
     try {
       const res = await fetch(pagina);
