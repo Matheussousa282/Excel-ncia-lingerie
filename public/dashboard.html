@@ -86,11 +86,22 @@ tbody tr:hover { background:#f8fafc; }
 
 <div class="sidebar">
     <h2>RH System</h2>
+<p id="usuarioLogado" style="
+  text-align:center;
+  font-size:13px;
+  color:#cbd5f5;
+  margin-top:-25px;
+  margin-bottom:30px;
+"></p>
     <a class="active" onclick="abrirPagina('curriculos.html', event)">Currículos</a>
     <a onclick="abrirPagina('cadastros.html', event)">Gestão de Cargo</a>
     <a onclick="abrirPagina('instituicoes-unidades.html', event)">Instituições e Unidades</a>
+
+    <a onclick="logout()" style="margin-top:40px; color:#fecaca;">
+    Sair
+  </a>
 </div>
-<button onclick="logout()">Sair</button>
+
 <div class="main">
     <iframe id="iframeConteudo" src="curriculos.html"></iframe>
 </div>
@@ -117,6 +128,13 @@ tbody tr:hover { background:#f8fafc; }
 if (!usuario) {
   window.location.href = "login.html";
 }
+
+const dadosUsuario = JSON.parse(usuario);
+
+// Exibe nome do usuário na sidebar
+document.getElementById("usuarioLogado").textContent =
+  "Bem Vindo, " + dadosUsuario.nome;
+
 async function abrirPagina(pagina, event) {
   // Remove active de todos os links
   const links = document.querySelectorAll('.sidebar a');
@@ -222,6 +240,10 @@ function abrirPagina(pagina, event) {
   document.getElementById('iframeConteudo').src = pagina;
 }
 
+function logout() {
+  localStorage.removeItem("usuario");
+  window.location.href = "login.html";
+}
 
 // Carrega currículos ao abrir a página
 carregarCurriculos();
