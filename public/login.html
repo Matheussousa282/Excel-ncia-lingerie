@@ -12,7 +12,6 @@
   --text: #2e2e2e;
   --muted: #6b7280;
   --border: #d1d5db;
-  --white: #ffffff;
 }
 
 * { box-sizing: border-box; }
@@ -120,14 +119,13 @@ button:hover {
       <label for="nome">Usuário</label>
       <input type="text" id="nome" placeholder="Digite seu usuário" required>
 
-
       <label for="senha">Senha</label>
       <input type="password" id="senha" placeholder="••••••••" required>
 
       <button type="submit">Entrar</button>
 
       <div class="error" id="errorMsg">
-        E-mail ou senha inválidos
+        Usuário ou senha inválidos
       </div>
     </form>
 
@@ -141,8 +139,8 @@ button:hover {
 document.getElementById("loginForm").addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  const nome = document.getElementById("nome").value;
-  const senha = document.getElementById("senha").value;
+  const nome = document.getElementById("nome").value.trim();
+  const senha = document.getElementById("senha").value.trim();
   const errorMsg = document.getElementById("errorMsg");
 
   errorMsg.style.display = "none";
@@ -151,21 +149,21 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
     const res = await fetch("/api/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ nome, senha })
+      body: JSON.stringify({ nome, senha }) // login pelo nome de usuário
     });
 
     const data = await res.json();
 
     if (!res.ok) {
-      errorMsg.textContent = data.error || "Erro no login";
+      errorMsg.textContent = data.error || "Usuário ou senha inválidos";
       errorMsg.style.display = "block";
       return;
     }
 
-    // Salva usuário (simples)
+    // Salva usuário no localStorage (como JSON)
     localStorage.setItem("usuario", JSON.stringify(data.usuario));
 
-    // Redireciona
+    // Redireciona para dashboard
     window.location.href = "dashboard.html";
 
   } catch (err) {
@@ -175,5 +173,6 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
   }
 });
 </script>
+
 </body>
 </html>

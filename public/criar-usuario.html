@@ -8,7 +8,6 @@
 <style>
 :root {
   --primary: #c4a264;
-  --dark: #111;
   --bg: #f3f4f6;
   --card: #ffffff;
   --border: #e5e7eb;
@@ -84,33 +83,13 @@ button:hover {
 <div class="card">
   <h1>Criar Usuário</h1>
 
-  <!-- 🔒 autocomplete DESATIVADO -->
   <form id="formUsuario" autocomplete="off">
 
-    <label>Nome</label>
-    <input
-      type="text"
-      id="nome"
-      autocomplete="off"
-      required
-    >
-
-    <label>E-mail</label>
-    <input
-      type="email"
-      id="email"
-      autocomplete="off"
-      required
-    >
+    <label>Nome de Usuário</label>
+    <input type="text" id="nome" autocomplete="off" required>
 
     <label>Senha</label>
-    <!-- 🔑 IMPEDE SENHA AUTOMÁTICA -->
-    <input
-      type="password"
-      id="senha"
-      autocomplete="new-password"
-      required
-    >
+    <input type="password" id="senha" autocomplete="new-password" required>
 
     <button type="submit">Criar Usuário</button>
   </form>
@@ -124,7 +103,6 @@ document.getElementById("formUsuario").addEventListener("submit", async (e) => {
 
   const body = {
     nome: document.getElementById("nome").value,
-    email: document.getElementById("email").value,
     senha: document.getElementById("senha").value
   };
 
@@ -141,8 +119,9 @@ document.getElementById("formUsuario").addEventListener("submit", async (e) => {
     msg.textContent = "Usuário criado com sucesso!";
     e.target.reset();
   } else {
+    const data = await res.json();
     msg.style.color = "red";
-    msg.textContent = "Erro ao criar usuário";
+    msg.textContent = data.error || "Erro ao criar usuário";
   }
 });
 </script>
