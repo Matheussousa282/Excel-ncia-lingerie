@@ -22,17 +22,19 @@ body {
   background: linear-gradient(135deg, #000000, #c59845);
   min-height: 100vh;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
+  padding: 20px;
 }
 
 .card {
   width: 100%;
-  max-width: 420px;
+  max-width: 500px;
   background: var(--card);
   padding: 30px;
   border-radius: 14px;
   box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+  margin-bottom: 30px;
 }
 
 h1 {
@@ -76,6 +78,32 @@ button:hover {
   margin-top: 15px;
   font-size: 14px;
 }
+
+table {
+  width: 100%;
+  max-width: 500px;
+  border-collapse: collapse;
+  margin-bottom: 50px;
+  background: var(--card);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+}
+
+th, td {
+  padding: 10px 15px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+th {
+  background: #f3f4f6;
+  font-weight: 600;
+}
+
+tbody tr:hover {
+  background: #f9fafb;
+}
 </style>
 </head>
 <body>
@@ -84,7 +112,6 @@ button:hover {
   <h1>Criar Usuário</h1>
 
   <form id="formUsuario" autocomplete="off">
-
     <label>Nome de Usuário</label>
     <input type="text" id="nome" autocomplete="off" required>
 
@@ -97,7 +124,50 @@ button:hover {
   <div class="msg" id="msg"></div>
 </div>
 
+<!-- Tabela de usuários -->
+<div class="card">
+  <h1>Usuários Cadastrados</h1>
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Nome</th>
+        <th>Senha</th>
+        <th>Criado em</th>
+      </tr>
+    </thead>
+    <tbody id="listaUsuarios">
+      <tr><td colspan="4" style="text-align:center;">Carregando...</td></tr>
+    </tbody>
+  </table>
+</div>
+
 <script>
+async function listarUsuarios() {
+  const tbody = document.getElementById("listaUsuarios");
+  try {
+    const res = await fetch("/api/usuarios");
+    if(!res.ok) throw new Error("Erro ao buscar usuários");
+    const usuarios = await res.json();
+
+    tbody.innerHTML = usuarios.length
+      ? usuarios.map(u => `
+        <tr>
+          <td>${u.id}</td>
+          <td>${u.nome}</td>
+          <td>${u.senha}</td>
+          <td>${new Date(u.criado_em).toLocaleString()}</td>
+        </tr>
+      `).join("")
+      : `<tr><td colspan="4" style="text-align:center;">Nenhum usuário cadastrado</td></tr>`;
+
+  } catch(err){
+    console.error(err);
+    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:red;">Erro ao carregar usuários</td></tr>`;
+  }
+}
+
+// Criar usuário
 document.getElementById("formUsuario").addEventListener("submit", async (e) => {
   e.preventDefault();
 
@@ -118,12 +188,16 @@ document.getElementById("formUsuario").addEventListener("submit", async (e) => {
     msg.style.color = "green";
     msg.textContent = "Usuário criado com sucesso!";
     e.target.reset();
+    listarUsuarios(); // Atualiza a tabela
   } else {
     const data = await res.json();
     msg.style.color = "red";
     msg.textContent = data.error || "Erro ao criar usuário";
   }
 });
+
+// Carregar a lista ao abrir a página
+listarUsuarios();
 </script>
 
 </body>
