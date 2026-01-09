@@ -1,4 +1,5 @@
 import { Pool } from "pg";
+import bcrypt from "bcryptjs";
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -7,24 +8,38 @@ const pool = new Pool({
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
-    return res.status(405).send("Método não permitido");
+    return res.status(405).json({ error: "Método não permitido" });
   }
 
   const { nome, email, senha } = req.body;
 
-  if (!nome || !email || !senha) {
-    return res.status(400).send("Dados obrigatórios");
+  if (!nome || !senha) {
+    return res.status(400).json({ error: "Nome e senha são obrigatórios" });
   }
 
   try {
-    await pool.query(
-      "INSERT INTO usuarios (nome, email, senha) VALUES ($1,$2,$3)",
-      [nome, email, senha]
+    // verifica se usuário já existe
+    const existe = await pool.query(
+      "SELECT id FROM usuarios WHERE nome = $1",
+      [nome]
     );
 
-    res.status(200).json({ success: true });
+    if (existe.rows.length > 0) {
+      return res.status(400).json({ error: "Usuário já existe" });
+    }
+
+    // criptografa senha
+    const senhaHash = await bcrypt.hash(senha, 10);
+
+    await pool.query(
+      "INSERT INTO usuarios (nome, email, senha) VALUES ($1,$2,$3)",
+      [nome, email || null, senhaHash]
+    );
+
+    return res.status(201).json({ success: true });
+
   } catch (err) {
-    console.error(err);
-    res.status(500).send("Erro ao criar usuário");
+    console.error("ERRO AO CRIAR USUÁRIO:", err);
+    return res.status(500).json({ error: "Erro interno no servidor" });
   }
 }
