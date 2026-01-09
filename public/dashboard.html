@@ -58,7 +58,7 @@ body { font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background
   font-weight: 600;
   cursor:pointer;
 }
-.logout:hover { background: rgb(219, 18, 18); color: #ff0404; }
+.logout:hover { background: rgb(226, 6, 6); color: #ff0404; }
 </style>
 </head>
 <body>
@@ -95,7 +95,7 @@ const usuario = localStorage.getItem("usuario");
 if(!usuario) { window.location.href="login.html"; }
 
 const dadosUsuario = JSON.parse(usuario);
-document.getElementById("usuarioLogado").textContent = "Bem Vindo, " + dadosUsuario.nome;
+document.getElementById("usuarioLogado").textContent = "Bem Vindo " + dadosUsuario.nome;
 
 // Mostrar botão "Usuários" somente para Matheus
 if(dadosUsuario.nome === "Matheus"){
