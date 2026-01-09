@@ -1,5 +1,4 @@
 import { Pool } from "pg";
-import bcrypt from "bcryptjs";
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -13,33 +12,31 @@ export default async function handler(req, res) {
 
   const { nome, email, senha } = req.body;
 
-  if (!nome || !senha) {
-    return res.status(400).json({ error: "Nome e senha são obrigatórios" });
+  if (!nome || !email || !senha) {
+    return res.status(400).json({ error: "Dados obrigatórios" });
   }
 
   try {
     // verifica se usuário já existe
     const existe = await pool.query(
-      "SELECT id FROM usuarios WHERE nome = $1",
-      [nome]
+      "SELECT id FROM usuarios WHERE email = $1",
+      [email]
     );
 
     if (existe.rows.length > 0) {
       return res.status(400).json({ error: "Usuário já existe" });
     }
 
-    // criptografa senha
-    const senhaHash = await bcrypt.hash(senha, 10);
-
+    // SALVA A SENHA DO JEITO QUE FOI DIGITADA
     await pool.query(
-      "INSERT INTO usuarios (nome, email, senha) VALUES ($1,$2,$3)",
-      [nome, email || null, senhaHash]
+      "INSERT INTO usuarios (nome, email, senha) VALUES ($1, $2, $3)",
+      [nome, email, senha]
     );
 
     return res.status(201).json({ success: true });
 
   } catch (err) {
-    console.error("ERRO AO CRIAR USUÁRIO:", err);
-    return res.status(500).json({ error: "Erro interno no servidor" });
+    console.error("ERRO:", err);
+    return res.status(500).json({ error: "Erro no servidor" });
   }
 }

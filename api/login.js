@@ -1,8 +1,7 @@
 import { Pool } from "pg";
 
 const pool = new Pool({
-  connectionString:
-    process.env.DATABASE_URL || process.env.DATABASE_URL_RH,
+  connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false }
 });
 
@@ -14,33 +13,25 @@ export default async function handler(req, res) {
   const { nome, senha } = req.body;
 
   if (!nome || !senha) {
-    return res.status(400).json({ error: "Dados obrigatórios" });
+    return res.status(400).json({ error: "Nome e senha obrigatórios" });
   }
 
   try {
-    const query = `
-      SELECT id, nome, email
-      FROM usuarios
-      WHERE nome = $1 AND senha = $2
-      LIMIT 1
-    `;
-
-    const result = await pool.query(query, [nome, senha]);
+    // procura usuário pelo nome e senha exata
+    const result = await pool.query(
+      "SELECT id, nome FROM usuarios WHERE nome = $1 AND senha = $2",
+      [nome, senha]
+    );
 
     if (result.rows.length === 0) {
-      return res.status(401).json({ error: "Usuário ou senha inválidos" });
+      return res.status(401).json({ error: "Usuário ou senha incorretos" });
     }
 
-    // Login OK
-    const usuario = result.rows[0];
-
-    return res.status(200).json({
-      success: true,
-      usuario
-    });
+    // retorna dados do usuário (pode salvar no localStorage depois)
+    return res.status(200).json({ usuario: result.rows[0] });
 
   } catch (err) {
-    console.error("Erro no login:", err);
-    return res.status(500).json({ error: "Erro interno no servidor" });
+    console.error("ERRO LOGIN:", err);
+    return res.status(500).json({ error: "Erro no servidor" });
   }
 }
