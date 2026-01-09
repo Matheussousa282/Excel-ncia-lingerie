@@ -55,14 +55,11 @@ tbody tr:hover { background:#f8fafc; }
 <div class="cards" id="cardsResumo"></div>
 
 <div style="margin-bottom: 20px; display:flex; gap:15px; flex-wrap:wrap;">
-  <input type="text" id="filtroNome" placeholder="Filtrar por nome" style="padding:8px; border-radius:6px; border:1px solid #ccc;">
-  <input type="text" id="filtroEmail" placeholder="Filtrar por e-mail" style="padding:8px; border-radius:6px; border:1px solid #ccc;">
-  <select id="filtroCargo" style="padding:8px; border-radius:6px; border:1px solid #ccc;">
-    <option value="">Todos os cargos</option>
-  </select>
-  <select id="filtroUnidade" style="padding:8px; border-radius:6px; border:1px solid #ccc;">
-    <option value="">Todas as unidades</option>
-  </select>
+  <input type="text" id="filtroNome" placeholder="Filtrar por nome">
+  <input type="text" id="filtroEmail" placeholder="Filtrar por e-mail">
+  <select id="filtroCargo"><option value="">Todos os cargos</option></select>
+  <select id="filtroUnidade"><option value="">Todas as unidades</option></select>
+  <select id="filtroInstituicao"><option value="">Todas as instituições</option></select>
 </div>
 
 
@@ -103,64 +100,22 @@ if (!usuario) {
 }
 // Carrega currículos da API
 async function carregarCurriculos() {
-  try {
-    const res = await fetch("/api/candidatos");
-    if (!res.ok) throw new Error("Erro ao buscar currículos");
-    const curriculos = await res.json();
-
-    // Preencher tabela
-    const tbody = document.getElementById("listaCurriculos");
-    tbody.innerHTML = curriculos.map(c => `
-      <tr>
-        <td>${c.nome}</td>
-        <td>${c.email}</td>
-        <td>${c.telefone || "-"}</td>
-        <td>${c.instituicao}</td>
-        <td>${c.unidade}</td>
-        <td><span class="badge ${c.cargo === "TI" ? "badge-ti" : "badge-adm"}">${c.cargo}</span></td>
-        <td>${new Date(c.data).toLocaleDateString()}</td>
-        <td class="actions">
-          <a href="javascript:void(0)" onclick='abrirModal(${JSON.stringify(c.apresentacao)})'>Ver</a>
-          <a href="${c.arquivo}" download="${c.nome}-${c.arquivo_nome}">Baixar</a>
-        </td>
-      </tr>
-    `).join("");
-
-    // Preencher cards
-    atualizarResumo(curriculos);
-
-  } catch(err) {
-    console.error(err);
-    document.body.innerHTML = `<p style="color:red;">Erro ao carregar currículos: ${err.message}</p>`;
-  }
-
-  // Preencher opções de filtro
-const selectCargo = document.getElementById("filtroCargo");
-const selectUnidade = document.getElementById("filtroUnidade");
-
-const cargosUnicos = [...new Set(curriculos.map(c => c.cargo))];
-cargosUnicos.forEach(c => selectCargo.innerHTML += `<option value="${c}">${c}</option>`);
-
-const unidadesUnicas = [...new Set(curriculos.map(c => c.unidade))];
-unidadesUnicas.forEach(u => selectUnidade.innerHTML += `<option value="${u}">${u}</option>`);
-
-// Função de filtragem
-function aplicarFiltros() {
-  const nomeFiltro = document.getElementById("filtroNome").value.toLowerCase();
-  const emailFiltro = document.getElementById("filtroEmail").value.toLowerCase();
-  const cargoFiltro = selectCargo.value;
-  const unidadeFiltro = selectUnidade.value;
-
-  const curriculosFiltrados = curriculos.filter(c => 
-    c.nome.toLowerCase().includes(nomeFiltro) &&
-    c.email.toLowerCase().includes(emailFiltro) &&
-    (cargoFiltro === "" || c.cargo === cargoFiltro) &&
-    (unidadeFiltro === "" || c.unidade === unidadeFiltro)
-  );
+  const res = await fetch("/api/candidatos");
+  if (!res.ok) throw new Error("Erro ao buscar currículos");
+  curriculos = await res.json();
 
   // Atualiza tabela e cards
+  atualizarTabela(curriculos);
+  atualizarResumo(curriculos);
+
+  // Preenche filtros do front-end
+  preencherFiltros(curriculos);
+}
+
+// Atualiza tabela
+function atualizarTabela(lista) {
   const tbody = document.getElementById("listaCurriculos");
-  tbody.innerHTML = curriculosFiltrados.map(c => `
+  tbody.innerHTML = lista.map(c => `
     <tr>
       <td>${c.nome}</td>
       <td>${c.email}</td>
@@ -175,37 +130,22 @@ function aplicarFiltros() {
       </td>
     </tr>
   `).join("");
-
-  atualizarResumo(curriculosFiltrados);
 }
 
-// Adicionar eventos aos filtros
-document.getElementById("filtroNome").addEventListener("input", aplicarFiltros);
-document.getElementById("filtroEmail").addEventListener("input", aplicarFiltros);
-selectCargo.addEventListener("change", aplicarFiltros);
-selectUnidade.addEventListener("change", aplicarFiltros);
-
-}
-
-// Atualiza os cards de resumo
-function atualizarResumo(curriculos){
+// Atualiza cards
+function atualizarResumo(lista) {
   const container = document.getElementById("cardsResumo");
   container.innerHTML = "";
 
-  // Total de currículos
   const totalCard = document.createElement("div");
   totalCard.className = "card";
-  totalCard.innerHTML = `<h3>Total de Currículos</h3><p>${curriculos.length}</p>`;
+  totalCard.innerHTML = `<h3>Total de Currículos</h3><p>${lista.length}</p>`;
   container.appendChild(totalCard);
 
-  // Quantidade por cargo
   const cargosMap = {};
-  curriculos.forEach(c => {
-    if (!cargosMap[c.cargo]) cargosMap[c.cargo] = 0;
-    cargosMap[c.cargo]++;
-  });
+  lista.forEach(c => { cargosMap[c.cargo] = (cargosMap[c.cargo] || 0) + 1; });
 
-  for(const [cargo, qtd] of Object.entries(cargosMap)){
+  for (const [cargo, qtd] of Object.entries(cargosMap)) {
     const card = document.createElement("div");
     card.className = "card";
     card.innerHTML = `<h3>${cargo}</h3><p>${qtd}</p>`;
@@ -213,6 +153,48 @@ function atualizarResumo(curriculos){
   }
 }
 
+// Preenche os selects com valores únicos do front-end
+function preencherFiltros(lista) {
+  const selectCargo = document.getElementById("filtroCargo");
+  const selectUnidade = document.getElementById("filtroUnidade");
+  const selectInstituicao = document.getElementById("filtroInstituicao");
+
+  const cargosUnicos = [...new Set(lista.map(c => c.cargo))];
+  cargosUnicos.forEach(c => selectCargo.innerHTML += `<option value="${c}">${c}</option>`);
+
+  const unidadesUnicas = [...new Set(lista.map(c => c.unidade))];
+  unidadesUnicas.forEach(u => selectUnidade.innerHTML += `<option value="${u}">${u}</option>`);
+
+  const instituicoesUnicas = [...new Set(lista.map(c => c.instituicao))];
+  instituicoesUnicas.forEach(i => selectInstituicao.innerHTML += `<option value="${i}">${i}</option>`);
+}
+
+// Aplica filtros
+function aplicarFiltros() {
+  const nomeFiltro = document.getElementById("filtroNome").value.toLowerCase();
+  const emailFiltro = document.getElementById("filtroEmail").value.toLowerCase();
+  const cargoFiltro = document.getElementById("filtroCargo").value;
+  const unidadeFiltro = document.getElementById("filtroUnidade").value;
+  const instituicaoFiltro = document.getElementById("filtroInstituicao").value;
+
+  const filtrados = curriculos.filter(c => 
+    c.nome.toLowerCase().includes(nomeFiltro) &&
+    c.email.toLowerCase().includes(emailFiltro) &&
+    (cargoFiltro === "" || c.cargo === cargoFiltro) &&
+    (unidadeFiltro === "" || c.unidade === unidadeFiltro) &&
+    (instituicaoFiltro === "" || c.instituicao === instituicaoFiltro)
+  );
+
+  atualizarTabela(filtrados);
+  atualizarResumo(filtrados);
+}
+
+// Eventos de filtros
+document.getElementById("filtroNome").addEventListener("input", aplicarFiltros);
+document.getElementById("filtroEmail").addEventListener("input", aplicarFiltros);
+document.getElementById("filtroCargo").addEventListener("change", aplicarFiltros);
+document.getElementById("filtroUnidade").addEventListener("change", aplicarFiltros);
+document.getElementById("filtroInstituicao").addEventListener("change", aplicarFiltros);
 
 const modal = document.getElementById("modalApresentacao");
 const fecharModal = document.getElementById("fecharModal");
