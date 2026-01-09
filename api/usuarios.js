@@ -11,35 +11,40 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Método não permitido" });
   }
 
-  const { nome, email, senha } = req.body;
+  const { nome, senha } = req.body;
 
   if (!nome || !senha) {
-    return res.status(400).json({ error: "Nome e senha são obrigatórios" });
+    return res.status(400).json({ error: "Nome e senha obrigatórios" });
   }
 
   try {
-    // verifica se usuário já existe
-    const existe = await pool.query(
-      "SELECT id FROM usuarios WHERE nome = $1",
+    const result = await pool.query(
+      "SELECT id, nome, senha FROM usuarios WHERE nome = $1",
       [nome]
     );
 
-    if (existe.rows.length > 0) {
-      return res.status(400).json({ error: "Usuário já existe" });
+    if (result.rows.length === 0) {
+      return res.status(401).json({ error: "Usuário ou senha inválidos" });
     }
 
-    // criptografa senha
-    const senhaHash = await bcrypt.hash(senha, 10);
+    const usuario = result.rows[0];
 
-    await pool.query(
-      "INSERT INTO usuarios (nome, email, senha) VALUES ($1,$2,$3)",
-      [nome, email || null, senhaHash]
-    );
+    const senhaOk = await bcrypt.compare(senha, usuario.senha);
 
-    return res.status(201).json({ success: true });
+    if (!senhaOk) {
+      return res.status(401).json({ error: "Usuário ou senha inválidos" });
+    }
+
+    return res.status(200).json({
+      success: true,
+      usuario: {
+        id: usuario.id,
+        nome: usuario.nome
+      }
+    });
 
   } catch (err) {
-    console.error("ERRO AO CRIAR USUÁRIO:", err);
-    return res.status(500).json({ error: "Erro interno no servidor" });
+    console.error("ERRO LOGIN:", err);
+    return res.status(500).json({ error: "Erro interno" });
   }
 }
