@@ -264,7 +264,10 @@ async function carregarCurriculos() {
     `).join("");
 
     atualizarResumo(curriculos);
-  } catch(err) { console.error(err); }
+  } catch(err){
+    console.error(err);
+    document.getElementById("listaCurriculos").innerHTML = "<tr><td colspan='8'>Erro ao carregar currículos</td></tr>";
+  }
 }
 
 // Atualiza os cards com estatísticas
