@@ -146,6 +146,9 @@ tbody tr:hover { background:#f8fafc; }
 if (!usuario) {
   window.location.href = "login.html";
 }
+
+let curriculos = []; // <<< FIX
+
 // Carrega currículos da API
 async function carregarCurriculos() {
   const res = await fetch("/api/candidatos");
