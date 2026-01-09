@@ -169,15 +169,12 @@ document.getElementById("usuarioLogado").textContent = "Bem-vindo, " + dadosUsua
 
 // Menu navigation
 function abrirPagina(pagina){
-  const titulo = document.getElementById("tituloPagina");
-  if(pagina === 'curriculos'){
-    titulo.textContent = "Currículos Recebidos";
-    carregarCurriculos();
-  } else {
-    titulo.textContent = pagina === 'gestao' ? "Gestão de Cargo" : "Instituições e Unidades";
-    document.getElementById("cardsResumo").innerHTML = "";
-    document.getElementById("listaCurriculos").innerHTML = "<tr><td colspan='8' style='text-align:center;'>Conteúdo não disponível nesta demo</td></tr>";
-  }
+  const paginas = {
+    curriculos: document.getElementById("paginaCurriculos"),
+    gestao: document.getElementById("paginaGestao"),
+    instituicoes: document.getElementById("paginaInstituicoes"),
+    usuarios: document.getElementById("paginaUsuarios")
+  };
 
   // Atualiza classe active
   document.querySelectorAll('.menu a').forEach(a => a.classList.remove('active'));
