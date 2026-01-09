@@ -137,7 +137,7 @@ tbody tr:hover {
       </tr>
     </thead>
     <tbody id="listaUsuarios">
-      <tr><td colspan="4" style="text-align:center;">Carregando...</td></tr>
+       <tr><td colspan="5" style="text-align:center;">Carregando...</td></tr>
     </tbody>
   </table>
 </div>
@@ -155,7 +155,10 @@ async function listarUsuarios() {
         <tr>
           <td>${u.id}</td>
           <td>${u.nome}</td>
-          <td>${u.senha}</td>
+          <td>
+            <input type="password" value="${u.senha}" readonly style="border:none;background:transparent;width:100%;font-family:inherit;">
+            <button onclick="toggleSenha(this)" style="margin-left:5px;">👁️</button>
+          </td>
           <td>${new Date(u.criado_em).toLocaleString()}</td>
         </tr>
       `).join("")
@@ -164,6 +167,18 @@ async function listarUsuarios() {
   } catch(err){
     console.error(err);
     tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:red;">Erro ao carregar usuários</td></tr>`;
+  }
+}
+
+// Função para alternar senha visível
+function toggleSenha(button) {
+  const input = button.previousElementSibling;
+  if(input.type === "password"){
+    input.type = "text";
+    button.textContent = "🙈"; // opcional: muda ícone
+  } else {
+    input.type = "password";
+    button.textContent = "👁️";
   }
 }
 
