@@ -32,9 +32,9 @@ export default async function handler(req, res) {
     const senhaHash = await bcrypt.hash(senha, 10);
 
     await pool.query(
-      "INSERT INTO usuarios (nome, email, senha) VALUES ($1,$2,$3)",
-      [nome, email || null, senha]
-    );
+  "INSERT INTO usuarios (nome, email, senha) VALUES ($1,$2,$3)",
+  [nome, email || null, senha] // senha pura
+);
 
     return res.status(201).json({ success: true });
 
