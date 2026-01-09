@@ -1,5 +1,5 @@
 import { Pool } from "pg";
-
+import bcrypt from "bcryptjs";
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -32,9 +32,9 @@ export default async function handler(req, res) {
     const senhaHash = await bcrypt.hash(senha, 10);
 
     await pool.query(
-  "INSERT INTO usuarios (nome, email, senha) VALUES ($1,$2,$3)",
-  [nome, email || null, senha] // senha pura
-);
+      "INSERT INTO usuarios (nome, email, senha) VALUES ($1,$2,$3)",
+      [nome, email || null, senhaHash]
+    );
 
     return res.status(201).json({ success: true });
 
