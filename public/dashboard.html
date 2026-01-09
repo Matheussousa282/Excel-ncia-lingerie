@@ -111,32 +111,24 @@ tbody tr:hover { background:#f8fafc; }
 </div>
 
 <div class="main">
-  <!-- Página Currículos -->
-  <div id="paginaCurriculos">
-    <h1 id="tituloPagina">Currículos Recebidos</h1>
-    <div class="cards" id="cardsResumo"></div>
-    <div class="table-wrapper">
-      <table>
-        <thead>
-          <tr>
-            <th>Nome</th>
-            <th>E-mail</th>
-            <th>Telefone</th>
-            <th>Instituição</th>
-            <th>Unidade</th>
-            <th>Cargo</th>
-            <th>Data</th>
-            <th>Ações</th>
-          </tr>
-        </thead>
-        <tbody id="listaCurriculos"></tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- Página iframe para outras telas -->
-  <div id="paginaIframe" style="display:none;width:100%;height:80vh;">
-    <iframe id="iframePagina" src="" style="width:100%;height:100%;border:none;"></iframe>
+  <h1 id="tituloPagina">Currículos Recebidos</h1>
+  <div class="cards" id="cardsResumo"></div>
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>E-mail</th>
+          <th>Telefone</th>
+          <th>Instituição</th>
+          <th>Unidade</th>
+          <th>Cargo</th>
+          <th>Data</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody id="listaCurriculos"></tbody>
+    </table>
   </div>
 </div>
 
@@ -158,42 +150,20 @@ document.getElementById("usuarioLogado").textContent = "Bem-vindo, " + dadosUsua
 
 // Menu navigation
 function abrirPagina(pagina){
-  const paginaCurriculos = document.getElementById("paginaCurriculos");
-  const paginaIframe = document.getElementById("paginaIframe");
-  const iframe = document.getElementById("iframePagina");
   const titulo = document.getElementById("tituloPagina");
-
-  // Reset: esconde tudo
-  paginaCurriculos.style.display = "none";
-  paginaIframe.style.display = "none";
-
-  // Atualiza classe active no menu
-  document.querySelectorAll('.menu a').forEach(a => a.classList.remove('active'));
-  const link = Array.from(document.querySelectorAll('.menu a'))
-                     .find(a => a.textContent.replace(/\s/g,'').toLowerCase() === pagina.toLowerCase());
-  if(link) link.classList.add('active');
-
-  // Decide o que mostrar
-  if(pagina === "curriculos"){
-    paginaCurriculos.style.display = "block";
+  if(pagina === 'curriculos'){
     titulo.textContent = "Currículos Recebidos";
     carregarCurriculos();
+  } else {
+    titulo.textContent = pagina === 'gestao' ? "Gestão de Cargo" : "Instituições e Unidades";
+    document.getElementById("cardsResumo").innerHTML = "";
+    document.getElementById("listaCurriculos").innerHTML = "<tr><td colspan='8' style='text-align:center;'>Conteúdo não disponível nesta demo</td></tr>";
   }
-  else if(pagina === "gestao"){
-    paginaIframe.style.display = "block";
-    iframe.src = "cadastro.html";
-    titulo.textContent = "Gestão de Cargo";
-  }
-  else if(pagina === "instituicoes"){
-    paginaIframe.style.display = "block";
-    iframe.src = "instituicoes-unidades.html";
-    titulo.textContent = "Instituições e Unidades";
-  }
-  else if(pagina === "usuarios"){
-    paginaIframe.style.display = "block";
-    iframe.src = "criar-usuario.html";
-    titulo.textContent = "Criar Usuário";
-  }
+
+  // Atualiza classe active
+  document.querySelectorAll('.menu a').forEach(a => a.classList.remove('active'));
+  const links = Array.from(document.querySelectorAll('.menu a'));
+  links.forEach(a => { if(a.textContent.replace(/\s/g,'').toLowerCase() === pagina.replace(/\s/g,'').toLowerCase()) a.classList.add('active'); });
 }
 
 // Logout
