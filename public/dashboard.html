@@ -88,19 +88,25 @@ tbody tr:hover { background:#f8fafc; }
 <body>
 
 <div class="sidebar">
-    <h2>RH System</h2>
-<p id="usuarioLogado" style="
-  text-align:center;
-  font-size:13px;
-  color:#cbd5f5;
-  margin-top:-25px;
-  margin-bottom:30px;
-"></p>
+  <h2>RH System</h2>
+
+  <p id="usuarioLogado" style="
+    text-align:center;
+    font-size:13px;
+    color:#cbd5f5;
+    margin-top:-25px;
+    margin-bottom:30px;
+  "></p>
+
+  <!-- MENU -->
+  <div class="menu">
     <a class="active" onclick="abrirPagina('curriculos.html', event)">Currículos</a>
     <a onclick="abrirPagina('cadastros.html', event)">Gestão de Cargo</a>
     <a onclick="abrirPagina('instituicoes-unidades.html', event)">Instituições e Unidades</a>
+  </div>
 
-    <a onclick="logout()" style="margin-top:40px; color:#fecaca;">
+  <!-- LOGOUT -->
+  <a onclick="logout()" class="logout">
     Sair
   </a>
 </div>
