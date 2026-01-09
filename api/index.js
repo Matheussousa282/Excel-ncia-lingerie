@@ -1,7 +1,7 @@
 import { Pool } from "pg";
 
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL_RH,
+  connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false },
 });
 
@@ -53,4 +53,3 @@ export default async function handler(req, res) {
     res.status(500).send("Erro ao buscar candidatos: " + err.message);
   }
 }
-
