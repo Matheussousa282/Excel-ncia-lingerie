@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>RH | Dashboard</title>
-
 <style>
 :root {
   --primary: #2563eb;
@@ -35,20 +34,39 @@ body {
   color: #fff;
   position: fixed;
   padding: 25px 20px;
-
   display: flex;
   flex-direction: column;
 }
 
-.sidebar h2 { text-align:center; font-size:20px; margin-bottom:40px; }
-.sidebar a {
-  display: block; color:#cbd5f5; text-decoration:none;
-  padding:12px 14px; border-radius:8px; margin-bottom:8px; font-size:14px;
+.sidebar h2 { text-align:center; font-size:20px; margin-bottom:20px; }
+#usuarioLogado { text-align:center; font-size:13px; color:#f10000; margin-bottom:30px; }
+
+/* MENU LINKS */
+.menu a {
+  display: block; 
+  color:#cbd5f5; 
+  text-decoration:none;
+  padding:12px 14px; 
+  border-radius:8px; 
+  margin-bottom:8px; 
+  font-size:14px;
   cursor:pointer;
 }
-.sidebar a.active, .sidebar a:hover { background: rgba(255,255,255,0.1); color:#fff; }
+.menu a.active, .menu a:hover { background: rgba(255,255,255,0.1); color:#fff; }
 
-/* MAIN */
+/* LOGOUT */
+.logout {
+  margin-top: auto;
+  padding:12px 14px;
+  text-align:center;
+  color: #f50808;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.logout:hover { background: rgb(219, 18, 18); color: #fff; }
+
+/* MAIN CONTENT */
 .main { margin-left:260px; padding:30px; min-height:100vh; }
 
 /* CARDS */
@@ -74,71 +92,38 @@ tbody tr:hover { background:#f8fafc; }
 .actions a { text-decoration:none; font-size:13px; margin-right:10px; color: var(--primary); }
 .actions a:hover { text-decoration:underline; }
 
-/* RESPONSIVE */
-@media (max-width:900px) { .sidebar { display:none; } .main { margin-left:0; } }
-
-.main iframe {
-  width: 100%;
-  height: calc(100vh - 0px); /* ajuste se precisar */
-  border: none;
-}
-
-.menu {
-  flex: 1; /* ocupa todo espaço disponível */
-}
-
-.logout {
-  margin-top: auto;
-  color: #f50808;
-  font-weight: 600;
-}
-
-.logout:hover {
-  background: rgb(219, 18, 18);
-  color: #fff;
-}
-
 </style>
 </head>
 <body>
 
 <div class="sidebar">
   <h2>RH System</h2>
+  <p id="usuarioLogado"></p>
 
-  <p id="usuarioLogado" style="
-    text-align:center;
-    font-size:13px;
-    color:#f10000;
-    margin-top:-25px;
-    margin-bottom:30px;
-  "></p>
-
-  <!-- MENU -->
   <div class="menu">
-    <a class="active" onclick="abrirPagina('curriculos.html', event)">Currículos</a>
-    <a onclick="abrirPagina('cadastros.html', event)">Gestão de Cargo</a>
-    <a onclick="abrirPagina('instituicoes-unidades.html', event)">Instituições e Unidades</a>
+    <a class="active" onclick="abrirPagina('curriculos')">Currículos</a>
+    <a onclick="abrirPagina('gestao')">Gestão de Cargo</a>
+    <a onclick="abrirPagina('instituicoes')">Instituições e Unidades</a>
   </div>
 
-  <!-- LOGOUT -->
-  <a onclick="logout()" class="logout">
-    Sair
-  </a>
+  <div class="logout" onclick="logout()">Sair</div>
 </div>
 
 <div class="main">
-    <iframe id="iframeConteudo" src="curriculos.html"></iframe>
-</div>
-
-  <!-- Conteúdo inicial: Currículos -->
-  <h1>Currículos Recebidos</h1>
+  <h1 id="tituloPagina">Currículos Recebidos</h1>
   <div class="cards" id="cardsResumo"></div>
   <div class="table-wrapper">
     <table>
       <thead>
         <tr>
-          <th>Nome</th><th>E-mail</th><th>Telefone</th><th>Instituição</th>
-          <th>Unidade</th><th>Cargo</th><th>Data</th><th>Ações</th>
+          <th>Nome</th>
+          <th>E-mail</th>
+          <th>Telefone</th>
+          <th>Instituição</th>
+          <th>Unidade</th>
+          <th>Cargo</th>
+          <th>Data</th>
+          <th>Ações</th>
         </tr>
       </thead>
       <tbody id="listaCurriculos"></tbody>
@@ -147,66 +132,45 @@ tbody tr:hover { background:#f8fafc; }
 </div>
 
 <script>
-  const usuario = localStorage.getItem("usuario");
-
+const usuario = localStorage.getItem("usuario");
 if (!usuario) {
   window.location.href = "login.html";
 }
-
 const dadosUsuario = JSON.parse(usuario);
+document.getElementById("usuarioLogado").textContent = "Bem-vindo, " + dadosUsuario.nome;
 
-// Exibe nome do usuário na sidebar
-document.getElementById("usuarioLogado").textContent =
-  "Bem Vindo, " + dadosUsuario.nome;
-
-async function abrirPagina(pagina, event) {
-  // Remove active de todos os links
-  const links = document.querySelectorAll('.sidebar a');
-  links.forEach(link => link.classList.remove('active'));
-  
-  // Adiciona active no clicado
-  event.currentTarget.classList.add('active');
-
-  const conteudo = document.getElementById("conteudoPrincipal");
-
-  if (pagina === 'curriculos') {
-    // Restaurar tela de currículos
-    conteudo.innerHTML = `
-      <h1>Currículos Recebidos</h1>
-      <div class="cards" id="cardsResumo"></div>
-      <div class="table-wrapper">
-        <table>
-          <thead>
-            <tr>
-              <th>Nome</th><th>E-mail</th><th>Telefone</th><th>Instituição</th>
-              <th>Unidade</th><th>Cargo</th><th>Data</th><th>Ações</th>
-            </tr>
-          </thead>
-          <tbody id="listaCurriculos"></tbody>
-        </table>
-      </div>
-    `;
+// Menu navigation
+function abrirPagina(pagina){
+  const titulo = document.getElementById("tituloPagina");
+  if(pagina === 'curriculos'){
+    titulo.textContent = "Currículos Recebidos";
     carregarCurriculos();
   } else {
-    // Carrega a página HTML dentro do container
-    try {
-      const res = await fetch(pagina);
-      if (!res.ok) throw new Error("Erro ao carregar a página");
-      const html = await res.text();
-      conteudo.innerHTML = html;
-    } catch (err) {
-      conteudo.innerHTML = `<p style="color:red;">Erro ao carregar a página: ${err.message}</p>`;
-    }
+    titulo.textContent = pagina === 'gestao' ? "Gestão de Cargo" : "Instituições e Unidades";
+    document.getElementById("cardsResumo").innerHTML = "";
+    document.getElementById("listaCurriculos").innerHTML = "<tr><td colspan='8' style='text-align:center;'>Conteúdo não disponível nesta demo</td></tr>";
   }
+
+  // Atualiza classe active
+  document.querySelectorAll('.menu a').forEach(a => a.classList.remove('active'));
+  const links = Array.from(document.querySelectorAll('.menu a'));
+  links.forEach(a => { if(a.textContent.replace(/\s/g,'').toLowerCase() === pagina.replace(/\s/g,'').toLowerCase()) a.classList.add('active'); });
 }
 
-// Função para carregar currículos da API
-async function carregarCurriculos() {
+// Logout
+function logout(){
+  localStorage.removeItem("usuario");
+  window.location.href = "login.html";
+}
+
+// Carregar currículos
+async function carregarCurriculos(){
   try {
     const res = await fetch("/api/candidatos");
-    if (!res.ok) throw new Error("Erro ao buscar currículos");
+    if(!res.ok) throw new Error("Erro ao buscar currículos");
     const curriculos = await res.json();
 
+    // Preencher tabela
     const tbody = document.getElementById("listaCurriculos");
     tbody.innerHTML = curriculos.map(c => `
       <tr>
@@ -224,12 +188,16 @@ async function carregarCurriculos() {
       </tr>
     `).join("");
 
+    // Preencher cards
     atualizarResumo(curriculos);
-  } catch(err) { console.error(err); }
+  } catch(err){
+    console.error(err);
+    document.getElementById("listaCurriculos").innerHTML = "<tr><td colspan='8'>Erro ao carregar currículos</td></tr>";
+  }
 }
 
-// Atualiza os cards com estatísticas
-function atualizarResumo(curriculos) {
+// Atualiza os cards de resumo
+function atualizarResumo(curriculos){
   const container = document.getElementById("cardsResumo");
   container.innerHTML = "";
 
@@ -239,12 +207,9 @@ function atualizarResumo(curriculos) {
   container.appendChild(totalCard);
 
   const cargosMap = {};
-  curriculos.forEach(c => {
-    if (!cargosMap[c.cargo]) cargosMap[c.cargo] = 0;
-    cargosMap[c.cargo]++;
-  });
+  curriculos.forEach(c => { cargosMap[c.cargo] = (cargosMap[c.cargo] || 0) + 1; });
 
-  for (const [cargo, qtd] of Object.entries(cargosMap)) {
+  for(const [cargo, qtd] of Object.entries(cargosMap)){
     const card = document.createElement("div");
     card.className = "card";
     card.innerHTML = `<h3>${cargo}</h3><p>${qtd}</p>`;
@@ -252,25 +217,8 @@ function atualizarResumo(curriculos) {
   }
 }
 
-function abrirPagina(pagina, event) {
-  // Remove a classe active de todos os links
-  const links = document.querySelectorAll('.sidebar a');
-  links.forEach(link => link.classList.remove('active'));
-
-  // Adiciona active no link clicado
-  event.currentTarget.classList.add('active');
-
-  // Muda o src do iframe
-  document.getElementById('iframeConteudo').src = pagina;
-}
-
-function logout() {
-  localStorage.removeItem("usuario");
-  window.location.href = "login.html";
-}
-
-// Carrega currículos ao abrir a página
-carregarCurriculos();
+// Inicializa com currículos
+abrirPagina('curriculos');
 </script>
 
 </body>
