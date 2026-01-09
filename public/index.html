@@ -31,19 +31,17 @@ body {
 .card {
   width: 100%;
   max-width: 720px;
-  background: rgba(255, 255, 255, 0.92); /* fundo branco translúcido */
+  background: rgba(255, 255, 255, 0.92);
   border-radius: 12px;
   box-shadow: 0 15px 40px rgba(0,0,0,0.15);
   overflow: hidden;
 }
-
 .footer-dev {
   margin-top: 20px;
   text-align: center;
   font-size: 13px;
   color: #c59845;
 }
-
 .card-header { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); padding: 30px; color: #fff; }
 .card-header h1 { margin: 0; font-size: 26px; }
 .card-header p { margin-top: 8px; font-size: 15px; opacity: 0.9; }
@@ -82,8 +80,8 @@ button:hover { background: var(--primary-dark); }
       </form>
       <p class="privacy">Seus dados serão utilizados exclusivamente para fins de recrutamento e seleção.</p>
       <div class="footer-dev">
-  Desenvolvido por <strong>Excelencia Lingerie</strong>
-</div>
+        Desenvolvido por <strong>Excelencia Lingerie</strong>
+      </div>
     </div>
   </div>
 </div>
@@ -92,6 +90,17 @@ button:hover { background: var(--primary-dark); }
 const cargoSelect = document.getElementById("cargoSelect");
 const instituicaoSelect = document.getElementById("instituicaoSelect");
 const unidadeSelect = document.getElementById("unidadeSelect");
+
+// Função de voz
+function falarMensagem(texto) {
+  if ('speechSynthesis' in window) {
+    const msg = new SpeechSynthesisUtterance(texto);
+    msg.lang = 'pt-BR';
+    msg.rate = 1;
+    msg.pitch = 1;
+    window.speechSynthesis.speak(msg);
+  }
+}
 
 // Funções para carregar cargos, instituições e unidades
 async function carregarCargos() {
@@ -168,6 +177,7 @@ document.getElementById("formCandidato").addEventListener("submit", async (e) =>
 
       if (res.ok) {
         alert("Currículo enviado com sucesso!");
+        falarMensagem("Seu currículo foi enviado com sucesso. Boa sorte!");
         document.getElementById("formCandidato").reset();
         unidadeSelect.disabled = true;
       } else {
@@ -187,5 +197,6 @@ document.getElementById("formCandidato").addEventListener("submit", async (e) =>
 carregarCargos();
 carregarInstituicoes();
 </script>
+
 </body>
 </html>
