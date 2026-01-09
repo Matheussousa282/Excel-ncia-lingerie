@@ -111,28 +111,30 @@ tbody tr:hover { background:#f8fafc; }
 </div>
 
 <div class="main">
-  <h1 id="tituloPagina">Currículos Recebidos</h1>
-  <div class="cards" id="cardsResumo"></div>
-  <div class="table-wrapper">
-    <table>
-      <thead>
-        <tr>
-          <th>Nome</th>
-          <th>E-mail</th>
-          <th>Telefone</th>
-          <th>Instituição</th>
-          <th>Unidade</th>
-          <th>Cargo</th>
-          <th>Data</th>
-          <th>Ações</th>
-        </tr>
-      </thead>
-      <tbody id="listaCurriculos"></tbody>
-    </table>
+  <!-- Página Currículos -->
+  <div id="paginaCurriculos">
+    <h1 id="tituloPagina">Currículos Recebidos</h1>
+    <div class="cards" id="cardsResumo"></div>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>E-mail</th>
+            <th>Telefone</th>
+            <th>Instituição</th>
+            <th>Unidade</th>
+            <th>Cargo</th>
+            <th>Data</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="listaCurriculos"></tbody>
+      </table>
+    </div>
   </div>
-</div>
 
-<!-- Página Gestão de Cargo -->
+  <!-- Página Gestão de Cargo -->
   <div id="paginaGestao" style="display:none;">
     <h1>Gestão de Cargo</h1>
     <p>Conteúdo não disponível nesta demo</p>
@@ -176,10 +178,27 @@ function abrirPagina(pagina){
     usuarios: document.getElementById("paginaUsuarios")
   };
 
-  // Atualiza classe active
+  // Esconde todas
+  Object.values(paginas).forEach(p => p.style.display = "none");
+
+  // Mostra a página selecionada
+  paginas[pagina].style.display = "block";
+
+  // Atualiza título
+  const titulo = document.getElementById("tituloPagina");
+  if(pagina === "curriculos") titulo.textContent = "Currículos Recebidos";
+  else if(pagina === "gestao") titulo.textContent = "Gestão de Cargo";
+  else if(pagina === "instituicoes") titulo.textContent = "Instituições e Unidades";
+  else if(pagina === "usuarios") titulo.textContent = "Criar Usuário";
+
+  // Atualiza classe active no menu
   document.querySelectorAll('.menu a').forEach(a => a.classList.remove('active'));
-  const links = Array.from(document.querySelectorAll('.menu a'));
-  links.forEach(a => { if(a.textContent.replace(/\s/g,'').toLowerCase() === pagina.replace(/\s/g,'').toLowerCase()) a.classList.add('active'); });
+  const link = Array.from(document.querySelectorAll('.menu a'))
+                     .find(a => a.textContent.replace(/\s/g,'').toLowerCase() === pagina.toLowerCase());
+  if(link) link.classList.add('active');
+
+  // Carregar currículos se página atual for currículos
+  if(pagina === 'curriculos') carregarCurriculos();
 }
 
 // Logout
