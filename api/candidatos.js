@@ -1,5 +1,5 @@
 import { Pool } from "pg";
-import { autenticar } from "./auth";
+
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
