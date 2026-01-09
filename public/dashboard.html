@@ -118,6 +118,7 @@ tbody tr:hover { background:#f8fafc; }
     <a class="active" onclick="abrirPagina('curriculos.html', event)">Currículos</a>
     <a onclick="abrirPagina('cadastros.html', event)">Gestão de Cargo</a>
     <a onclick="abrirPagina('instituicoes-unidades.html', event)">Instituições e Unidades</a>
+    <a id="usuariosLink" style="display:none;" onclick="abrirPagina('Criar-usuario.html')">Usuários</a>
   </div>
 
   <!-- LOGOUT -->
@@ -263,6 +264,47 @@ function abrirPagina(pagina, event) {
   // Muda o src do iframe
   document.getElementById('iframeConteudo').src = pagina;
 }
+
+// Mostrar botão "Usuários" somente para Matheus
+if(dadosUsuario.nome === "Matheus"){
+  document.getElementById("usuariosLink").style.display = "block";
+}
+
+// Atualiza a função abrirPagina para lidar com 'usuarios'
+function abrirPagina(pagina){
+  const titulo = document.getElementById("tituloPagina");
+  
+  if(pagina === 'curriculos'){
+    titulo.textContent = "Currículos Recebidos";
+    carregarCurriculos();
+    document.getElementById("cardsResumo").style.display = "grid";
+    document.getElementById("listaCurriculos").parentElement.style.display = "block";
+  } 
+  else if(pagina === 'usuarios'){
+    titulo.textContent = "Criar Usuário";
+    // Exibir iframe ou conteúdo do criar-usuario.html
+    document.getElementById("cardsResumo").style.display = "none";
+    document.getElementById("listaCurriculos").parentElement.style.display = "none";
+    
+    // Carrega criar-usuario.html dentro da main
+    const main = document.querySelector('.main');
+    main.innerHTML = `<iframe src="criar-usuario.html" style="width:100%;height:80vh;border:none;"></iframe>`;
+  }
+  else {
+    titulo.textContent = pagina === 'gestao' ? "Gestão de Cargo" : "Instituições e Unidades";
+    document.getElementById("cardsResumo").style.display = "none";
+    document.getElementById("listaCurriculos").parentElement.innerHTML = "<tr><td colspan='8' style='text-align:center;'>Conteúdo não disponível nesta demo</td></tr>";
+  }
+
+  // Atualiza classe active
+  document.querySelectorAll('.menu a').forEach(a => a.classList.remove('active'));
+  const links = Array.from(document.querySelectorAll('.menu a'));
+  links.forEach(a => {
+    if(a.textContent.replace(/\s/g,'').toLowerCase() === pagina.replace(/\s/g,'').toLowerCase())
+      a.classList.add('active');
+  });
+}
+
 
 function logout() {
   localStorage.removeItem("usuario");
