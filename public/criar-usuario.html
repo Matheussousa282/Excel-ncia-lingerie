@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Criar Usuário</title>
+
+<style>
+:root {
+  --primary: #c4a264;
+  --dark: #111;
+  --bg: #f3f4f6;
+  --card: #ffffff;
+  --border: #e5e7eb;
+  --text: #1f2937;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: linear-gradient(135deg, #000000, #c59845);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--card);
+  padding: 30px;
+  border-radius: 14px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+label {
+  display: block;
+  font-size: 14px;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+input {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  margin-bottom: 18px;
+  font-size: 14px;
+}
+
+button {
+  width: 100%;
+  padding: 14px;
+  background: var(--primary);
+  color: #000;
+  font-weight: bold;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+button:hover {
+  opacity: 0.9;
+}
+
+.msg {
+  text-align: center;
+  margin-top: 15px;
+  font-size: 14px;
+}
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h1>Criar Usuário</h1>
+
+  <form id="formUsuario">
+    <label>Nome</label>
+    <input type="text" id="nome" required>
+
+    <label>E-mail</label>
+    <input type="email" id="email" required>
+
+    <label>Senha</label>
+    <input type="password" id="senha" required>
+
+    <button type="submit">Criar Usuário</button>
+  </form>
+
+  <div class="msg" id="msg"></div>
+</div>
+
+<script>
+document.getElementById("formUsuario").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const body = {
+    nome: nome.value,
+    email: email.value,
+    senha: senha.value
+  };
+
+  const res = await fetch("/api/usuarios", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  });
+
+  const msg = document.getElementById("msg");
+
+  if (res.ok) {
+    msg.style.color = "green";
+    msg.textContent = "Usuário criado com sucesso!";
+    e.target.reset();
+  } else {
+    msg.style.color = "red";
+    msg.textContent = "Erro ao criar usuário";
+  }
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login | Dashboard</title>
+
+<style>
+:root {
+  --primary: #c4a264;
+  --primary-dark: #080808;
+  --text: #2e2e2e;
+  --muted: #6b7280;
+  --border: #d1d5db;
+  --white: #ffffff;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: linear-gradient(135deg, #000000, #c59845);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card {
+  width: 100%;
+  max-width: 420px;
+  background: rgba(255,255,255,0.95);
+  border-radius: 12px;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+  overflow: hidden;
+}
+
+.card-header {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  padding: 30px;
+  color: #fff;
+  text-align: center;
+}
+
+.card-header h1 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.card-header p {
+  margin-top: 8px;
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.card-body {
+  padding: 30px;
+}
+
+label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+input {
+  width: 100%;
+  padding: 12px 14px;
+  font-size: 14px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  margin-bottom: 16px;
+}
+
+button {
+  width: 100%;
+  padding: 14px;
+  background: var(--primary);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: var(--primary-dark);
+}
+
+.error {
+  color: #dc2626;
+  font-size: 14px;
+  margin-top: 12px;
+  text-align: center;
+  display: none;
+}
+
+.footer {
+  text-align: center;
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 20px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+  <div class="card-header">
+    <h1>Área Administrativa</h1>
+    <p>Faça login para acessar o dashboard</p>
+  </div>
+
+  <div class="card-body">
+    <form id="loginForm">
+      <label for="nome">Usuário</label>
+      <input type="text" id="nome" placeholder="Digite seu usuário" required>
+
+
+      <label for="senha">Senha</label>
+      <input type="password" id="senha" placeholder="••••••••" required>
+
+      <button type="submit">Entrar</button>
+
+      <div class="error" id="errorMsg">
+        E-mail ou senha inválidos
+      </div>
+    </form>
+
+    <div class="footer">
+      © 2026 • Sistema de Recrutamento
+    </div>
+  </div>
+</div>
+
+<script>
+document.getElementById("loginForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const nome = document.getElementById("nome").value;
+  const senha = document.getElementById("senha").value;
+  const errorMsg = document.getElementById("errorMsg");
+
+  errorMsg.style.display = "none";
+
+  try {
+    const res = await fetch("/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nome, senha })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      errorMsg.textContent = data.error || "Erro no login";
+      errorMsg.style.display = "block";
+      return;
+    }
+
+    // Salva usuário (simples)
+    localStorage.setItem("usuario", JSON.stringify(data.usuario));
+
+    // Redireciona
+    window.location.href = "dashboard.html";
+
+  } catch (err) {
+    console.error(err);
+    errorMsg.textContent = "Erro de conexão";
+    errorMsg.style.display = "block";
+  }
+});
+</script>
+</body>
+</html>
