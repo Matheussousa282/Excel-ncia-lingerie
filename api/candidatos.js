@@ -8,10 +8,12 @@ const pool = new Pool({
 
 export default async function handler(req, res) {
 
-  // 🔐 PROTEÇÃO SIMPLES
-  const usuario = autenticar(req);
-  if (!usuario) {
-    return res.status(401).json({ error: "Não autorizado" });
+  // 🔓 LIBERA GET
+  if (req.method !== "GET") {
+    const usuario = autenticar(req);
+    if (!usuario) {
+      return res.status(401).json({ error: "Não autorizado" });
+    }
   }
 
   if (req.method === "POST") {
