@@ -160,6 +160,11 @@ const dadosUsuario = JSON.parse(usuario);
 document.getElementById("usuarioLogado").textContent =
   "Bem Vindo, " + dadosUsuario.nome;
 
+  // Mostrar botão "Usuários" somente para Matheus
+if(dadosUsuario.nome === "Matheus"){
+  document.getElementById("usuariosLink").style.display = "block";
+}
+
 async function abrirPagina(pagina, event) {
   // Remove active de todos os links
   const links = document.querySelectorAll('.sidebar a');
