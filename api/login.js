@@ -1,34 +1,46 @@
 import { Pool } from "pg";
 
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString:
+    process.env.DATABASE_URL || process.env.DATABASE_URL_RH,
   ssl: { rejectUnauthorized: false }
 });
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
-    return res.status(405).send("Método não permitido");
+    return res.status(405).json({ error: "Método não permitido" });
   }
 
-  const { email, senha } = req.body;
+  const { nome, senha } = req.body;
+
+  if (!nome || !senha) {
+    return res.status(400).json({ error: "Dados obrigatórios" });
+  }
 
   try {
-    const result = await pool.query(
-      "SELECT id, nome, email FROM usuarios WHERE email=$1 AND senha=$2 AND ativo=true",
-      [email, senha]
-    );
+    const query = `
+      SELECT id, nome, email
+      FROM usuarios
+      WHERE nome = $1 AND senha = $2
+      LIMIT 1
+    `;
 
-    if (result.rowCount === 0) {
-      return res.status(401).send("Usuário ou senha inválidos");
+    const result = await pool.query(query, [nome, senha]);
+
+    if (result.rows.length === 0) {
+      return res.status(401).json({ error: "Usuário ou senha inválidos" });
     }
 
-    res.status(200).json({
+    // Login OK
+    const usuario = result.rows[0];
+
+    return res.status(200).json({
       success: true,
-      usuario: result.rows[0]
+      usuario
     });
 
   } catch (err) {
-    console.error(err);
-    res.status(500).send("Erro no login");
+    console.error("Erro no login:", err);
+    return res.status(500).json({ error: "Erro interno no servidor" });
   }
 }
