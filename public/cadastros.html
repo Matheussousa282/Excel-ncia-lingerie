@@ -141,6 +141,11 @@ th {
 </div>
 
 <script>
+  const usuario = localStorage.getItem("usuario");
+
+if (!usuario) {
+  window.location.href = "login.html";
+}
 async function carregar() {
   const res = await fetch("/api/cargos");
   const data = await res.json();

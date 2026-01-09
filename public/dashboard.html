@@ -89,13 +89,12 @@ tbody tr:hover { background:#f8fafc; }
     <a class="active" onclick="abrirPagina('curriculos.html', event)">Currículos</a>
     <a onclick="abrirPagina('cadastros.html', event)">Gestão de Cargo</a>
     <a onclick="abrirPagina('instituicoes-unidades.html', event)">Instituições e Unidades</a>
-  </div>
+</div>
 
-  <div class="main">
-    <iframe id="iframeConteudo" src="curriculos.html" style="width:100%; height:100vh; border:none;"></iframe>
-  </div>
+<div class="main">
+    <iframe id="iframeConteudo" src="curriculos.html"></iframe>
+</div>
 
-<div class="main" id="conteudoPrincipal">
   <!-- Conteúdo inicial: Currículos -->
   <h1>Currículos Recebidos</h1>
   <div class="cards" id="cardsResumo"></div>
@@ -113,6 +112,11 @@ tbody tr:hover { background:#f8fafc; }
 </div>
 
 <script>
+  const usuario = localStorage.getItem("usuario");
+
+if (!usuario) {
+  window.location.href = "login.html";
+}
 async function abrirPagina(pagina, event) {
   // Remove active de todos os links
   const links = document.querySelectorAll('.sidebar a');

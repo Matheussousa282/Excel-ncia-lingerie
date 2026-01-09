@@ -73,6 +73,11 @@ tbody tr:hover { background:#f8fafc; }
 </div>
 
 <script>
+  const usuario = localStorage.getItem("usuario");
+
+if (!usuario) {
+  window.location.href = "login.html";
+}
 // Carrega currículos da API
 async function carregarCurriculos() {
   try {

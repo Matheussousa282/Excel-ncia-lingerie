@@ -157,8 +157,11 @@ th {
 </div>
 
 <script>
-let instituicoes = [];
+  const usuario = localStorage.getItem("usuario");
 
+if (!usuario) {
+  window.location.href = "login.html";
+}
 async function carregarInstituicoes() {
   const res = await fetch("/api/instituicoes");
   instituicoes = await res.json();
