@@ -37,7 +37,11 @@ body { font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background
   padding:12px 14px; border-radius:8px; margin-bottom:8px; font-size:14px;
   cursor:pointer;
 }
-.sidebar a.active, .sidebar a:hover { background: rgba(255,255,255,0.1); color:#fff; }
+.sidebar a:not(.logout).active,
+.sidebar a:not(.logout):hover {
+  background: rgba(255,255,255,0.1);
+  color:#fff;
+}
 
 /* MAIN */
 .main { margin-left:260px; padding:20px; min-height:100vh; }
