@@ -1,6 +1,5 @@
 import { Pool } from "pg";
 
-
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false },
@@ -8,16 +7,7 @@ const pool = new Pool({
 
 export default async function handler(req, res) {
 
-  // 🔓 LIBERA GET
-  if (req.method !== "GET") {
-    const usuario = autenticar(req);
-    if (!usuario) {
-      return res.status(401).json({ error: "Não autorizado" });
-    }
-  }
-
   if (req.method === "POST") {
-    // === Inserir candidato ===
     try {
       const {
         nome,
@@ -56,10 +46,7 @@ export default async function handler(req, res) {
         arquivo_nome
       ]);
 
-      return res.status(200).json({
-        success: true,
-        id: result.rows[0].id
-      });
+      return res.status(200).json({ success: true, id: result.rows[0].id });
 
     } catch (err) {
       console.error("ERRO POST:", err);
@@ -67,7 +54,6 @@ export default async function handler(req, res) {
     }
 
   } else if (req.method === "GET") {
-    // === Listar candidatos ===
     try {
       const query = `
         SELECT 
@@ -102,7 +88,9 @@ export default async function handler(req, res) {
         unidade: c.unidade,
         data: c.data,
         arquivo_nome: c.arquivo_nome,
-        arquivo: `data:application/octet-stream;base64,${c.arquivo.toString("base64")}`
+        arquivo: c.arquivo
+          ? `data:application/octet-stream;base64,${c.arquivo.toString("base64")}`
+          : null
       }));
 
       return res.status(200).json(curriculos);
