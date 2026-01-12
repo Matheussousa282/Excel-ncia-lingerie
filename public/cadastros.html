@@ -142,10 +142,12 @@ th {
 
 <script>
   const usuario = localStorage.getItem("usuario");
+if(!usuario) { window.location.href="login.html"; }
 
-if (!usuario) {
-  window.location.href = "login.html";
-}
+const dadosUsuario = JSON.parse(usuario);
+document.getElementById("usuarioLogado").textContent = "Bem Vindo " + dadosUsuario.nome;
+
+
 async function carregar() {
   const res = await fetch("/api/cargos");
   const data = await res.json();
@@ -208,6 +210,12 @@ async function alterarStatus(id, nome, ativo) {
     body: JSON.stringify({ id, nome, ativo })
   });
   carregar();
+}
+
+// Função de logout
+function logout(){
+  localStorage.removeItem("usuario");
+  window.location.href="login.html";
 }
 
 carregar();

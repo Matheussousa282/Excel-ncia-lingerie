@@ -158,10 +158,12 @@ th {
 
 <script>
   const usuario = localStorage.getItem("usuario");
+if(!usuario) { window.location.href="login.html"; }
 
-if (!usuario) {
-  window.location.href = "login.html";
-}
+const dadosUsuario = JSON.parse(usuario);
+document.getElementById("usuarioLogado").textContent = "Bem Vindo " + dadosUsuario.nome;
+
+
 async function carregarInstituicoes() {
   const res = await fetch("/api/instituicoes");
   instituicoes = await res.json();
@@ -268,6 +270,12 @@ async function alterarUnidade(id, ativo) {
   });
 
   carregarUnidades();
+}
+
+// Função de logout
+function logout(){
+  localStorage.removeItem("usuario");
+  window.location.href="login.html";
 }
 
 carregarInstituicoes();

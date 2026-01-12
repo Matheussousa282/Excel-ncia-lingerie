@@ -263,6 +263,11 @@ fecharModal.onclick = () => { modal.style.display = "none"; };
 // Fecha ao clicar fora do conteúdo
 window.onclick = (e) => { if(e.target == modal) modal.style.display = "none"; };
 
+// Função de logout
+function logout(){
+  localStorage.removeItem("usuario");
+  window.location.href="login.html";
+}
 
 // Carrega ao abrir a página
 carregarCurriculos();

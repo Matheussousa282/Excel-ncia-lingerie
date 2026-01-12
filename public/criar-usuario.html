@@ -143,6 +143,13 @@ tbody tr:hover {
 </div>
 
 <script>
+  const usuario = localStorage.getItem("usuario");
+if(!usuario) { window.location.href="login.html"; }
+
+const dadosUsuario = JSON.parse(usuario);
+document.getElementById("usuarioLogado").textContent = "Bem Vindo " + dadosUsuario.nome;
+
+
 async function listarUsuarios() {
   const tbody = document.getElementById("listaUsuarios");
   try {
@@ -210,6 +217,12 @@ document.getElementById("formUsuario").addEventListener("submit", async (e) => {
     msg.textContent = data.error || "Erro ao criar usuário";
   }
 });
+
+// Função de logout
+function logout(){
+  localStorage.removeItem("usuario");
+  window.location.href="login.html";
+}
 
 // Carregar a lista ao abrir a página
 listarUsuarios();
