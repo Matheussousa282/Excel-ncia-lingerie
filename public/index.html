@@ -73,6 +73,94 @@ button:hover { background: var(--primary-dark); }
   width: 110px;
 }
 
+/* =========================
+   MOBILE FIRST AJUSTES
+   ========================= */
+
+/* Ajuste geral */
+@media (max-width: 768px) {
+
+  body {
+    background: linear-gradient(180deg, #000000, #c59845);
+  }
+
+  .page {
+    padding: 0;
+    align-items: flex-start;
+  }
+
+  .card {
+    max-width: 100%;
+    min-height: 100vh;
+    border-radius: 0;
+  }
+
+  /* HEADER */
+  .card-header {
+    padding: 25px 20px;
+    text-align: center;
+  }
+
+  .card-header h1 {
+    font-size: 22px;
+  }
+
+  .card-header p {
+    font-size: 14px;
+  }
+
+  /* LOGO */
+  .logo-header {
+    position: static;
+    display: block;
+    margin: 0 auto 15px auto;
+    width: 90px;
+  }
+
+  /* BODY */
+  .card-body {
+    padding: 20px;
+  }
+
+  /* FORM */
+  form {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  label {
+    font-size: 14px;
+  }
+
+  input,
+  select,
+  textarea {
+    font-size: 16px; /* melhor para teclado mobile */
+    padding: 14px;
+  }
+
+  textarea {
+    min-height: 110px;
+  }
+
+  /* BOTÃO */
+  button {
+    font-size: 17px;
+    padding: 16px;
+    border-radius: 10px;
+  }
+
+  /* TEXTOS */
+  .privacy {
+    font-size: 12px;
+    margin-top: 15px;
+  }
+
+  .footer-dev {
+    font-size: 12px;
+    margin-bottom: 15px;
+  }
+}
 
 </style>
 </head>
