@@ -53,7 +53,7 @@ body {
   font-size: 13px;
   color: #c59845;
 }
-.card-header { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); padding: 30px; color: #fff; }
+.card-header { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); padding: 30px; color: #fff;text-align: center; /* 👈 CENTRALIZA TUDO */ }
 .card-header h1 { margin: 0; font-size: 26px; }
 .card-header p { margin-top: 8px; font-size: 15px; opacity: 0.9; }
 .card-body { padding: 30px; }
@@ -73,9 +73,8 @@ button:hover { background: var(--primary-dark); }
 }
 
 .logo-header {
-  position: absolute;
-  top: 15px;
-  right: 20px;
+  display: block;
+  margin: 0 auto 15px auto;
   width: 110px;
 }
 
@@ -117,11 +116,10 @@ button:hover { background: var(--primary-dark); }
 
   /* LOGO */
   .logo-header {
-    position: static;
-    display: block;
-    margin: 0 auto 15px auto;
-    width: 90px;
-  }
+  display: block;
+  margin: 0 auto 15px auto;
+  width: 300px; /* 👈 AQUI aumenta a logo */
+}
 
   /* BODY */
   .card-body {
@@ -182,7 +180,7 @@ button:hover { background: var(--primary-dark); }
 <div class="page">
   <div class="card">
     <div class="card-header">
-      <img src="LG03.png" alt="Logo" class="logo-header">
+      <img src="LG05.png" alt="Logo" class="logo-header">
       <h1>Venha Construir Sua História Conosco</h1>
       <p>Cadastre seu currículo e faça parte de um time que acredita no desenvolvimento de pessoas.</p>
     </div>
