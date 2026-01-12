@@ -115,12 +115,15 @@ th {
 
   <!-- CADASTRO -->
   <div class="card">
-    <h3>Novo Cargo</h3>
     <div class="form">
-      <input id="nome" placeholder="Digite o nome do cargo">
-      <button class="btn-primary" onclick="salvar()">Salvar</button>
-    </div>
-  </div>
+  <input id="nome" placeholder="Digite o nome do cargo">
+
+  <select id="unidade" style="padding:12px;border-radius:8px;border:1px solid #e5e7eb;">
+    <option value="">Selecione a unidade</option>
+  </select>
+
+  <button class="btn-primary" onclick="salvar()">Salvar</button>
+</div>
 
   <!-- LISTA -->
   <div class="card">
@@ -182,15 +185,22 @@ async function carregar() {
 }
 
 async function salvar() {
-  if (!nome.value) return;
+  if (!nome.value || !unidade.value) {
+    alert("Informe o nome do cargo e a unidade");
+    return;
+  }
 
   await fetch("/api/cargos", {
     method: "POST",
     headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({ nome: nome.value })
+    body: JSON.stringify({
+      nome: nome.value,
+      unidade_id: unidade.value
+    })
   });
 
   nome.value = "";
+  unidade.value = "";
   carregar();
 }
 
@@ -210,6 +220,19 @@ async function alterarStatus(id, nome, ativo) {
   });
   carregar();
 }
+async function carregarUnidades() {
+  const res = await fetch("/api/unidades");
+  const data = await res.json();
+
+  unidade.innerHTML = '<option value="">Selecione a unidade</option>';
+
+  data
+    .filter(u => u.ativo)
+    .forEach(u => {
+      unidade.innerHTML += `<option value="${u.id}">${u.nome}</option>`;
+    });
+}
+
 
 // Função de logout
 function logout(){
@@ -217,6 +240,7 @@ function logout(){
   window.location.href="login.html";
 }
 
+carregarUnidades();
 carregar();
 </script>
 
