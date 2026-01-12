@@ -158,10 +158,9 @@ th {
 
 <script>
   const usuario = localStorage.getItem("usuario");
-if(!usuario) { window.location.href="login.html"; }
-
-const dadosUsuario = JSON.parse(usuario);
-document.getElementById("usuarioLogado").textContent = "Bem Vindo " + dadosUsuario.nome;
+if (!usuario) {
+  window.location.href = "login.html";
+}
 
 
 async function carregarInstituicoes() {
