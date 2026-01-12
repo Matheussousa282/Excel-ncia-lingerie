@@ -2,6 +2,11 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
+<meta property="og:title" content="Trabalhe Conosco | Excelência Lingerie">
+<meta property="og:description" content="Envie seu currículo e faça parte do nosso time.">
+<meta property="og:image" content="https://https://excelencia-lingerie.vercel.app/LG04.ppg">
+<meta property="og:url" content="https://https://excelencia-lingerie.vercel.app/">
+<meta property="og:type" content="website">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Trabalhe Conosco</title>
 <style>
@@ -56,6 +61,19 @@ button { width: 100%; padding: 14px; background: var(--primary); color: #fff; fo
 button:hover { background: var(--primary-dark); }
 .privacy { text-align: center; font-size: 13px; color: var(--muted); margin-top: 20px; }
 @media (max-width: 640px) { form { grid-template-columns: 1fr; } .full { grid-column: span 1; } }
+
+.card-header {
+  position: relative;
+}
+
+.logo-header {
+  position: absolute;
+  top: 10px;    /* sobe / desce */
+  left: 580px;   /* esquerda / direita */
+  width: 110px;
+}
+
+
 </style>
 </head>
 <body>
@@ -63,6 +81,7 @@ button:hover { background: var(--primary-dark); }
 <div class="page">
   <div class="card">
     <div class="card-header">
+      <img src="LG03.PNG" alt="Logo" class="logo-header">
       <h1>Trabalhe Conosco</h1>
       <p>Envie seu currículo e faça parte do nosso time</p>
     </div>
@@ -75,12 +94,12 @@ button:hover { background: var(--primary-dark); }
         <div><label for="instituicaoSelect">Instituição</label><select id="instituicaoSelect" name="instituicao_id" required><option value="">Carregando instituições...</option></select></div>
         <div><label for="unidadeSelect">Unidade</label><select id="unidadeSelect" name="unidade_id" required disabled><option value="">Selecione uma instituição primeiro</option></select></div>
         <div class="full"><label for="apresentacao">Apresentação profissional</label><textarea id="apresentacao" name="apresentacao" placeholder="Fale sobre você"></textarea></div>
-        <div class="full"><label for="arquivo">Currículo (PDF ou DOC)</label><input id="arquivo" name="arquivo" type="file" accept=".pdf,.doc,.docx" required /></div>
+        <div class="full"><label for="arquivo">Currículo (PDF,DOC ou IMG)</label><input id="arquivo" name="arquivo" type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" required /></div>
         <div class="actions full"><button type="submit">Enviar Currículo</button></div>
       </form>
       <p class="privacy">Seus dados serão utilizados exclusivamente para fins de recrutamento e seleção.</p>
       <div class="footer-dev">
-        Desenvolvido por <strong>Excelencia Lingerie</strong>
+        Desenvolvido por <strong>Excelência Lingerie</strong>
       </div>
     </div>
   </div>
