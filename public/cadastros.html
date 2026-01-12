@@ -141,11 +141,7 @@ th {
 </div>
 
 <script>
-  const usuario = localStorage.getItem("usuario");
-if(!usuario) { window.location.href="login.html"; }
-
-const dadosUsuario = JSON.parse(usuario);
-document.getElementById("usuarioLogado").textContent = "Bem Vindo " + dadosUsuario.nome;
+ 
 
 
 async function carregar() {
@@ -212,11 +208,7 @@ async function alterarStatus(id, nome, ativo) {
   carregar();
 }
 
-// Função de logout
-function logout(){
-  localStorage.removeItem("usuario");
-  window.location.href="login.html";
-}
+
 
 carregar();
 </script>
