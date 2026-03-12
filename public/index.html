@@ -222,46 +222,99 @@ function falarMensagem(texto) {
 
 // Funções para carregar cargos, instituições e unidades
 async function carregarCargos() {
-  try {
-    const res = await fetch("/api/cargos");
-    const data = await res.json();
-    cargoSelect.innerHTML = '<option value="">Selecione um cargo</option>';
-    data.filter(c => c.ativo).forEach(c => {
-      const o = document.createElement("option");
-      o.value = c.id; o.textContent = c.nome;
-      cargoSelect.appendChild(o);
-    });
-  } catch (err) { console.error(err); }
+
+  const res = await fetch("/api/cargos");
+  const data = await res.json();
+
+  cargoSelect.innerHTML =
+    '<option value="">Selecione um cargo</option>';
+
+  data.forEach(c => {
+
+    const o = document.createElement("option");
+
+    o.value = c.id;
+    o.textContent = c.nome;
+
+    cargoSelect.appendChild(o);
+
+  });
+
 }
 
 async function carregarInstituicoes() {
   try {
+
     const res = await fetch("/api/instituicoes");
-    const data = await res.json();
-    instituicaoSelect.innerHTML = '<option value="">Selecione uma instituição</option>';
-    data.filter(i => i.ativo).forEach(i => {
+
+    const text = await res.text();
+
+    let data;
+
+    try {
+      data = JSON.parse(text);
+    } catch {
+      console.log("ERRO /api/instituicoes:", text);
+      return;
+    }
+
+    instituicaoSelect.innerHTML =
+      '<option value="">Selecione uma instituição</option>';
+
+    data.forEach(i =>  {
       const o = document.createElement("option");
-      o.value = i.id; o.textContent = i.nome;
+      o.value = i.id;
+      o.textContent = i.nome;
       instituicaoSelect.appendChild(o);
     });
-  } catch (err) { console.error(err); }
+
+  } catch (err) {
+    console.error(err);
+  }
 }
 
 instituicaoSelect.addEventListener("change", async () => {
+
   const id = instituicaoSelect.value;
+
   unidadeSelect.disabled = !id;
-  unidadeSelect.innerHTML = '<option value="">Carregando unidades...</option>';
-  if (!id) return unidadeSelect.innerHTML = '<option value="">Selecione uma instituição primeiro</option>';
+
+  if (!id) {
+    unidadeSelect.innerHTML =
+      '<option value="">Selecione uma instituição primeiro</option>';
+    return;
+  }
+
   try {
-    const res = await fetch(`/api/unidades?instituicao_id=${id}`);
-    const data = await res.json();
-    unidadeSelect.innerHTML = '<option value="">Selecione uma unidade</option>';
-    data.filter(u => u.ativo).forEach(u => {
+
+    const res =
+      await fetch(`/api/unidades?instituicao_id=${id}`);
+
+    const text = await res.text();
+
+    let data;
+
+    try {
+      data = JSON.parse(text);
+    } catch {
+      console.log("ERRO /api/unidades:", text);
+      return;
+    }
+
+    unidadeSelect.innerHTML =
+      '<option value="">Selecione uma unidade</option>';
+
+    data.forEach(u => {
       const o = document.createElement("option");
-      o.value = u.id; o.textContent = u.nome;
+      o.value = u.id;
+      o.textContent = u.nome;
       unidadeSelect.appendChild(o);
     });
-  } catch (err) { console.error(err); }
+
+  } catch (err) {
+    console.error(err);
+  }
+
 });
 
 // Envio do formulário como Base64
