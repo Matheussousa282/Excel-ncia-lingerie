@@ -1,0 +1,9 @@
+{
+  "name": "rh-excelencia",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "pg": "^8.11.5",
+    "formidable": "^3.5.4"
+  }
+}
