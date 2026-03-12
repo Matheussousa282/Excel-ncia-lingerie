@@ -139,13 +139,20 @@ tbody tr:hover { background:#f8fafc; }
   </div>
 </div>
 
-
+<div style="margin-bottom:15px;">
+  <button onclick="baixarTodos()" 
+    style="padding:10px 15px;border:none;border-radius:8px;
+    background:#2563eb;color:#fff;font-weight:600;cursor:pointer;">
+    Baixar todos os currículos
+  </button>
+</div>
 <script>
-  const usuario = localStorage.getItem("usuario");
+  
+  //const usuario = localStorage.getItem("usuario");
 
-if (!usuario) {
-  window.location.href = "login.html";
-}
+//if (!usuario) {
+  //window.location.href = "login.html";
+//} 
 
 let curriculos = []; // <<< FIX
 
@@ -257,6 +264,39 @@ function abrirModal(texto) {
   modal.style.display = "flex";
 }
 
+function baixarTodos() {
+
+  const nomeFiltro = document.getElementById("filtroNome").value.toLowerCase();
+  const emailFiltro = document.getElementById("filtroEmail").value.toLowerCase();
+  const cargoFiltro = document.getElementById("filtroCargo").value;
+  const unidadeFiltro = document.getElementById("filtroUnidade").value;
+  const instituicaoFiltro = document.getElementById("filtroInstituicao").value;
+
+  const filtrados = curriculos.filter(c => 
+    c.nome.toLowerCase().includes(nomeFiltro) &&
+    c.email.toLowerCase().includes(emailFiltro) &&
+    (cargoFiltro === "" || c.cargo === cargoFiltro) &&
+    (unidadeFiltro === "" || c.unidade === unidadeFiltro) &&
+    (instituicaoFiltro === "" || c.instituicao === instituicaoFiltro)
+  );
+
+  if (filtrados.length === 0) {
+    alert("Nenhum currículo para baixar");
+    return;
+  }
+
+  filtrados.forEach((c, i) => {
+    setTimeout(() => {
+      const link = document.createElement("a");
+      link.href = c.arquivo;
+      link.download = `${c.nome}-${c.arquivo_nome}`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }, i * 500); // delay para evitar bloqueio do navegador
+  });
+
+}
 // Fecha ao clicar no "X"
 fecharModal.onclick = () => { modal.style.display = "none"; };
 
@@ -264,10 +304,10 @@ fecharModal.onclick = () => { modal.style.display = "none"; };
 window.onclick = (e) => { if(e.target == modal) modal.style.display = "none"; };
 
 // Função de logout
-function logout(){
-  localStorage.removeItem("usuario");
-  window.location.href="login.html";
-}
+//function logout(){
+  //localStorage.removeItem("usuario");
+ // window.location.href="login.html";
+//}
 
 // Carrega ao abrir a página
 carregarCurriculos();
