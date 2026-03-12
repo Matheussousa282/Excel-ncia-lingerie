@@ -147,24 +147,32 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
 
   try {
     const res = await fetch("/api/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ nome, senha }) // login pelo nome de usuário
-    });
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ nome, senha })
+});
 
-    const data = await res.json();
+const text = await res.text();
 
-    if (!res.ok) {
-      errorMsg.textContent = data.error || "Usuário ou senha inválidos";
-      errorMsg.style.display = "block";
-      return;
-    }
+let data;
 
-    // Salva usuário no localStorage (como JSON)
-    localStorage.setItem("usuario", JSON.stringify(data.usuario));
+try {
+  data = JSON.parse(text);
+} catch {
+  errorMsg.textContent = "Erro no servidor";
+  errorMsg.style.display = "block";
+  return;
+}
 
-    // Redireciona para dashboard
-    window.location.href = "dashboard.html";
+if (!res.ok) {
+  errorMsg.textContent = data.error || "Login inválido";
+  errorMsg.style.display = "block";
+  return;
+}
+
+localStorage.setItem("usuario", JSON.stringify(data.usuario));
+
+window.location.href = "dashboard.html";
 
   } catch (err) {
     console.error(err);

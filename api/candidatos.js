@@ -30,7 +30,10 @@ export default async function handler(req, res) {
       } = req.body;
 
       if (!arquivo_base64) {
-        return res.status(400).send("Arquivo é obrigatório");
+        return res.status(400).json({
+          success: false,
+          error: "Arquivo é obrigatório"
+        });
       }
 
       const arquivoBuffer = Buffer.from(arquivo_base64, "base64");
@@ -54,15 +57,26 @@ export default async function handler(req, res) {
         arquivo_nome
       ]);
 
-      return res.status(200).json({ success: true, id: result.rows[0].id });
+      return res.status(200).json({
+        success: true,
+        id: result.rows[0].id
+      });
 
     } catch (err) {
+
       console.error("ERRO POST:", err);
-      return res.status(500).send("Erro ao salvar candidato");
+
+      return res.status(500).json({
+        success: false,
+        error: "Erro ao salvar candidato"
+      });
+
     }
 
   } else if (req.method === "GET") {
+
     try {
+
       const query = `
         SELECT 
           c.id,
@@ -104,11 +118,23 @@ export default async function handler(req, res) {
       return res.status(200).json(curriculos);
 
     } catch (err) {
+
       console.error("ERRO GET:", err);
-      return res.status(500).send("Erro ao buscar candidatos");
+
+      return res.status(500).json({
+        success: false,
+        error: "Erro ao buscar candidatos"
+      });
+
     }
 
   } else {
-    return res.status(405).send("Método não permitido");
+
+    return res.status(405).json({
+      success: false,
+      error: "Método não permitido"
+    });
+
   }
+
 }
