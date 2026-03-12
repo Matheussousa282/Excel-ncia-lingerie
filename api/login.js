@@ -1,4 +1,6 @@
-import { Pool } from "pg";
+import pkg from "pg";
+
+const { Pool } = pkg;
 
 const connectionString =
   process.env.DATABASE_URL ||
@@ -9,8 +11,10 @@ if (!connectionString) {
 }
 
 const pool = new Pool({
-  connectionString,
-  ssl: { rejectUnauthorized: false }
+  connectionString: connectionString,
+  ssl: {
+    rejectUnauthorized: false,
+  },
 });
 
 export default async function handler(req, res) {
@@ -18,7 +22,7 @@ export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({
       success: false,
-      error: "Método não permitido"
+      error: "Método não permitido",
     });
   }
 
@@ -29,27 +33,37 @@ export default async function handler(req, res) {
     if (!nome || !senha) {
       return res.status(400).json({
         success: false,
-        error: "Nome e senha obrigatórios"
+        error: "Nome e senha obrigatórios",
       });
     }
 
     const result = await pool.query(
-      "SELECT id, nome FROM usuarios WHERE nome = $1 AND senha = $2",
-      [nome, senha]
+      "SELECT id, nome, senha FROM usuarios WHERE nome = $1",
+      [nome]
     );
 
     if (result.rows.length === 0) {
       return res.status(401).json({
         success: false,
-        error: "Usuário ou senha incorretos"
+        error: "Usuário não encontrado",
       });
     }
 
-    const usuario = result.rows[0];
+    const user = result.rows[0];
+
+    if (user.senha !== senha) {
+      return res.status(401).json({
+        success: false,
+        error: "Senha incorreta",
+      });
+    }
 
     return res.status(200).json({
       success: true,
-      usuario
+      usuario: {
+        id: user.id,
+        nome: user.nome,
+      },
     });
 
   } catch (err) {
@@ -58,7 +72,7 @@ export default async function handler(req, res) {
 
     return res.status(500).json({
       success: false,
-      error: "Erro no servidor"
+      error: err.message,
     });
 
   }
