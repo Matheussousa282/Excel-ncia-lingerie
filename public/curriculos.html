@@ -148,11 +148,11 @@ tbody tr:hover { background:#f8fafc; }
 </div>
 <script>
   
-  //const usuario = localStorage.getItem("usuario");
+  const usuario = localStorage.getItem("usuario");
 
-//if (!usuario) {
-  //window.location.href = "login.html";
-//} 
+if (!usuario) {
+  window.location.href = "login.html";
+} 
 
 let curriculos = []; // <<< FIX
 
@@ -304,10 +304,10 @@ fecharModal.onclick = () => { modal.style.display = "none"; };
 window.onclick = (e) => { if(e.target == modal) modal.style.display = "none"; };
 
 // Função de logout
-//function logout(){
-  //localStorage.removeItem("usuario");
- // window.location.href="login.html";
-//}
+function logout(){
+  localStorage.removeItem("usuario");
+ window.location.href="login.html";
+}
 
 // Carrega ao abrir a página
 carregarCurriculos();
