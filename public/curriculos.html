@@ -336,6 +336,17 @@ tbody tr:last-child td { border-bottom: none; }
 }
 .badge-ti { background: var(--info-bg); color: var(--primary); }
 .badge-adm { background: var(--success-bg); color: var(--success); }
+.badge-outros {
+  background: #fef3c7;
+  color: #92400e;
+  cursor: pointer;
+  border: 1.5px dashed #f59e0b;
+  transition: all 0.15s;
+}
+.badge-outros:hover {
+  background: #fde68a;
+  transform: scale(1.04);
+}
 
 /* ── NOME COM AVATAR ── */
 .nome-cell {
@@ -389,6 +400,109 @@ tbody tr:last-child td { border-bottom: none; }
 .btn-selecionar { background: #fff4ef; color: var(--accent); }
 .btn-selecionar:hover { background: #ffe8df; }
 .btn-selecionar.selecionado { background: #ffe8df; font-weight: 600; }
+
+.btn-editar { background: #f0f4ff; color: #5a67d8; }
+.btn-editar:hover { background: #e0e7ff; }
+
+/* ── MODAL EDITAR ── */
+.modal-edit-overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.5);
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  backdrop-filter: blur(2px);
+}
+.modal-edit-overlay.open { display: flex; }
+
+.modal-edit-box {
+  background: #ffffff;
+  color: #0d1117;
+  color-scheme: light;
+  padding: 28px;
+  border-radius: 16px;
+  max-width: 460px;
+  width: 92%;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+  animation: slideUp 0.25s ease;
+}
+
+.edit-field { margin-bottom: 16px; }
+.edit-field label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #8a94a6;
+  margin-bottom: 6px;
+}
+.edit-field input,
+.edit-field select {
+  width: 100%;
+  padding: 9px 13px;
+  border-radius: 8px;
+  border: 1.5px solid #e2e8f0;
+  background-color: #f5f7fa;
+  color: #0d1117;
+  font-size: 14px;
+  font-family: "DM Sans", sans-serif;
+  color-scheme: light;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.edit-field input:focus,
+.edit-field select:focus {
+  border-color: #0f62fe;
+  box-shadow: 0 0 0 3px rgba(15,98,254,0.12);
+  outline: none;
+  background-color: #ffffff;
+}
+.edit-field select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-color: #f5f7fa;
+  background-image: url("data:image/svg+xml,%3Csvg fill='none' stroke='%236b7280' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 15px;
+  padding-right: 34px;
+  cursor: pointer;
+}
+.edit-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+.btn-edit-cancel {
+  padding: 9px 18px;
+  border: 1.5px solid #e2e8f0;
+  background: #ffffff;
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-family: "DM Sans", sans-serif;
+  color: #4a5568;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+.btn-edit-cancel:hover { border-color: #e53e3e; color: #e53e3e; background: #fef2f2; }
+.btn-edit-save {
+  padding: 9px 22px;
+  border: none;
+  background: #0f62fe;
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-family: "DM Sans", sans-serif;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+.btn-edit-save:hover { background: #0353e9; }
 
 /* ── BOTÃO BAIXAR TODOS ── */
 .btn-baixar-todos {
@@ -638,6 +752,76 @@ tbody tr:last-child td { border-bottom: none; }
   </div>
 </div>
 
+<!-- Modal Editar Candidato -->
+<div class="modal-edit-overlay" id="modalEditar">
+  <div class="modal-edit-box">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;">
+      <div>
+        <div style="font-size:17px;font-weight:700;">✏️ Editar Candidato</div>
+        <div style="font-size:13px;color:#8a94a6;margin-top:3px;" id="editNomeLabel">—</div>
+      </div>
+      <button style="width:30px;height:30px;border-radius:8px;border:none;background:#f5f7fa;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#8a94a6;" onclick="fecharModalEditar()">×</button>
+    </div>
+    <div class="edit-field">
+      <label>Unidade</label>
+      <input type="text" id="editUnidade" placeholder="Ex: Fortaleza, Sobral…">
+    </div>
+    <div class="edit-field">
+      <label>Instituição</label>
+      <input type="text" id="editInstituicao" placeholder="Ex: UFCE, UFC…">
+    </div>
+    <div class="edit-field">
+      <label>Cargo</label>
+      <select id="editCargo">
+        <option value="TI">TI</option>
+        <option value="Administrativo">Administrativo</option>
+      </select>
+    </div>
+    <div class="edit-actions">
+      <button class="btn-edit-cancel" onclick="fecharModalEditar()">Cancelar</button>
+      <button class="btn-edit-save" onclick="salvarEdicao()">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Detalhes Cargo -->
+<div class="modal-overlay" id="modalDetalhesCargo" style="z-index:10001;">
+  <div class="modal-box" style="max-width:500px;">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="detalhesNome"></div>
+        <div class="modal-subtitle">📋 Detalhes do cargo pretendido</div>
+      </div>
+      <button class="modal-close" onclick="fecharDetalhesCargo()">×</button>
+    </div>
+
+    <!-- Cargos pretendidos -->
+    <div id="blocoCargosPretendidos" style="margin-bottom:16px;">
+      <div style="font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#8a94a6;margin-bottom:10px;">
+        🎯 Cargos pretendidos
+      </div>
+      <div id="listaCargosPretendidos" style="display:flex;flex-wrap:wrap;gap:7px;"></div>
+    </div>
+
+    <!-- Máquinas (Costureira) -->
+    <div id="blocoMaquinas" style="display:none;margin-bottom:16px;">
+      <div style="font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#8a94a6;margin-bottom:10px;">
+        🧵 Máquinas com experiência
+      </div>
+      <div id="listaMaquinas" style="display:flex;flex-wrap:wrap;gap:7px;"></div>
+    </div>
+
+    <!-- Nenhuma info -->
+    <div id="blocoSemInfo" style="display:none;padding:20px;text-align:center;color:#8a94a6;background:#f8fafc;border-radius:8px;font-size:14px;">
+      ℹ️ Nenhuma informação adicional cadastrada para este candidato.
+    </div>
+
+    <div style="margin-top:16px;display:flex;justify-content:flex-end;">
+      <button class="btn-edit-cancel" onclick="fecharDetalhesCargo()">Fechar</button>
+    </div>
+  </div>
+</div>
+
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
@@ -751,7 +935,14 @@ function atualizarTabela(lista) {
       <td>${c.telefone || "—"}</td>
       <td>${c.instituicao}</td>
       <td>${c.unidade}</td>
-      <td><span class="badge ${c.cargo === "TI" ? "badge-ti" : "badge-adm"}">${c.cargo}</span></td>
+      <td>
+        ${(c.cargo || "").toLowerCase().includes("outro")
+          ? `<span class="badge badge-outros" onclick="abrirDetalhesCargo(${c.id})" title="Clique para ver detalhes">
+               📋 ${c.cargo}
+             </span>`
+          : `<span class="badge ${c.cargo === "TI" ? "badge-ti" : "badge-adm"}">${c.cargo}</span>`
+        }
+      </td>
       <td>${dataBR}</td>
       <td>
         <div class="actions">
@@ -759,6 +950,8 @@ function atualizarTabela(lista) {
             onclick="abrirModalPorId(${c.id})">👁 Ver</button>
           <button class="btn-action btn-download"
             onclick="baixarCurriculo(${c.id})">⬇ CV</button>
+          <button class="btn-action btn-editar"
+            onclick="abrirModalEditar(${c.id})">✏️ Editar</button>
           <button class="btn-action btn-selecionar ${isSelecionado ? "selecionado" : ""}"
             onclick="toggleSelecionado(${c.id}, this)">
             ${isSelecionado ? "✅ Selecionado" : "🎯 Selecionar"}
@@ -964,12 +1157,34 @@ function abrirModal(c) {
   document.getElementById("modalCargoCanditado").textContent = `${c.cargo} • ${c.unidade} • ${c.email}`;
   document.getElementById("conteudoApresentacao").textContent = c.apresentacao || "Sem apresentação registrada.";
 
-  // Botão de download
-  const btnDl = document.getElementById("btnDownloadModal");
+  // Botão de download — usa o nome original do arquivo para preservar extensão
+  const btnDl    = document.getElementById("btnDownloadModal");
   const nomeLabel = document.getElementById("arquivoNomeLabel");
+
   if (c.arquivo && c.arquivo !== "#") {
-    btnDl.href = c.arquivo;
-    btnDl.download = `${c.nome}-${c.arquivo_nome || "curriculo"}`;
+    // Monta href com o mime type correto baseado na extensão original
+    const ext = (c.arquivo_nome || "").split(".").pop().toLowerCase();
+    const mimeMap = {
+      pdf:  "application/pdf",
+      doc:  "application/msword",
+      docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      jpg:  "image/jpeg",
+      jpeg: "image/jpeg",
+      png:  "image/png",
+      gif:  "image/gif",
+      webp: "image/webp",
+    };
+    const mime = mimeMap[ext] || "application/octet-stream";
+
+    // Reconstrói o data URL com o mime correto
+    let href = c.arquivo;
+    if (c.arquivo.startsWith("data:")) {
+      const base64 = c.arquivo.split(",")[1];
+      href = `data:${mime};base64,${base64}`;
+    }
+
+    btnDl.href     = href;
+    btnDl.download = c.arquivo_nome || `curriculo-${c.nome}.${ext}`;
     btnDl.style.display = "inline-flex";
     nomeLabel.textContent = c.arquivo_nome || "";
   } else {
@@ -977,35 +1192,16 @@ function abrirModal(c) {
     nomeLabel.textContent = "";
   }
 
-  // Prepara visualizador de arquivo
+  // Limpa o visualizador — só carrega quando clicar na aba "Currículo"
   const viz = document.getElementById("visualizadorArquivo");
-  const ext = (c.arquivo_nome || "").split(".").pop().toLowerCase();
-  const ehImagem = ["jpg","jpeg","png","gif","webp","bmp"].includes(ext);
-  const ehPdf    = ext === "pdf";
+  viz.innerHTML = `
+    <div style="padding:40px;text-align:center;color:var(--muted);">
+      <div style="font-size:32px;margin-bottom:10px;">📄</div>
+      <div style="font-size:13px;">Clique na aba <strong>Currículo</strong> para visualizar o arquivo</div>
+    </div>`;
 
-  if (!c.arquivo || c.arquivo === "#") {
-    viz.innerHTML = `<div style="padding:30px;text-align:center;color:var(--muted);">📎 Nenhum arquivo disponível</div>`;
-  } else if (ehPdf) {
-    // PDF: abre inline via <embed>
-    viz.innerHTML = `
-      <embed src="${c.arquivo}" type="application/pdf"
-        style="width:100%;height:480px;border-radius:8px;border:1px solid var(--border);"
-        onerror="this.outerHTML='<div style=\\'padding:20px;text-align:center;color:var(--muted);\\'>Não foi possível exibir o PDF. Use o botão Baixar abaixo.</div>'">`;
-  } else if (ehImagem) {
-    // Imagem: exibe diretamente
-    viz.innerHTML = `
-      <img src="${c.arquivo}" alt="Currículo de ${c.nome}"
-        style="max-width:100%;border-radius:8px;border:1px solid var(--border);display:block;margin:0 auto;"
-        onerror="this.outerHTML='<div style=\\'padding:20px;text-align:center;color:var(--muted);\\'>Erro ao carregar imagem. Use o botão Baixar.</div>'">`;
-  } else {
-    // DOC / DOCX e outros: não podem ser renderizados inline, oferece download
-    viz.innerHTML = `
-      <div style="padding:30px;text-align:center;color:var(--muted);">
-        <div style="font-size:40px;margin-bottom:12px;">📄</div>
-        <div style="font-size:14px;font-weight:600;color:var(--text-secondary);">Arquivo: ${c.arquivo_nome || "documento"}</div>
-        <div style="font-size:13px;margin-top:6px;">Este formato não pode ser visualizado no navegador.<br>Clique em <strong>Baixar arquivo</strong> para abrir no seu computador.</div>
-      </div>`;
-  }
+  // Guarda referência do candidato atual para carregar na aba
+  window._modalCandidatoAtual = c;
 
   // Começa sempre na aba de apresentação
   trocarAba("apres");
@@ -1017,6 +1213,7 @@ function trocarAba(aba) {
   const arquivo = document.getElementById("abaArquivo");
   const tabA    = document.getElementById("tabApres");
   const tabB    = document.getElementById("tabArquivo");
+
   if (aba === "apres") {
     apres.style.display   = "block";
     arquivo.style.display = "none";
@@ -1027,6 +1224,70 @@ function trocarAba(aba) {
     arquivo.style.display = "block";
     tabA.style.background = "none";    tabA.style.color = "#8a94a6";
     tabB.style.background = "#0f62fe"; tabB.style.color = "#fff";
+
+    // Carrega o visualizador somente quando a aba for aberta
+    const c   = window._modalCandidatoAtual;
+    const viz = document.getElementById("visualizadorArquivo");
+
+    if (!c || !c.arquivo || c.arquivo === "#") {
+      viz.innerHTML = `<div style="padding:30px;text-align:center;color:var(--muted);">📎 Nenhum arquivo disponível</div>`;
+      return;
+    }
+
+    const ext      = (c.arquivo_nome || "").split(".").pop().toLowerCase();
+    const ehPdf    = ext === "pdf";
+    const ehImagem = ["jpg","jpeg","png","gif","webp","bmp"].includes(ext);
+    const ehDoc    = ["doc","docx"].includes(ext);
+
+    // Monta src com mime correto
+    const mimeMap = {
+      pdf:  "application/pdf",
+      doc:  "application/msword",
+      docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      jpg:  "image/jpeg", jpeg: "image/jpeg",
+      png:  "image/png",  gif: "image/gif", webp: "image/webp",
+    };
+    const mime = mimeMap[ext] || "application/octet-stream";
+    let src = c.arquivo;
+    if (c.arquivo.startsWith("data:")) {
+      const base64 = c.arquivo.split(",")[1];
+      src = `data:${mime};base64,${base64}`;
+    }
+
+    if (ehPdf) {
+      viz.innerHTML = `
+        <embed src="${src}" type="application/pdf"
+          style="width:100%;height:500px;border-radius:8px;border:1px solid var(--border);"
+          onerror="this.outerHTML='<div style=\'padding:20px;text-align:center;color:var(--muted);\'>Não foi possível exibir o PDF inline. Use o botão <strong>Baixar arquivo</strong>.</div>'">`;
+
+    } else if (ehImagem) {
+      viz.innerHTML = `
+        <img src="${src}" alt="Currículo de ${c.nome}"
+          style="max-width:100%;border-radius:8px;border:1px solid var(--border);display:block;margin:0 auto;"
+          onerror="this.outerHTML='<div style=\'padding:20px;text-align:center;color:var(--muted);\'>Erro ao carregar imagem.</div>'">`;
+
+    } else if (ehDoc) {
+      // DOC/DOCX: usa Google Docs Viewer como preview
+      const blobUrl = src; // data URL
+      viz.innerHTML = `
+        <div style="padding:30px;text-align:center;color:var(--muted);">
+          <div style="font-size:44px;margin-bottom:14px;">📝</div>
+          <div style="font-size:14px;font-weight:600;color:#4a5568;margin-bottom:6px;">${c.arquivo_nome || "documento.docx"}</div>
+          <div style="font-size:13px;margin-bottom:16px;">Arquivos Word não podem ser visualizados diretamente no navegador.</div>
+          <a href="${src}" download="${c.arquivo_nome || "curriculo." + ext}"
+            style="display:inline-flex;align-items:center;gap:6px;padding:9px 20px;background:#0f62fe;color:#fff;border-radius:8px;font-size:13.5px;font-weight:600;text-decoration:none;">
+            ⬇ Baixar para visualizar
+          </a>
+        </div>`;
+
+    } else {
+      viz.innerHTML = `
+        <div style="padding:30px;text-align:center;color:var(--muted);">
+          <div style="font-size:44px;margin-bottom:12px;">📎</div>
+          <div style="font-size:14px;font-weight:600;color:#4a5568;">${c.arquivo_nome || "arquivo"}</div>
+          <div style="font-size:13px;margin-top:6px;">Formato não suportado para visualização. Use o botão <strong>Baixar arquivo</strong>.</div>
+        </div>`;
+    }
   }
 }
 
@@ -1211,6 +1472,121 @@ async function baixarTodosZip() {
     btn.textContent = "⬇ Baixar todos os currículos";
   }
 }
+
+/* ── Modal Detalhes Cargo (Outros / Costureira) ── */
+function abrirDetalhesCargo(id) {
+  const c = curriculos.find(x => x.id === id);
+  if (!c) return;
+
+  document.getElementById("detalhesNome").textContent = c.nome;
+
+  const blocoCP  = document.getElementById("blocoCargosPretendidos");
+  const blocoMaq = document.getElementById("blocoMaquinas");
+  const blocoSem = document.getElementById("blocoSemInfo");
+  const listaCP  = document.getElementById("listaCargosPretendidos");
+  const listaMaq = document.getElementById("listaMaquinas");
+
+  // Reseta
+  blocoCP.style.display  = "none";
+  blocoMaq.style.display = "none";
+  blocoSem.style.display = "none";
+  listaCP.innerHTML  = "";
+  listaMaq.innerHTML = "";
+
+  let temInfo = false;
+
+  // Cargos pretendidos
+  if (c.cargos_pretendidos && c.cargos_pretendidos.trim()) {
+    temInfo = true;
+    blocoCP.style.display = "block";
+    c.cargos_pretendidos.split(",").map(s => s.trim()).filter(Boolean).forEach(cargo => {
+      listaCP.innerHTML += `
+        <span style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;background:linear-gradient(135deg,#c4a264,#a8884e);color:#fff;border-radius:20px;font-size:12.5px;font-weight:600;">
+          ✦ ${cargo}
+        </span>`;
+    });
+  }
+
+  // Máquinas
+  if (c.maquinas && c.maquinas.trim()) {
+    temInfo = true;
+    blocoMaq.style.display = "block";
+    c.maquinas.split(",").map(s => s.trim()).filter(Boolean).forEach(maq => {
+      listaMaq.innerHTML += `
+        <span style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;background:#f0fdf4;color:#15803d;border:1.5px solid #bbf7d0;border-radius:20px;font-size:12.5px;font-weight:600;">
+          🧵 ${maq}
+        </span>`;
+    });
+  }
+
+  if (!temInfo) blocoSem.style.display = "block";
+
+  document.getElementById("modalDetalhesCargo").classList.add("open");
+}
+
+function fecharDetalhesCargo() {
+  document.getElementById("modalDetalhesCargo").classList.remove("open");
+}
+
+window.addEventListener("click", e => {
+  if (e.target.id === "modalDetalhesCargo") fecharDetalhesCargo();
+});
+
+/* ── Modal Editar ── */
+let editandoId = null;
+
+function abrirModalEditar(id) {
+  const c = curriculos.find(x => x.id === id);
+  if (!c) return;
+  editandoId = id;
+  document.getElementById("editNomeLabel").textContent = c.nome;
+  document.getElementById("editUnidade").value = c.unidade || "";
+  document.getElementById("editInstituicao").value = c.instituicao || "";
+  document.getElementById("editCargo").value = c.cargo || "TI";
+  document.getElementById("modalEditar").classList.add("open");
+}
+
+function fecharModalEditar() {
+  document.getElementById("modalEditar").classList.remove("open");
+  editandoId = null;
+}
+
+async function salvarEdicao() {
+  if (editandoId === null) return;
+  const c = curriculos.find(x => x.id === editandoId);
+  if (!c) return;
+
+  const novaUnidade     = document.getElementById("editUnidade").value.trim();
+  const novaInstituicao = document.getElementById("editInstituicao").value.trim();
+  const novoCargo       = document.getElementById("editCargo").value;
+
+  if (!novaUnidade || !novaInstituicao) {
+    mostrarToast("Preencha todos os campos.", "warning");
+    return;
+  }
+
+  try {
+    await fetch("/api/candidatos", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: editandoId, unidade: novaUnidade, instituicao: novaInstituicao, cargo: novoCargo }),
+    });
+  } catch (err) {
+    console.warn("API indisponível, salvando localmente:", err);
+  }
+
+  c.unidade     = novaUnidade;
+  c.instituicao = novaInstituicao;
+  c.cargo       = novoCargo;
+
+  fecharModalEditar();
+  aplicarFiltros();
+  mostrarToast("Candidato atualizado! ✅", "success");
+}
+
+window.addEventListener("click", e => {
+  if (e.target.id === "modalEditar") fecharModalEditar();
+});
 
 /* ── Inicializa ── */
 carregarCurriculos();

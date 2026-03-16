@@ -303,6 +303,100 @@ input[type="file"]::file-selector-button:hover {
   font-weight: 500;
 }
 
+/* ── CAMPOS DINÂMICOS ── */
+.campo-dinamico {
+  display: none;
+  grid-column: span 2;
+  animation: fadeIn 0.3s ease;
+}
+.campo-dinamico.show { display: flex; flex-direction: column; }
+
+/* Cargos pretendidos */
+.cargos-pretendidos-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cargos-pretendidos-label {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.cargo-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 38px;
+  padding: 8px 10px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  background: #fafafa;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.cargo-chips:focus-within {
+  border-color: var(--border-focus);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(196,162,100,0.15);
+}
+
+.cargo-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  background: linear-gradient(135deg, var(--primary), #a8884e);
+  color: #fff;
+  border-radius: 20px;
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.cargo-chip button {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.85);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0;
+  line-height: 1;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  transition: color 0.15s;
+}
+.cargo-chip button:hover { color: #fff; }
+
+.cargo-chips-placeholder {
+  font-size: 13.5px;
+  color: #b0b7c3;
+  align-self: center;
+}
+
+.cargos-dropdown {
+  position: relative;
+}
+
+.cargos-dropdown select {
+  width: 100%;
+}
+
+.cargos-limite-aviso {
+  font-size: 12px;
+  color: var(--primary);
+  font-weight: 600;
+  margin-top: 4px;
+  display: none;
+}
+.cargos-limite-aviso.show { display: block; }
+
+/* Campo máquinas */
+.maquinas-wrap { display: flex; flex-direction: column; }
+
 /* ── RESPONSIVE ── */
 @media (max-width: 640px) {
   .page { padding: 0; align-items: flex-start; }
@@ -353,6 +447,33 @@ input[type="file"]::file-selector-button:hover {
           <select id="cargoSelect" name="cargo_id" required>
             <option value="">Carregando cargos…</option>
           </select>
+        </div>
+
+        <!-- Campo: Cargos pretendidos (aparece quando cargo = "Outros") -->
+        <div class="campo-dinamico" id="campoCargosExtras">
+          <label>Cargos pretendidos <span class="req">*</span>
+            <span style="font-weight:400;color:var(--muted);font-size:11px;">(selecione até 5)</span>
+          </label>
+          <div class="cargos-pretendidos-wrap">
+            <div class="cargo-chips" id="cargoChips">
+              <span class="cargo-chips-placeholder" id="chipsPlaceholder">Selecione os cargos abaixo…</span>
+            </div>
+            <div class="cargos-dropdown">
+              <select id="cargosExtrasSelect" onchange="adicionarCargoExtra(this)">
+                <option value="">＋ Adicionar cargo…</option>
+              </select>
+            </div>
+            <div class="cargos-limite-aviso" id="limiteAviso">⚠️ Limite de 5 cargos atingido</div>
+          </div>
+        </div>
+
+        <!-- Campo: Máquinas (aparece quando cargo = "Costureiro(a)") -->
+        <div class="campo-dinamico" id="campoCostureira">
+          <label for="maquinas">Máquinas que deseja operar ou tem experiência <span class="req">*</span></label>
+          <div class="maquinas-wrap">
+            <input type="text" id="maquinas" placeholder="Ex: Overloque, Reta, Galoneira, Elastiqueira…">
+            <span style="font-size:12px;color:var(--muted);margin-top:4px;">💡 Separe por vírgula se tiver mais de uma</span>
+          </div>
         </div>
 
         <div class="field">
@@ -420,21 +541,118 @@ function falarMensagem(texto) {
   }
 }
 
+/* ── Cargos extras selecionados ── */
+let cargosExtrasSelecionados = []; // [{id, nome}]
+let todosCargos = [];
+let cargoOutrosId = null;    // id do cargo "Outros" ou similar
+let cargoCosTureiraId = null; // id do cargo "Costureiro(a)"
+
 /* ── Carrega cargos ── */
 async function carregarCargos() {
   try {
     const res  = await fetch("/api/cargos");
     const data = await res.json();
+    todosCargos = data;
+
     cargoSelect.innerHTML = '<option value="">Selecione um cargo</option>';
     data.forEach(c => {
       const o = document.createElement("option");
       o.value = c.id; o.textContent = c.nome;
       cargoSelect.appendChild(o);
+
+      // Detecta "Outros" e "Costureiro(a)" pelo nome (case-insensitive)
+      const nome = c.nome.toLowerCase();
+      if (nome.includes("outro")) cargoOutrosId = String(c.id);
+      if (nome.includes("costurei")) cargoCosTureiraId = String(c.id);
     });
   } catch (err) {
     cargoSelect.innerHTML = '<option value="">Erro ao carregar</option>';
     console.error(err);
   }
+}
+
+/* ── Ao trocar cargo, exibe campos dinâmicos ── */
+cargoSelect.addEventListener("change", () => {
+  const val = cargoSelect.value;
+
+  const campoCargosExtras = document.getElementById("campoCargosExtras");
+  const campoCostureira   = document.getElementById("campoCostureira");
+  const maquinas          = document.getElementById("maquinas");
+
+  // Reseta
+  campoCargosExtras.classList.remove("show");
+  campoCostureira.classList.remove("show");
+  maquinas.required = false;
+
+  if (val === cargoOutrosId) {
+    campoCargosExtras.classList.add("show");
+    preencherSelectExtras();
+  } else if (val === cargoCosTureiraId) {
+    campoCostureira.classList.add("show");
+    maquinas.required = true;
+  }
+});
+
+/* ── Preenche o select de cargos extras (exclui "Outros" e já selecionados) ── */
+function preencherSelectExtras() {
+  const sel = document.getElementById("cargosExtrasSelect");
+  sel.innerHTML = '<option value="">＋ Adicionar cargo…</option>';
+  todosCargos.forEach(c => {
+    if (String(c.id) === cargoOutrosId) return; // remove "Outros" da lista
+    if (cargosExtrasSelecionados.find(x => x.id === String(c.id))) return; // já selecionado
+    const o = document.createElement("option");
+    o.value = c.id; o.textContent = c.nome;
+    sel.appendChild(o);
+  });
+}
+
+/* ── Adiciona cargo chip ── */
+function adicionarCargoExtra(sel) {
+  if (!sel.value) return;
+  if (cargosExtrasSelecionados.length >= 5) {
+    sel.value = "";
+    document.getElementById("limiteAviso").classList.add("show");
+    return;
+  }
+
+  const nome = sel.options[sel.selectedIndex].textContent;
+  const id   = sel.value;
+
+  cargosExtrasSelecionados.push({ id, nome });
+  renderizarChips();
+  preencherSelectExtras();
+  sel.value = "";
+
+  document.getElementById("limiteAviso").classList.remove("show");
+  if (cargosExtrasSelecionados.length >= 5) {
+    document.getElementById("limiteAviso").classList.add("show");
+  }
+}
+
+/* ── Remove cargo chip ── */
+function removerCargoExtra(id) {
+  cargosExtrasSelecionados = cargosExtrasSelecionados.filter(c => c.id !== id);
+  renderizarChips();
+  preencherSelectExtras();
+  document.getElementById("limiteAviso").classList.remove("show");
+}
+
+/* ── Renderiza chips ── */
+function renderizarChips() {
+  const wrap = document.getElementById("cargoChips");
+  const placeholder = document.getElementById("chipsPlaceholder");
+
+  if (!cargosExtrasSelecionados.length) {
+    wrap.innerHTML = '<span class="cargo-chips-placeholder" id="chipsPlaceholder">Selecione os cargos abaixo…</span>';
+    return;
+  }
+
+  wrap.innerHTML = cargosExtrasSelecionados.map(c => `
+    <span class="cargo-chip">
+      ${c.nome}
+      <button type="button" onclick="removerCargoExtra('${c.id}')" title="Remover">×</button>
+    </span>
+  `).join("");
 }
 
 /* ── Carrega instituições ── */
@@ -496,6 +714,15 @@ document.getElementById("formCandidato").addEventListener("submit", async (e) =>
   reader.onload = async () => {
     const base64 = reader.result.split(",")[1];
 
+    // Validação campos dinâmicos
+    const cargoVal = document.getElementById("cargoSelect").value;
+    if (cargoVal === cargoOutrosId && cargosExtrasSelecionados.length === 0) {
+      alert("Selecione pelo menos 1 cargo pretendido.");
+      btn.disabled = false;
+      btn.textContent = "Enviar Currículo";
+      return;
+    }
+
     const body = {
       nome:          document.getElementById("nome").value,
       telefone:      document.getElementById("telefone").value,
@@ -505,7 +732,14 @@ document.getElementById("formCandidato").addEventListener("submit", async (e) =>
       unidade_id:    document.getElementById("unidadeSelect").value,
       apresentacao:  document.getElementById("apresentacao").value,
       arquivo_base64: base64,
-      arquivo_nome:  file.name
+      arquivo_nome:  file.name,
+      // Campos extras
+      cargos_pretendidos: cargoVal === cargoOutrosId
+        ? cargosExtrasSelecionados.map(c => c.nome).join(", ")
+        : null,
+      maquinas: cargoVal === cargoCosTureiraId
+        ? document.getElementById("maquinas").value
+        : null,
     };
 
     try {
@@ -543,6 +777,12 @@ function novoCadastro() {
   document.getElementById("successMsg").classList.remove("show");
   unidadeSelect.disabled = true;
   unidadeSelect.innerHTML = '<option value="">Selecione uma instituição primeiro</option>';
+  // Reset campos dinâmicos
+  cargosExtrasSelecionados = [];
+  renderizarChips();
+  document.getElementById("campoCargosExtras").classList.remove("show");
+  document.getElementById("campoCostureira").classList.remove("show");
+  document.getElementById("limiteAviso").classList.remove("show");
 }
 
 /* ── Inicializa ── */

@@ -42,7 +42,8 @@ export default async function handler(req, res) {
       const {
         nome, telefone, email,
         cargo_id, instituicao_id, unidade_id,
-        apresentacao, arquivo_base64, arquivo_nome
+        apresentacao, arquivo_base64, arquivo_nome,
+        cargos_pretendidos, maquinas
       } = req.body;
 
       if (!arquivo_base64) {
@@ -54,8 +55,9 @@ export default async function handler(req, res) {
       const result = await pool.query(
         `INSERT INTO candidatos
            (nome, telefone, email, cargo_id, instituicao_id, unidade_id,
-            apresentacao, arquivo, arquivo_nome)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+            apresentacao, arquivo, arquivo_nome,
+            cargos_pretendidos, maquinas)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
          RETURNING id`,
         [
           nome,
@@ -67,6 +69,8 @@ export default async function handler(req, res) {
           apresentacao || null,
           arquivoBuffer,
           arquivo_nome,
+          cargos_pretendidos || null,
+          maquinas || null,
         ]
       );
 
@@ -111,6 +115,8 @@ export default async function handler(req, res) {
           c.arquivo_nome,
           c.aprovado,
           c.criado_em AS data,
+          c.cargos_pretendidos,
+          c.maquinas,
           ca.nome AS cargo,
           i.nome  AS instituicao,
           u.nome  AS unidade
