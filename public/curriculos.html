@@ -374,22 +374,24 @@ tbody tr:last-child td { border-bottom: none; }
 /* ── ACTIONS ── */
 .actions {
   display: flex;
-  gap: 6px;
+  gap: 4px;
   align-items: center;
+  flex-wrap: nowrap;
 }
 .btn-action {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 5px 11px;
+  gap: 3px;
+  padding: 4px 8px;
   border-radius: 6px;
-  font-size: 12.5px;
+  font-size: 11.5px;
   font-weight: 500;
   text-decoration: none;
   cursor: pointer;
   border: none;
   font-family: "DM Sans", sans-serif;
   transition: all 0.15s;
+  white-space: nowrap;
 }
 .btn-ver { background: var(--primary-light); color: var(--primary); }
 .btn-ver:hover { background: #dde7ff; }
@@ -403,6 +405,13 @@ tbody tr:last-child td { border-bottom: none; }
 
 .btn-editar { background: #f0f4ff; color: #5a67d8; }
 .btn-editar:hover { background: #e0e7ff; }
+
+.btn-arquivar { background: #fdf4ff; color: #7e22ce; }
+.btn-arquivar:hover { background: #f3e8ff; }
+
+/* Coluna de ações não quebra */
+td:last-child { white-space: nowrap; }
+th:last-child { white-space: nowrap; }
 
 /* ── MODAL EDITAR ── */
 .modal-edit-overlay {
@@ -825,6 +834,44 @@ tbody tr:last-child td { border-bottom: none; }
   </div>
 </div>
 
+<!-- Modal Arquivar Candidato -->
+<div class="modal-edit-overlay" id="modalArquivar" style="z-index:10002;">
+  <div class="modal-edit-box" style="max-width:480px;">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;">
+      <div>
+        <div style="font-size:17px;font-weight:700;">🗄️ Arquivar Candidato</div>
+        <div style="font-size:13px;color:#8a94a6;margin-top:3px;" id="arquivarNomeLabel">—</div>
+      </div>
+      <button style="width:30px;height:30px;border-radius:8px;border:none;background:#f5f7fa;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#8a94a6;" onclick="fecharModalArquivar()">×</button>
+    </div>
+
+    <div style="background:#fdf4ff;border:1.5px solid #e9d5ff;border-radius:8px;padding:12px 14px;font-size:13px;color:#6b21a8;margin-bottom:16px;">
+      ⚠️ O candidato será arquivado e removido da lista principal. Esta ação fica registrada com seu usuário.
+    </div>
+
+    <div class="edit-field">
+      <label>Motivo do arquivamento <span style="color:#e53e3e;font-size:11px;">*</span></label>
+      <textarea id="arquivarMotivo" rows="3"
+        placeholder="Ex: Perfil não compatível com a vaga, candidato desistiu…"
+        style="width:100%;padding:9px 13px;border-radius:8px;border:1.5px solid #e2e8f0;background-color:#f5f7fa;color:#0d1117;font-size:14px;font-family:'DM Sans',sans-serif;resize:vertical;color-scheme:light;transition:border-color 0.2s;outline:none;"
+        onfocus="this.style.borderColor='#0f62fe'" onblur="this.style.borderColor='#e2e8f0'"></textarea>
+    </div>
+
+    <div style="background:#f8fafc;border-radius:8px;padding:10px 14px;font-size:12.5px;color:#8a94a6;margin-bottom:4px;">
+      👤 Arquivado por: <strong id="arquivarUsuario" style="color:#0d1117;">—</strong>
+    </div>
+
+    <div class="edit-actions">
+      <button class="btn-edit-cancel" onclick="fecharModalArquivar()">Cancelar</button>
+      <button onclick="confirmarArquivamento()"
+        style="padding:9px 22px;border:none;background:#7e22ce;border-radius:8px;font-size:13.5px;font-family:'DM Sans',sans-serif;color:#fff;cursor:pointer;font-weight:600;transition:background 0.2s;"
+        onmouseover="this.style.background='#6b21a8'" onmouseout="this.style.background='#7e22ce'">
+        🗄️ Confirmar arquivamento
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
@@ -957,8 +1004,10 @@ function atualizarTabela(lista) {
             onclick="abrirModalEditar(${c.id})">✏️ Editar</button>
           <button class="btn-action btn-selecionar ${isSelecionado ? "selecionado" : ""}"
             onclick="toggleSelecionado(${c.id}, this)">
-            ${isSelecionado ? "✅ Selecionado" : "🎯 Selecionar"}
+            ${isSelecionado ? "✅ Sel." : "🎯 Sel."}
           </button>
+          <button class="btn-action btn-arquivar"
+            onclick="abrirModalArquivar(${c.id})">🗄️ Arq.</button>
         </div>
       </td>
     </tr>`;
@@ -1533,6 +1582,81 @@ function fecharDetalhesCargo() {
 
 window.addEventListener("click", e => {
   if (e.target.id === "modalDetalhesCargo") fecharDetalhesCargo();
+});
+
+/* ── Modal Arquivar ── */
+let arquivandoId = null;
+
+function abrirModalArquivar(id) {
+  const c = curriculos.find(x => x.id === id);
+  if (!c) return;
+  arquivandoId = id;
+
+  document.getElementById("arquivarNomeLabel").textContent = c.nome;
+  document.getElementById("arquivarMotivo").value = "";
+
+  // Pega usuário logado do localStorage
+  let nomeUsuario = "—";
+  try {
+    const raw = localStorage.getItem("usuario");
+    if (raw) {
+      const u = JSON.parse(raw);
+      nomeUsuario = u.nome || u.name || u.usuario || JSON.stringify(u);
+    }
+  } catch(e) {}
+  document.getElementById("arquivarUsuario").textContent = nomeUsuario;
+
+  document.getElementById("modalArquivar").classList.add("open");
+}
+
+function fecharModalArquivar() {
+  document.getElementById("modalArquivar").classList.remove("open");
+  arquivandoId = null;
+}
+
+async function confirmarArquivamento() {
+  if (!arquivandoId) return;
+  const motivo = document.getElementById("arquivarMotivo").value.trim();
+  if (!motivo) {
+    document.getElementById("arquivarMotivo").focus();
+    document.getElementById("arquivarMotivo").style.borderColor = "#e53e3e";
+    mostrarToast("Digite o motivo do arquivamento.", "warning");
+    return;
+  }
+
+  let nomeUsuario = "—";
+  try {
+    const raw = localStorage.getItem("usuario");
+    if (raw) {
+      const u = JSON.parse(raw);
+      nomeUsuario = u.nome || u.name || u.usuario || "—";
+    }
+  } catch(e) {}
+
+  try {
+    await fetch("/api/candidatos", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: arquivandoId,
+        acao: "arquivar",
+        motivo_arquivamento: motivo,
+        arquivado_por: nomeUsuario,
+      }),
+    });
+  } catch (err) {
+    console.warn("API indisponível:", err);
+  }
+
+  // Remove da lista em memória
+  curriculos = curriculos.filter(x => x.id !== arquivandoId);
+  fecharModalArquivar();
+  aplicarFiltros();
+  mostrarToast("Candidato arquivado com sucesso! 🗄️", "success");
+}
+
+window.addEventListener("click", e => {
+  if (e.target.id === "modalArquivar") fecharModalArquivar();
 });
 
 /* ── Modal Editar ── */
