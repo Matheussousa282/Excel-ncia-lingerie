@@ -158,16 +158,67 @@ body { font-family: "DM Sans", sans-serif; background: var(--bg); color: var(--t
 .empty-cal-icon { font-size: 36px; margin-bottom: 10px; }
 
 /* ══ MODAIS ══ */
-.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.55); align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(3px); }
+.modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,.55);
+  align-items: center; justify-content: center;
+  z-index: 9999; backdrop-filter: blur(3px);
+}
 .modal-overlay.open { display: flex; animation: fadeIn .2s ease; }
 @keyframes fadeIn { from{opacity:0} to{opacity:1} }
-.modal-box { background: var(--card); padding: 24px 26px; border-radius: 16px; max-width: 510px; width: 94%; box-shadow: var(--shadow-lg); animation: slideUp .22s ease; max-height: 90vh; overflow-y: auto; }
+
+.modal-box {
+  background: var(--card);
+  border-radius: 16px;
+  max-width: 510px; width: 94%;
+  box-shadow: var(--shadow-lg);
+  animation: slideUp .22s ease;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* o scroll fica só no conteúdo, não cobre o header */
+}
 @keyframes slideUp { from{transform:translateY(20px);opacity:0} to{transform:translateY(0);opacity:1} }
-.modal-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 18px; }
+
+.modal-header {
+  display: flex; align-items: flex-start;
+  justify-content: space-between;
+  padding: 22px 24px 16px;
+  flex-shrink: 0; /* nunca encolhe — fica sempre visível */
+  border-bottom: 1px solid var(--border);
+}
+.modal-body-scroll {
+  overflow-y: auto;
+  padding: 20px 24px;
+  flex: 1;
+}
+/* compatibilidade com modal-box antigo que usava padding direto */
+.modal-box > .mfield,
+.modal-box > .btn-confirmar {
+  padding-left: 24px;
+  padding-right: 24px;
+}
+.modal-box > .mfield:first-of-type { margin-top: 16px; }
+.modal-box > .btn-confirmar { margin: 0 24px 20px; width: calc(100% - 48px); }
+
 .modal-title { font-size: 17px; font-weight: 700; }
 .modal-subtitle { font-size: 12.5px; color: var(--muted); margin-top: 3px; }
-.modal-close { width: 28px; height: 28px; border-radius: 7px; border: none; background: var(--bg); font-size: 16px; cursor: pointer; color: var(--muted); display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all .15s; }
+.modal-close {
+  width: 30px; height: 30px; border-radius: 8px;
+  border: none; background: var(--bg);
+  font-size: 18px; cursor: pointer;
+  color: var(--muted);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: all .15s;
+  position: relative;
+  z-index: 10000;
+  pointer-events: all;
+}
 .modal-close:hover { background: var(--danger-bg); color: var(--danger); }
+
+/* Garante que o modal-header não bloqueia eventos */
+.modal-header { position: relative; z-index: 10000; }
 
 .mfield { margin-bottom: 15px; }
 .mfield label { display: block; font-size: 11.5px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 5px; }
@@ -326,32 +377,33 @@ body { font-family: "DM Sans", sans-serif; background: var(--bg); color: var(--t
       </div>
       <button class="modal-close" onclick="fecharModal('modalAgendar')">&times;</button>
     </div>
-
-    <div class="mfield">
-      <label>Candidato *</label>
-      <select id="selectCand"><option value="">Carregando…</option></select>
-    </div>
-    <div class="mfield">
-      <label>Data *</label>
-      <input type="date" id="dataAgendar" onchange="carregarHorarios()">
-    </div>
-    <div class="mfield">
-      <label>Horário disponível *</label>
-      <div class="horarios-grid" id="horariosGrid">
-        <div style="grid-column:span 4;color:var(--muted);font-size:13px;padding:6px 0;">
-          Selecione uma data primeiro
+    <div class="modal-body-scroll">
+      <div class="mfield">
+        <label>Candidato *</label>
+        <select id="selectCand"><option value="">Carregando…</option></select>
+      </div>
+      <div class="mfield">
+        <label>Data *</label>
+        <input type="date" id="dataAgendar" onchange="carregarHorarios()">
+      </div>
+      <div class="mfield">
+        <label>Horário disponível *</label>
+        <div class="horarios-grid" id="horariosGrid">
+          <div style="grid-column:span 4;color:var(--muted);font-size:13px;padding:6px 0;">
+            Selecione uma data primeiro
+          </div>
         </div>
       </div>
+      <div class="mfield">
+        <label>Responsável pela entrevista</label>
+        <input type="text" id="respAgendar" placeholder="Nome do entrevistador…">
+      </div>
+      <div class="mfield">
+        <label>Observações</label>
+        <textarea id="obsAgendar" placeholder="Anotações…"></textarea>
+      </div>
+      <button class="btn-confirmar" id="btnConfirmar" onclick="confirmarAgendamento()" style="width:100%;">✓ Confirmar Agendamento</button>
     </div>
-    <div class="mfield">
-      <label>Responsável pela entrevista</label>
-      <input type="text" id="respAgendar" placeholder="Nome do entrevistador…">
-    </div>
-    <div class="mfield">
-      <label>Observações</label>
-      <textarea id="obsAgendar" placeholder="Anotações…"></textarea>
-    </div>
-    <button class="btn-confirmar" id="btnConfirmar" onclick="confirmarAgendamento()">✓ Confirmar Agendamento</button>
   </div>
 </div>
 
@@ -365,21 +417,21 @@ body { font-family: "DM Sans", sans-serif; background: var(--bg); color: var(--t
       </div>
       <button class="modal-close" onclick="fecharModal('modalDetalhe')">&times;</button>
     </div>
-    <div id="detConteudo"></div>
+    <div class="modal-body-scroll" id="detConteudo"></div>
   </div>
 </div>
 
 <!-- Modal: Lista por status -->
 <div class="modal-overlay" id="modalLista">
-  <div class="modal-box" style="max-width:680px;padding:0;overflow:hidden;">
-    <div class="modal-header" style="padding:20px 24px 16px;">
+  <div class="modal-box" style="max-width:680px;">
+    <div class="modal-header">
       <div>
         <div class="modal-title" id="modalListaTitulo"></div>
         <div class="modal-subtitle" id="modalListaSubtitulo"></div>
       </div>
       <button class="modal-close" onclick="fecharModal('modalLista')">&times;</button>
     </div>
-    <div id="modalListaConteudo" style="max-height:55vh;overflow-y:auto;"></div>
+    <div id="modalListaConteudo" style="overflow-y:auto;flex:1;"></div>
     <div class="modal-lista-footer">
       <button class="btn-pdf-modal" id="btnPDFModal"
         onclick="exportarPDFStatus(statusAtualModal)">
@@ -399,26 +451,28 @@ body { font-family: "DM Sans", sans-serif; background: var(--bg); color: var(--t
       </div>
       <button class="modal-close" onclick="fecharModal('modalEditarData')">&times;</button>
     </div>
-    <input type="hidden" id="editarEntrevistaId">
-    <div class="mfield">
-      <label>Nova data *</label>
-      <input type="date" id="editarData" onchange="carregarHorariosEdicao()">
-    </div>
-    <div class="mfield">
-      <label>Novo horário *</label>
-      <div class="horarios-grid" id="horariosGridEdicao">
-        <div style="grid-column:span 4;color:var(--muted);font-size:13px;padding:6px 0;">
-          Selecione uma data primeiro
+    <div class="modal-body-scroll">
+      <input type="hidden" id="editarEntrevistaId">
+      <div class="mfield">
+        <label>Nova data *</label>
+        <input type="date" id="editarData" onchange="carregarHorariosEdicao()">
+      </div>
+      <div class="mfield">
+        <label>Novo horário *</label>
+        <div class="horarios-grid" id="horariosGridEdicao">
+          <div style="grid-column:span 4;color:var(--muted);font-size:13px;padding:6px 0;">
+            Selecione uma data primeiro
+          </div>
         </div>
       </div>
+      <div class="mfield">
+        <label>Responsável</label>
+        <input type="text" id="editarResponsavel" placeholder="Nome do entrevistador…">
+      </div>
+      <button class="btn-confirmar" id="btnConfirmarEdicao" onclick="confirmarEdicaoData()" style="width:100%;">
+        ✓ Confirmar alteração
+      </button>
     </div>
-    <div class="mfield">
-      <label>Responsável</label>
-      <input type="text" id="editarResponsavel" placeholder="Nome do entrevistador…">
-    </div>
-    <button class="btn-confirmar" id="btnConfirmarEdicao" onclick="confirmarEdicaoData()">
-      ✓ Confirmar alteração
-    </button>
   </div>
 </div>
 
@@ -998,9 +1052,16 @@ async function confirmarEdicaoData() {
   } catch { mostrarToast("Erro ao alterar data.", "danger"); }
   finally { btn.disabled = false; btn.textContent = "✓ Confirmar alteração"; }
 }
-window.addEventListener("click", e => {
-  ["modalAgendar","modalDetalhe","modalLista","modalEditarData"].forEach(id => {
-    if(e.target.id===id) fecharModal(id);
+/* ════ FECHAR MODAIS ════ */
+function fecharModal(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.remove("open");
+}
+
+/* Fecha ao clicar no fundo escuro do overlay */
+window.addEventListener("click", function(e) {
+  ["modalAgendar","modalDetalhe","modalLista","modalEditarData"].forEach(function(id) {
+    if (e.target.id === id) fecharModal(id);
   });
 });
 
