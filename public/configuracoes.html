@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Configurações | RH System</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --primary: #2563eb;
+  --primary-light: #eff6ff;
+  --success: #0da868;
+  --success-bg: #e6f7f1;
+  --danger: #e53e3e;
+  --danger-bg: #fef2f2;
+  --warning: #d4a017;
+  --warning-bg: #fef9e7;
+  --muted: #6b7280;
+  --bg: #f5f7fa;
+  --card: #ffffff;
+  --border: #e2e8f0;
+  --text: #0d1117;
+  --text-secondary: #4a5568;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.07);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.09);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --whatsapp: #25d366;
+  --whatsapp-dark: #128c3e;
+  --whatsapp-bg: #e8fdf0;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: "DM Sans", sans-serif; background: var(--bg); color: var(--text); padding: 26px 22px; }
+
+.page-title    { font-size: 22px; font-weight: 700; letter-spacing: -.4px; margin-bottom: 6px; }
+.page-subtitle { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+
+/* ── SEÇÃO ── */
+.section { margin-bottom: 28px; }
+.section-title {
+  font-size: 12px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .7px; color: var(--muted); margin-bottom: 12px;
+  display: flex; align-items: center; gap: 7px;
+}
+.section-title::after {
+  content: ""; flex: 1; height: 1px; background: var(--border);
+}
+
+/* ── CARD ── */
+.card {
+  background: var(--card); border-radius: var(--radius);
+  border: 1px solid var(--border); box-shadow: var(--shadow-sm);
+  overflow: hidden; margin-bottom: 14px;
+}
+.card-header {
+  padding: 16px 20px; border-bottom: 1px solid var(--border);
+  background: #fafafa; display: flex; align-items: center;
+  justify-content: space-between; gap: 12px;
+}
+.card-header-left  { display: flex; align-items: center; gap: 10px; }
+.card-header-icon  { font-size: 20px; }
+.card-header-title { font-size: 14.5px; font-weight: 700; }
+.card-header-sub   { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.card-body  { padding: 20px 22px; }
+
+/* ── TOGGLE SWITCH ── */
+.toggle-wrap {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 0; border-bottom: 1px solid #f0f4f8;
+}
+.toggle-wrap:last-child { border-bottom: none; padding-bottom: 0; }
+.toggle-label { font-size: 13.5px; font-weight: 500; }
+.toggle-sub   { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+.toggle {
+  position: relative; width: 44px; height: 24px; flex-shrink: 0;
+}
+.toggle input { opacity: 0; width: 0; height: 0; }
+.toggle-slider {
+  position: absolute; inset: 0; background: #d1d5db;
+  border-radius: 24px; cursor: pointer; transition: background .25s;
+}
+.toggle-slider::before {
+  content: ""; position: absolute;
+  width: 18px; height: 18px; left: 3px; top: 3px;
+  background: #fff; border-radius: 50%;
+  transition: transform .25s; box-shadow: 0 1px 3px rgba(0,0,0,.2);
+}
+.toggle input:checked + .toggle-slider { background: var(--whatsapp); }
+.toggle input:checked + .toggle-slider::before { transform: translateX(20px); }
+.toggle.primary input:checked + .toggle-slider { background: var(--primary); }
+
+/* ── MASTER SWITCH ── */
+.master-card {
+  background: linear-gradient(135deg, var(--whatsapp-dark) 0%, var(--whatsapp) 100%);
+  border-radius: var(--radius); padding: 20px 22px; margin-bottom: 20px;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; box-shadow: 0 6px 20px rgba(37,211,102,.3);
+}
+.master-left  { display: flex; align-items: center; gap: 14px; }
+.master-icon  { font-size: 32px; }
+.master-title { font-size: 16px; font-weight: 700; color: #fff; }
+.master-sub   { font-size: 13px; color: rgba(255,255,255,.8); margin-top: 3px; }
+.toggle-master .toggle-slider { background: rgba(255,255,255,.4); }
+.toggle-master input:checked + .toggle-slider { background: #fff; }
+.toggle-master .toggle-slider::before { background: var(--whatsapp-dark); }
+
+/* ── STATUS BADGE DA CONEXÃO ── */
+.conn-status {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 12px; border-radius: 20px; font-size: 12.5px; font-weight: 600;
+}
+.conn-ativo    { background: var(--whatsapp-bg); color: var(--whatsapp-dark); }
+.conn-inativo  { background: #f3f4f6; color: var(--muted); }
+.conn-erro     { background: var(--danger-bg); color: var(--danger); }
+.conn-dot      { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.dot-ativo     { background: var(--whatsapp); animation: pulse 1.5s infinite; }
+.dot-inativo   { background: var(--muted); }
+.dot-erro      { background: var(--danger); }
+@keyframes pulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(37,211,102,.5); }
+  50%      { box-shadow: 0 0 0 5px rgba(37,211,102,0); }
+}
+
+/* ── FIELDS ── */
+.field { margin-bottom: 16px; }
+.field label {
+  display: block; font-size: 12px; font-weight: 600; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .4px; margin-bottom: 6px;
+}
+.field input, .field textarea {
+  width: 100%; padding: 10px 13px; font-size: 14px;
+  font-family: "DM Sans", sans-serif; border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm); background: var(--bg); color: var(--text);
+  outline: none; transition: all .2s;
+}
+.field input:focus, .field textarea:focus {
+  border-color: var(--primary); background: #fff;
+  box-shadow: 0 0 0 3px rgba(37,99,235,.1);
+}
+.field input::placeholder, .field textarea::placeholder { color: #b0b7c3; }
+.field textarea { resize: vertical; min-height: 90px; line-height: 1.6; font-size: 13.5px; }
+
+/* Campo com senha oculta */
+.input-group { position: relative; }
+.input-group input { padding-right: 42px; }
+.btn-eye { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 15px; color: var(--muted); transition: color .15s; }
+.btn-eye:hover { color: var(--primary); }
+
+/* Hint de variáveis */
+.vars-hint {
+  background: var(--primary-light); border-radius: var(--radius-sm);
+  padding: 10px 13px; font-size: 12.5px; color: var(--text-secondary);
+  margin-bottom: 14px; line-height: 1.6;
+}
+.vars-hint strong { color: var(--primary); }
+
+/* ── BOTÕES ── */
+.btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
+.btn {
+  display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px;
+  border-radius: var(--radius-sm); font-size: 13.5px; font-weight: 600;
+  font-family: "DM Sans", sans-serif; border: none; cursor: pointer; transition: all .18s;
+}
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary:hover { background: #1d4ed8; transform: translateY(-1px); }
+.btn-primary:disabled { opacity: .6; pointer-events: none; }
+.btn-whatsapp { background: var(--whatsapp); color: #fff; }
+.btn-whatsapp:hover { background: var(--whatsapp-dark); }
+.btn-outline { background: var(--card); color: var(--text-secondary); border: 1.5px solid var(--border); }
+.btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+.btn-danger-sm { background: var(--danger-bg); color: var(--danger); }
+
+/* ── TESTE MANUAL ── */
+.test-row { display: flex; gap: 10px; align-items: flex-end; }
+.test-row .field { flex: 1; margin-bottom: 0; }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed; bottom: 22px; right: 22px; background: #1a202c; color: #fff;
+  padding: 11px 18px; border-radius: 10px; font-size: 13.5px; font-weight: 500;
+  box-shadow: var(--shadow-md); z-index: 9999;
+  transform: translateY(70px); opacity: 0; transition: all .3s ease;
+}
+.toast.show    { transform: translateY(0); opacity: 1; }
+.toast.success { background: var(--success); }
+.toast.danger  { background: var(--danger); }
+.toast.warning { background: var(--warning); }
+
+/* ── ACESSO NEGADO ── */
+.acesso-negado { display: none; padding: 60px 20px; text-align: center; color: var(--muted); }
+.acesso-negado-icon  { font-size: 48px; margin-bottom: 14px; }
+.acesso-negado-title { font-size: 18px; font-weight: 700; color: var(--text-secondary); margin-bottom: 6px; }
+
+/* Grid de 2 colunas para mensagens */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width:768px) { .grid-2 { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<!-- Conteúdo principal (só para Matheus) -->
+<div id="conteudo" style="display:none;">
+
+  <div class="page-title">⚙️ Configurações</div>
+  <div class="page-subtitle">Gerencie integrações e preferências do sistema</div>
+
+  <!-- ════ MASTER SWITCH WHATSAPP ════ -->
+  <div class="master-card">
+    <div class="master-left">
+      <div class="master-icon">📱</div>
+      <div>
+        <div class="master-title">Notificações WhatsApp</div>
+        <div class="master-sub">Envio automático de mensagens em cada etapa do processo</div>
+      </div>
+    </div>
+    <label class="toggle toggle-master" style="width:52px;height:28px;">
+      <input type="checkbox" id="toggleWhatsapp" onchange="salvarMaster()">
+      <span class="toggle-slider"></span>
+    </label>
+  </div>
+
+  <div id="painelWhatsapp">
+
+    <!-- ════ CONEXÃO EVOLUTION API ════ -->
+    <div class="section">
+      <div class="section-title">🔌 Conexão — Evolution API</div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-header-left">
+            <span class="card-header-icon">🌐</span>
+            <div>
+              <div class="card-header-title">Credenciais da API</div>
+              <div class="card-header-sub">Configure a URL, chave e instância da Evolution API</div>
+            </div>
+          </div>
+          <div id="statusConexao" class="conn-status conn-inativo">
+            <span class="conn-dot dot-inativo"></span> Não testado
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="grid-2">
+            <div class="field">
+              <label>URL da API *</label>
+              <input type="url" id="apiUrl" placeholder="https://sua-evolution-api.com">
+            </div>
+            <div class="field">
+              <label>Instância *</label>
+              <input type="text" id="apiInstance" placeholder="nome-da-instancia">
+            </div>
+          </div>
+          <div class="field">
+            <label>API Key *</label>
+            <div class="input-group">
+              <input type="password" id="apiKey" placeholder="Sua chave de API…">
+              <button class="btn-eye" onclick="toggleSenha('apiKey', this)" type="button">👁️</button>
+            </div>
+          </div>
+
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="salvarConexao()" id="btnSalvarConexao">💾 Salvar conexão</button>
+            <button class="btn btn-whatsapp" onclick="testarConexao()" id="btnTestar">📡 Testar conexão</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Teste manual de envio -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-header-left">
+            <span class="card-header-icon">🧪</span>
+            <div>
+              <div class="card-header-title">Envio de teste</div>
+              <div class="card-header-sub">Envie uma mensagem de teste para verificar a integração</div>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="test-row">
+            <div class="field">
+              <label>Número de destino (com DDD)</label>
+              <input type="tel" id="testeTelefone" placeholder="(85) 99999-9999">
+            </div>
+            <button class="btn btn-whatsapp" onclick="enviarTeste()" id="btnEnviarTeste" style="margin-bottom:0;">📤 Enviar teste</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════ NOTIFICAÇÕES POR ETAPA ════ -->
+    <div class="section">
+      <div class="section-title">🔔 Notificações por etapa</div>
+
+      <div class="card">
+        <div class="card-body" style="padding:16px 22px;">
+
+          <div class="toggle-wrap">
+            <div>
+              <div class="toggle-label">📋 Currículo selecionado</div>
+              <div class="toggle-sub">Notifica quando o currículo é selecionado para entrevista</div>
+            </div>
+            <label class="toggle primary">
+              <input type="checkbox" id="notif_selecionado" onchange="salvarToggle('notif_selecionado', this.checked)">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <div class="toggle-wrap">
+            <div>
+              <div class="toggle-label">📅 Entrevista agendada</div>
+              <div class="toggle-sub">Envia data, horário e responsável ao candidato</div>
+            </div>
+            <label class="toggle primary">
+              <input type="checkbox" id="notif_agendado" onchange="salvarToggle('notif_agendado', this.checked)">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <div class="toggle-wrap">
+            <div>
+              <div class="toggle-label">📝 Entrevista realizada</div>
+              <div class="toggle-sub">Informa que a entrevista foi concluída e aguarda resultado</div>
+            </div>
+            <label class="toggle primary">
+              <input type="checkbox" id="notif_realizado" onchange="salvarToggle('notif_realizado', this.checked)">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <div class="toggle-wrap">
+            <div>
+              <div class="toggle-label">✅ Candidato aprovado</div>
+              <div class="toggle-sub">Mensagem de parabéns ao candidato aprovado</div>
+            </div>
+            <label class="toggle primary">
+              <input type="checkbox" id="notif_aprovado" onchange="salvarToggle('notif_aprovado', this.checked)">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <div class="toggle-wrap">
+            <div>
+              <div class="toggle-label">✕ Candidato reprovado</div>
+              <div class="toggle-sub">Mensagem educada informando que não foi selecionado</div>
+            </div>
+            <label class="toggle primary">
+              <input type="checkbox" id="notif_reprovado" onchange="salvarToggle('notif_reprovado', this.checked)">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ════ MENSAGENS ════ -->
+    <div class="section">
+      <div class="section-title">💬 Textos das mensagens</div>
+
+      <div class="vars-hint">
+        Use as variáveis: <strong>{nome}</strong> (nome do candidato) &nbsp;·&nbsp;
+        <strong>{data}</strong> (data da entrevista) &nbsp;·&nbsp;
+        <strong>{hora}</strong> (horário) &nbsp;·&nbsp;
+        <strong>{responsavel}</strong> (entrevistador) &nbsp;·&nbsp;
+        Use <strong>*texto*</strong> para negrito no WhatsApp.
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-header-icon">📋</span>
+            <div><div class="card-header-title">Currículo selecionado</div></div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="field">
+            <textarea id="msg_selecionado" rows="4" placeholder="Mensagem enviada quando o currículo é selecionado…"></textarea>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="salvarMensagem('msg_selecionado')">💾 Salvar</button>
+            <button class="btn btn-outline" onclick="restaurarPadrao('msg_selecionado')">↩ Padrão</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-header-icon">📅</span>
+            <div><div class="card-header-title">Entrevista agendada</div></div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="field">
+            <textarea id="msg_agendado" rows="5" placeholder="Mensagem enviada com data, hora e responsável…"></textarea>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="salvarMensagem('msg_agendado')">💾 Salvar</button>
+            <button class="btn btn-outline" onclick="restaurarPadrao('msg_agendado')">↩ Padrão</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-header-icon">📝</span>
+            <div><div class="card-header-title">Entrevista realizada</div></div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="field">
+            <textarea id="msg_realizado" rows="4"></textarea>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="salvarMensagem('msg_realizado')">💾 Salvar</button>
+            <button class="btn btn-outline" onclick="restaurarPadrao('msg_realizado')">↩ Padrão</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-header-icon">✅</span>
+            <div><div class="card-header-title">Candidato aprovado</div></div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="field">
+            <textarea id="msg_aprovado" rows="5"></textarea>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="salvarMensagem('msg_aprovado')">💾 Salvar</button>
+            <button class="btn btn-outline" onclick="restaurarPadrao('msg_aprovado')">↩ Padrão</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-header-icon">✕</span>
+            <div><div class="card-header-title">Candidato reprovado</div></div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="field">
+            <textarea id="msg_reprovado" rows="4"></textarea>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="salvarMensagem('msg_reprovado')">💾 Salvar</button>
+            <button class="btn btn-outline" onclick="restaurarPadrao('msg_reprovado')">↩ Padrão</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /painelWhatsapp -->
+</div><!-- /conteudo -->
+
+<!-- Acesso negado -->
+<div class="acesso-negado" id="acessoNegado">
+  <div class="acesso-negado-icon">🔒</div>
+  <div class="acesso-negado-title">Acesso restrito</div>
+  <div>Esta área é exclusiva para administradores do sistema.</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const PADROES = {
+  msg_selecionado: "Olá {nome}! 👋 Seu currículo foi recebido e *selecionado* pela equipe da Excelência Lingerie. Em breve entraremos em contato com mais detalhes. Fique atento! 😊",
+  msg_agendado:    "Olá {nome}! 🎉 Sua entrevista foi *agendada* com sucesso!\n\n📅 *Data:* {data}\n🕐 *Horário:* {hora}\n👤 *Responsável:* {responsavel}\n\nPor favor, confirme sua presença respondendo esta mensagem. Qualquer dúvida, estamos à disposição! 💼",
+  msg_realizado:   "Olá {nome}! ✅ Sua entrevista foi *realizada* com sucesso. Nossa equipe está avaliando seu perfil e em breve você receberá o resultado. Obrigado pela participação! 🙏",
+  msg_aprovado:    "Olá {nome}! 🎉🎊 Parabéns! Você foi *APROVADO(A)* no processo seletivo da Excelência Lingerie!\n\nEstamos muito felizes em tê-lo(a) em nossa equipe. Em breve entraremos em contato com os próximos passos. Bem-vindo(a)! 🌟",
+  msg_reprovado:   "Olá {nome}! Agradecemos sua participação no processo seletivo da Excelência Lingerie. Infelizmente, desta vez não daremos continuidade à sua candidatura. Agradecemos o interesse e desejamos sucesso! 💪",
+};
+
+/* ══ VERIFICAÇÃO DE ACESSO ══
+   Só o usuário "Matheus" acessa esta tela.
+   O nome vem do localStorage após o login.       */
+const usuarioRaw = localStorage.getItem("usuario");
+if (!usuarioRaw) {
+  window.location.href = "login.html";
+} else {
+  const usuario = JSON.parse(usuarioRaw);
+  if (usuario.nome === "Matheus") {
+    document.getElementById("conteudo").style.display = "block";
+    carregarConfiguracoes();
+  } else {
+    document.getElementById("acessoNegado").style.display = "block";
+  }
+}
+
+/* ══ CARREGAR CONFIGURAÇÕES ══ */
+async function carregarConfiguracoes() {
+  try {
+    const res = await fetch("/api/configuracoes");
+    const cfg = await res.json();
+
+    // Master switch
+    document.getElementById("toggleWhatsapp").checked = cfg.whatsapp_ativo === "true";
+    atualizarPainelWhatsapp(cfg.whatsapp_ativo === "true");
+
+    // Credenciais
+    if (cfg.whatsapp_api_url)  document.getElementById("apiUrl").value      = cfg.whatsapp_api_url;
+    if (cfg.whatsapp_api_key)  document.getElementById("apiKey").value      = cfg.whatsapp_api_key;
+    if (cfg.whatsapp_instance) document.getElementById("apiInstance").value = cfg.whatsapp_instance;
+
+    // Toggles de notificação
+    ["notif_selecionado","notif_agendado","notif_realizado","notif_aprovado","notif_reprovado"].forEach(k => {
+      const el = document.getElementById(k);
+      if (el) el.checked = cfg[k] !== "false";
+    });
+
+    // Mensagens
+    ["msg_selecionado","msg_agendado","msg_realizado","msg_aprovado","msg_reprovado"].forEach(k => {
+      const el = document.getElementById(k);
+      if (el && cfg[k]) el.value = cfg[k].replace(/\\n/g, "\n");
+    });
+
+  } catch (err) {
+    console.error(err);
+    mostrarToast("Erro ao carregar configurações.", "danger");
+  }
+}
+
+/* ══ MASTER SWITCH ══ */
+function salvarMaster() {
+  const ativo = document.getElementById("toggleWhatsapp").checked;
+  atualizarPainelWhatsapp(ativo);
+  salvarConfig({ whatsapp_ativo: String(ativo) });
+  mostrarToast(ativo ? "WhatsApp ativado! ✅" : "WhatsApp desativado.", ativo ? "success" : "warning");
+}
+
+function atualizarPainelWhatsapp(ativo) {
+  document.getElementById("painelWhatsapp").style.opacity  = ativo ? "1" : ".5";
+  document.getElementById("painelWhatsapp").style.pointerEvents = ativo ? "all" : "none";
+}
+
+/* ══ CONEXÃO ══ */
+async function salvarConexao() {
+  const btn = document.getElementById("btnSalvarConexao");
+  btn.disabled = true; btn.textContent = "Salvando…";
+  await salvarConfig({
+    whatsapp_api_url:  document.getElementById("apiUrl").value.trim(),
+    whatsapp_api_key:  document.getElementById("apiKey").value.trim(),
+    whatsapp_instance: document.getElementById("apiInstance").value.trim(),
+  });
+  mostrarToast("Conexão salva!", "success");
+  btn.disabled = false; btn.textContent = "💾 Salvar conexão";
+}
+
+async function testarConexao() {
+  const btn = document.getElementById("btnTestar");
+  const statusEl = document.getElementById("statusConexao");
+  btn.disabled = true; btn.textContent = "Testando…";
+
+  const url      = document.getElementById("apiUrl").value.trim();
+  const apikey   = document.getElementById("apiKey").value.trim();
+  const instance = document.getElementById("apiInstance").value.trim();
+
+  if (!url || !apikey || !instance) {
+    mostrarToast("Preencha URL, Key e Instância antes de testar.", "warning");
+    btn.disabled = false; btn.textContent = "📡 Testar conexão";
+    return;
+  }
+
+  try {
+    // Evolution API v2: GET /instance/fetchInstances
+    const res = await fetch(`${url.replace(/\/$/,"")}/instance/fetchInstances`, {
+      headers: { "apikey": apikey }
+    });
+
+    if (res.ok) {
+      statusEl.className = "conn-status conn-ativo";
+      statusEl.innerHTML = `<span class="conn-dot dot-ativo"></span> Conectado`;
+      mostrarToast("Conexão bem-sucedida! ✅", "success");
+    } else {
+      throw new Error(`Status ${res.status}`);
+    }
+  } catch (err) {
+    statusEl.className = "conn-status conn-erro";
+    statusEl.innerHTML = `<span class="conn-dot dot-erro"></span> Erro de conexão`;
+    mostrarToast("Falha na conexão. Verifique os dados.", "danger");
+  } finally {
+    btn.disabled = false; btn.textContent = "📡 Testar conexão";
+  }
+}
+
+/* ══ ENVIO DE TESTE MANUAL ══ */
+async function enviarTeste() {
+  const tel = document.getElementById("testeTelefone").value.trim();
+  if (!tel) { mostrarToast("Digite um número de destino.", "warning"); return; }
+
+  const btn = document.getElementById("btnEnviarTeste");
+  btn.disabled = true; btn.textContent = "Enviando…";
+
+  try {
+    const res = await fetch("/api/whatsapp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ telefone: tel, mensagem: "✅ *Teste de integração RH System*\n\nSe você recebeu esta mensagem, a integração com WhatsApp está funcionando corretamente!" }),
+    });
+    const data = await res.json();
+    if (data.skipped) {
+      mostrarToast("WhatsApp desativado. Ative o master switch.", "warning");
+    } else if (data.success) {
+      mostrarToast("Mensagem de teste enviada! 📱", "success");
+    } else {
+      mostrarToast("Erro ao enviar. Verifique os logs.", "danger");
+    }
+  } catch { mostrarToast("Erro de conexão.", "danger"); }
+  finally { btn.disabled = false; btn.textContent = "📤 Enviar teste"; }
+}
+
+/* ══ TOGGLE DE NOTIFICAÇÃO ══ */
+async function salvarToggle(chave, valor) {
+  await salvarConfig({ [chave]: String(valor) });
+  mostrarToast(valor ? "Notificação ativada." : "Notificação desativada.", valor ? "success" : "");
+}
+
+/* ══ MENSAGENS ══ */
+async function salvarMensagem(chave) {
+  const texto = document.getElementById(chave).value;
+  await salvarConfig({ [chave]: texto });
+  mostrarToast("Mensagem salva! ✅", "success");
+}
+
+function restaurarPadrao(chave) {
+  if (!PADROES[chave]) return;
+  document.getElementById(chave).value = PADROES[chave];
+  salvarMensagem(chave);
+}
+
+/* ══ HELPER: salva config no backend ══ */
+async function salvarConfig(dados) {
+  await fetch("/api/configuracoes", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(dados),
+  });
+}
+
+/* ══ UI helpers ══ */
+function toggleSenha(id, btn) {
+  const el = document.getElementById(id);
+  el.type = el.type === "password" ? "text" : "password";
+  btn.textContent = el.type === "password" ? "👁️" : "🙈";
+}
+
+function mostrarToast(msg, tipo = "") {
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.className = `toast ${tipo} show`;
+  setTimeout(() => t.classList.remove("show"), 3500);
+}
+
+function logout() { localStorage.removeItem("usuario"); window.location.href = "login.html"; }
+</script>
+</body>
+</html>

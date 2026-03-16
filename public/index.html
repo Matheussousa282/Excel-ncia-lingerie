@@ -3,340 +3,509 @@
 <head>
 <meta charset="UTF-8">
 <meta property="og:title" content="Venha Construir Sua História Conosco | Excelência Lingerie">
-  <meta property="og:description" content="Cadastre seu currículo e faça parte de um time que acredita no desenvolvimento de pessoas.">
-  <meta property="og:image" content="https://excelencia-lingerie.vercel.app/LG03.png">
-
-  <!-- ADICIONE AQUI -->
-  <meta property="og:image:width" content="1200">
-  <meta property="og:image:height" content="630">
-
-  <meta property="og:url" content="https://excelencia-lingerie.vercel.app/">
-  <meta property="og:type" content="website">
-
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta property="og:description" content="Cadastre seu currículo e faça parte de um time que acredita no desenvolvimento de pessoas.">
+<meta property="og:image" content="https://excelencia-lingerie.vercel.app/LG03.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:url" content="https://excelencia-lingerie.vercel.app/">
+<meta property="og:type" content="website">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>RH EXCELENCIA</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
+/* ── Cores originais mantidas: preto → dourado ── */
 :root {
   --primary: #c4a264;
   --primary-dark: #080808;
-  --background: #f2f4f8;
-  --text: #2e2e2e;
+  --primary-hover: #b08d50;
+  --bg: #f2f4f8;
+  --text: #1f2937;
+  --text-secondary: #4a5568;
   --muted: #6b7280;
   --border: #d1d5db;
+  --border-focus: #c4a264;
   --white: #ffffff;
+  --danger: #dc2626;
+  --success: #16a34a;
+  --success-bg: #f0fdf4;
 }
-* { box-sizing: border-box; }
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
 body {
-  margin: 0;
-  font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  background: linear-gradient(135deg, #000000, #c59845);
+  font-family: "DM Sans", "Segoe UI", sans-serif;
+  background: linear-gradient(135deg, #000000 0%, #c59845 100%);
   color: var(--text);
+  min-height: 100vh;
 }
+
+/* Detalhe decorativo de fundo */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: radial-gradient(ellipse at 30% 20%, rgba(196,162,100,0.08) 0%, transparent 50%);
+  pointer-events: none;
+}
+
 .page {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 24px 16px;
 }
+
 .card {
   width: 100%;
-  max-width: 720px;
-  background: rgba(255, 255, 255, 0.92);
-  border-radius: 12px;
-  box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+  max-width: 740px;
+  background: rgba(255,255,255,0.96);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+  overflow: hidden;
+  animation: fadeIn 0.4s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── HEADER ── */
+.card-header {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  padding: 32px 30px 28px;
+  text-align: center;
+  position: relative;
   overflow: hidden;
 }
-.footer-dev {
-  margin-top: 20px;
-  text-align: center;
-  font-size: 13px;
-  color: #c59845;
-}
-.card-header { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); padding: 30px; color: #fff;text-align: center; /* 👈 CENTRALIZA TUDO */ }
-.card-header h1 { margin: 0; font-size: 26px; }
-.card-header p { margin-top: 8px; font-size: 15px; opacity: 0.9; }
-.card-body { padding: 30px; }
-form { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-.full { grid-column: span 2; }
-label { font-size: 14px; font-weight: 600; margin-bottom: 6px; display: block; }
-input, select, textarea { width: 100%; padding: 12px 14px; font-size: 14px; border: 1px solid var(--border); border-radius: 6px; font-family: inherit; }
-textarea { resize: vertical; min-height: 120px; }
-.actions { grid-column: span 2; }
-button { width: 100%; padding: 14px; background: var(--primary); color: #fff; font-size: 16px; font-weight: 600; border: none; border-radius: 8px; cursor: pointer; }
-button:hover { background: var(--primary-dark); }
-.privacy { text-align: center; font-size: 13px; color: var(--muted); margin-top: 20px; }
-@media (max-width: 640px) { form { grid-template-columns: 1fr; } .full { grid-column: span 1; } }
 
-.card-header {
-  position: relative;
+.card-header::before {
+  content: "";
+  position: absolute;
+  bottom: -30px; right: -30px;
+  width: 100px; height: 100px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 50%;
 }
 
 .logo-header {
   display: block;
-  margin: 0 auto 15px auto;
-  width: 300px;
+  margin: 0 auto 16px;
+  width: 280px;
+  max-width: 85%;
 }
 
-/* =========================
-   MOBILE FIRST AJUSTES
-   ========================= */
-
-/* Ajuste geral */
-@media (max-width: 768px) {
-
-  body {
-    background: linear-gradient(180deg, #000000, #c59845);
-  }
-
-  .page {
-    padding: 0;
-    align-items: flex-start;
-  }
-
-  .card {
-    max-width: 100%;
-    min-height: 100vh;
-    border-radius: 0;
-  }
-
-  /* HEADER */
-  .card-header {
-    padding: 25px 20px;
-    text-align: center;
-  }
-
-  .card-header h1 {
-    font-size: 22px;
-  }
-
-  .card-header p {
-    font-size: 14px;
-  }
-
-  /* LOGO */
-  .logo-header {
-  display: block;
-  margin: 0 auto 15px auto;
-  width: 400px; /* 👈 AQUI aumenta a logo */
+.card-header h1 {
+  color: #fff;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  margin: 0 0 8px;
 }
 
-  /* BODY */
-  .card-body {
-    padding: 20px;
-  }
-
-  /* FORM */
-  form {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-
-  label {
-    font-size: 14px;
-  }
-
-  input,
-  select,
-  textarea {
-    font-size: 16px; /* melhor para teclado mobile */
-    padding: 14px;
-  }
-
-  textarea {
-    min-height: 110px;
-  }
-
-  /* BOTÃO */
-  button {
-    font-size: 17px;
-    padding: 16px;
-    border-radius: 10px;
-  }
-
-  /* TEXTOS */
-  .privacy {
-    font-size: 12px;
-    margin-top: 15px;
-  }
-
-  .footer-dev {
-    font-size: 12px;
-    margin-bottom: 15px;
-  }
+.card-header p {
+  color: rgba(255,255,255,0.8);
+  font-size: 14.5px;
+  line-height: 1.5;
+  max-width: 480px;
+  margin: 0 auto;
 }
 
-@media (max-width: 768px) {
-  .card-header p {
-    line-height: 1.4;
-  }
+/* ── BODY ── */
+.card-body { padding: 32px 30px; }
+
+/* ── GRID DO FORM ── */
+form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
 }
 
+.full { grid-column: span 2; }
 
+/* ── FIELD ── */
+.field { display: flex; flex-direction: column; }
+
+label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+label .req { color: var(--danger); font-size: 11px; }
+
+input, select, textarea {
+  width: 100%;
+  padding: 11px 14px;
+  font-size: 14px;
+  font-family: "DM Sans", "Segoe UI", sans-serif;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  background: #fafafa;
+  color: var(--text);
+  transition: all 0.2s;
+  outline: none;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--border-focus);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(196,162,100,0.15);
+}
+
+input::placeholder, textarea::placeholder { color: #b0b7c3; }
+
+select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg fill='none' stroke='%236b7280' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 15px;
+  padding-right: 36px;
+  cursor: pointer;
+}
+
+select:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  background-color: #f3f4f6;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 110px;
+  line-height: 1.55;
+}
+
+/* Upload de arquivo */
+.file-input-wrap {
+  position: relative;
+}
+
+input[type="file"] {
+  padding: 10px 14px;
+  cursor: pointer;
+  background: #fff;
+}
+
+input[type="file"]::file-selector-button {
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: none;
+  background: var(--primary);
+  color: #fff;
+  font-weight: 600;
+  font-family: "DM Sans", sans-serif;
+  font-size: 13px;
+  cursor: pointer;
+  margin-right: 12px;
+  transition: background 0.2s;
+}
+
+input[type="file"]::file-selector-button:hover {
+  background: var(--primary-hover);
+}
+
+/* Hint do arquivo */
+.file-hint {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 5px;
+}
+
+/* ── BOTÃO ── */
+.actions { grid-column: span 2; }
+
+.btn-submit {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, var(--primary) 0%, #a8884e 100%);
+  color: #fff;
+  font-size: 15.5px;
+  font-weight: 700;
+  font-family: "DM Sans", sans-serif;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 0.2px;
+}
+
+.btn-submit:hover {
+  background: linear-gradient(135deg, var(--primary-hover) 0%, #8a6e3a 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(196,162,100,0.4);
+}
+
+.btn-submit:active { transform: translateY(0); }
+.btn-submit:disabled { opacity: 0.65; pointer-events: none; }
+
+/* ── SUCCESS MESSAGE ── */
+.success-msg {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 28px;
+  background: var(--success-bg);
+  border: 1.5px solid #bbf7d0;
+  border-radius: 12px;
+  text-align: center;
+  animation: fadeIn 0.3s ease;
+}
+
+.success-msg.show { display: flex; }
+.success-msg .icon { font-size: 40px; }
+.success-msg h3 { font-size: 18px; font-weight: 700; color: var(--success); }
+.success-msg p { font-size: 14px; color: var(--text-secondary); }
+
+.btn-novo {
+  padding: 10px 24px;
+  background: var(--success);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: "DM Sans", sans-serif;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.btn-novo:hover { background: #0a9959; }
+
+/* ── FOOTER ── */
+.footer-card {
+  padding: 18px 30px;
+  border-top: 1px solid #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.privacy {
+  font-size: 12.5px;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.footer-dev {
+  font-size: 12.5px;
+  color: var(--primary);
+  font-weight: 500;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 640px) {
+  .page { padding: 0; align-items: flex-start; }
+  .card { border-radius: 0; min-height: 100vh; max-width: 100%; }
+  form { grid-template-columns: 1fr; }
+  .full { grid-column: span 1; }
+  .actions { grid-column: span 1; }
+  .card-body { padding: 24px 20px; }
+  .card-header { padding: 26px 20px 22px; }
+  input, select, textarea { font-size: 16px; }
+  .footer-card { flex-direction: column; text-align: center; }
+}
 </style>
 </head>
 <body>
 
 <div class="page">
   <div class="card">
+
     <div class="card-header">
-      <img src="LG06.png" alt="Logo" class="logo-header">
+      <img src="LG06.png" alt="Logo Excelência Lingerie" class="logo-header">
       <h1>Venha Construir Sua História Conosco</h1>
       <p>Cadastre seu currículo e faça parte de um time que acredita no desenvolvimento de pessoas.</p>
     </div>
+
     <div class="card-body">
+
+      <!-- Formulário -->
       <form id="formCandidato">
-        <div><label for="nome">Nome completo</label><input id="nome" name="nome" type="text" placeholder="Digite seu nome" required /></div>
-        <div><label for="telefone">Telefone</label><input id="telefone" name="telefone" type="tel" placeholder="(XX) XXXXX-XXXX" /></div>
-        <div><label for="email">E-mail</label><input id="email" name="email" type="email" placeholder="seu@email.com" required /></div>
-        <div><label for="cargoSelect">Cargo de interesse</label><select id="cargoSelect" name="cargo_id" required><option value="">Carregando cargos...</option></select></div>
-        <div><label for="instituicaoSelect">Instituição</label><select id="instituicaoSelect" name="instituicao_id" required><option value="">Carregando instituições...</option></select></div>
-        <div><label for="unidadeSelect">Unidade</label><select id="unidadeSelect" name="unidade_id" required disabled><option value="">Selecione uma instituição primeiro</option></select></div>
-        <div class="full"><label for="apresentacao">Apresentação profissional</label><textarea id="apresentacao" name="apresentacao" placeholder="Fale sobre você"></textarea></div>
-        <div class="full"><label for="arquivo">Currículo (PDF,DOC ou IMG)</label><input id="arquivo" name="arquivo" type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" required /></div>
-        <div class="actions full"><button type="submit">Enviar Currículo</button></div>
+
+        <div class="field">
+          <label for="nome">Nome completo <span class="req">*</span></label>
+          <input id="nome" name="nome" type="text" placeholder="Digite seu nome completo" required>
+        </div>
+
+        <div class="field">
+          <label for="telefone">Telefone</label>
+          <input id="telefone" name="telefone" type="tel" placeholder="(XX) XXXXX-XXXX">
+        </div>
+
+        <div class="field">
+          <label for="email">E-mail <span class="req">*</span></label>
+          <input id="email" name="email" type="email" placeholder="seu@email.com" required>
+        </div>
+
+        <div class="field">
+          <label for="cargoSelect">Cargo de interesse <span class="req">*</span></label>
+          <select id="cargoSelect" name="cargo_id" required>
+            <option value="">Carregando cargos…</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="instituicaoSelect">Instituição <span class="req">*</span></label>
+          <select id="instituicaoSelect" name="instituicao_id" required>
+            <option value="">Carregando instituições…</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="unidadeSelect">Unidade <span class="req">*</span></label>
+          <select id="unidadeSelect" name="unidade_id" required disabled>
+            <option value="">Selecione uma instituição primeiro</option>
+          </select>
+        </div>
+
+        <div class="field full">
+          <label for="apresentacao">Apresentação profissional</label>
+          <textarea id="apresentacao" name="apresentacao" placeholder="Fale um pouco sobre você, suas experiências e objetivos profissionais…"></textarea>
+        </div>
+
+        <div class="field full">
+          <label for="arquivo">Currículo <span class="req">*</span></label>
+          <div class="file-input-wrap">
+            <input id="arquivo" name="arquivo" type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" required>
+          </div>
+          <div class="file-hint">📎 Formatos aceitos: PDF, DOC, DOCX, JPG, PNG</div>
+        </div>
+
+        <div class="actions">
+          <button type="submit" class="btn-submit" id="btnEnviar">Enviar Currículo</button>
+        </div>
+
       </form>
-      <p class="privacy">Seus dados serão utilizados exclusivamente para fins de recrutamento e seleção.</p>
-      <div class="footer-dev">
-        Desenvolvido por <strong>Excelência Lingerie</strong>
+
+      <!-- Mensagem de sucesso (oculta até o envio) -->
+      <div class="success-msg" id="successMsg">
+        <div class="icon">🎉</div>
+        <h3>Currículo enviado com sucesso!</h3>
+        <p>Agradecemos seu interesse. Nossa equipe analisará seu perfil em breve. Boa sorte!</p>
+        <button class="btn-novo" onclick="novoCadastro()">Enviar outro currículo</button>
       </div>
+
     </div>
+
+    <div class="footer-card">
+      <div class="privacy">🔒 Seus dados são usados exclusivamente para recrutamento e seleção.</div>
+      <div class="footer-dev">Desenvolvido por <strong>Excelência Lingerie</strong></div>
+    </div>
+
   </div>
 </div>
 
 <script>
-const cargoSelect = document.getElementById("cargoSelect");
+const cargoSelect       = document.getElementById("cargoSelect");
 const instituicaoSelect = document.getElementById("instituicaoSelect");
-const unidadeSelect = document.getElementById("unidadeSelect");
+const unidadeSelect     = document.getElementById("unidadeSelect");
 
-// Função de voz
+/* ── Síntese de voz ── */
 function falarMensagem(texto) {
-  if ('speechSynthesis' in window) {
+  if ("speechSynthesis" in window) {
     const msg = new SpeechSynthesisUtterance(texto);
-    msg.lang = 'pt-BR';
-    msg.rate = 1;
-    msg.pitch = 1;
+    msg.lang = "pt-BR"; msg.rate = 1; msg.pitch = 1;
     window.speechSynthesis.speak(msg);
   }
 }
 
-// Funções para carregar cargos, instituições e unidades
+/* ── Carrega cargos ── */
 async function carregarCargos() {
-
-  const res = await fetch("/api/cargos");
-  const data = await res.json();
-
-  cargoSelect.innerHTML =
-    '<option value="">Selecione um cargo</option>';
-
-  data.forEach(c => {
-
-    const o = document.createElement("option");
-
-    o.value = c.id;
-    o.textContent = c.nome;
-
-    cargoSelect.appendChild(o);
-
-  });
-
-}
-
-async function carregarInstituicoes() {
   try {
-
-    const res = await fetch("/api/instituicoes");
-
-    const text = await res.text();
-
-    let data;
-
-    try {
-      data = JSON.parse(text);
-    } catch {
-      console.log("ERRO /api/instituicoes:", text);
-      return;
-    }
-
-    instituicaoSelect.innerHTML =
-      '<option value="">Selecione uma instituição</option>';
-
-    data.forEach(i =>  {
+    const res  = await fetch("/api/cargos");
+    const data = await res.json();
+    cargoSelect.innerHTML = '<option value="">Selecione um cargo</option>';
+    data.forEach(c => {
       const o = document.createElement("option");
-      o.value = i.id;
-      o.textContent = i.nome;
-      instituicaoSelect.appendChild(o);
+      o.value = c.id; o.textContent = c.nome;
+      cargoSelect.appendChild(o);
     });
-
   } catch (err) {
+    cargoSelect.innerHTML = '<option value="">Erro ao carregar</option>';
     console.error(err);
   }
 }
 
+/* ── Carrega instituições ── */
+async function carregarInstituicoes() {
+  try {
+    const res  = await fetch("/api/instituicoes");
+    const data = await res.json();
+    instituicaoSelect.innerHTML = '<option value="">Selecione uma instituição</option>';
+    data.forEach(i => {
+      const o = document.createElement("option");
+      o.value = i.id; o.textContent = i.nome;
+      instituicaoSelect.appendChild(o);
+    });
+  } catch (err) {
+    instituicaoSelect.innerHTML = '<option value="">Erro ao carregar</option>';
+    console.error(err);
+  }
+}
+
+/* ── Ao trocar instituição, carrega unidades ── */
 instituicaoSelect.addEventListener("change", async () => {
-
   const id = instituicaoSelect.value;
-
   unidadeSelect.disabled = !id;
 
   if (!id) {
-    unidadeSelect.innerHTML =
-      '<option value="">Selecione uma instituição primeiro</option>';
+    unidadeSelect.innerHTML = '<option value="">Selecione uma instituição primeiro</option>';
     return;
   }
 
   try {
-
-    const res =
-      await fetch(`/api/unidades?instituicao_id=${id}`);
-
-    const text = await res.text();
-
-    let data;
-
-    try {
-      data = JSON.parse(text);
-    } catch {
-      console.log("ERRO /api/unidades:", text);
-      return;
-    }
-
-    unidadeSelect.innerHTML =
-      '<option value="">Selecione uma unidade</option>';
-
+    unidadeSelect.innerHTML = '<option value="">Carregando…</option>';
+    const res  = await fetch(`/api/unidades?instituicao_id=${id}`);
+    const data = await res.json();
+    unidadeSelect.innerHTML = '<option value="">Selecione uma unidade</option>';
     data.forEach(u => {
       const o = document.createElement("option");
-      o.value = u.id;
-      o.textContent = u.nome;
+      o.value = u.id; o.textContent = u.nome;
       unidadeSelect.appendChild(o);
     });
-
+    unidadeSelect.disabled = false;
   } catch (err) {
+    unidadeSelect.innerHTML = '<option value="">Erro ao carregar</option>';
     console.error(err);
   }
-
 });
 
-// Envio do formulário como Base64
+/* ── Envio do formulário ── */
 document.getElementById("formCandidato").addEventListener("submit", async (e) => {
   e.preventDefault();
+
+  const btn  = document.getElementById("btnEnviar");
   const file = document.getElementById("arquivo").files[0];
-  if (!file) return alert("Selecione um arquivo");
+  if (!file) return alert("Selecione um arquivo de currículo.");
+
+  btn.disabled = true;
+  btn.textContent = "Enviando…";
 
   const reader = new FileReader();
   reader.onload = async () => {
     const base64 = reader.result.split(",")[1];
 
     const body = {
-      nome: document.getElementById("nome").value,
-      telefone: document.getElementById("telefone").value,
-      email: document.getElementById("email").value,
-      cargo_id: document.getElementById("cargoSelect").value,
-      instituicao_id: document.getElementById("instituicaoSelect").value,
-      unidade_id: document.getElementById("unidadeSelect").value,
-      apresentacao: document.getElementById("apresentacao").value,
+      nome:          document.getElementById("nome").value,
+      telefone:      document.getElementById("telefone").value,
+      email:         document.getElementById("email").value,
+      cargo_id:      document.getElementById("cargoSelect").value,
+      instituicao_id:document.getElementById("instituicaoSelect").value,
+      unidade_id:    document.getElementById("unidadeSelect").value,
+      apresentacao:  document.getElementById("apresentacao").value,
       arquivo_base64: base64,
-      arquivo_nome: file.name
+      arquivo_nome:  file.name
     };
 
     try {
@@ -347,24 +516,36 @@ document.getElementById("formCandidato").addEventListener("submit", async (e) =>
       });
 
       if (res.ok) {
-        alert("Currículo enviado com sucesso!");
         falarMensagem("Seu currículo foi enviado com sucesso. Boa sorte!");
-        document.getElementById("formCandidato").reset();
-        unidadeSelect.disabled = true;
+        // Esconde formulário, exibe mensagem de sucesso
+        document.getElementById("formCandidato").style.display = "none";
+        document.getElementById("successMsg").classList.add("show");
       } else {
         const txt = await res.text();
         alert("Erro ao enviar: " + txt);
       }
     } catch (err) {
       console.error(err);
-      alert("Erro ao enviar formulário");
+      alert("Erro de conexão. Tente novamente.");
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Enviar Currículo";
     }
   };
 
   reader.readAsDataURL(file);
 });
 
-// Inicializar selects
+/* ── Enviar outro currículo ── */
+function novoCadastro() {
+  document.getElementById("formCandidato").reset();
+  document.getElementById("formCandidato").style.display = "grid";
+  document.getElementById("successMsg").classList.remove("show");
+  unidadeSelect.disabled = true;
+  unidadeSelect.innerHTML = '<option value="">Selecione uma instituição primeiro</option>';
+}
+
+/* ── Inicializa ── */
 carregarCargos();
 carregarInstituicoes();
 </script>

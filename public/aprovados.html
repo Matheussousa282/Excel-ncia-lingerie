@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aprovados | RH System</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<!-- jsPDF para exportação de PDF no navegador -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<style>
+:root {
+  --primary: #0f62fe;
+  --primary-light: #eef3ff;
+  --approved: #7c3aed;
+  --approved-bg: #f5f3ff;
+  --approved-border: #ddd6fe;
+  --bg: #f5f7fa;
+  --card: #ffffff;
+  --text: #0d1117;
+  --text-secondary: #4a5568;
+  --muted: #8a94a6;
+  --border: #e2e8f0;
+  --success: #0da868;
+  --success-bg: #e6f7f1;
+  --info-bg: #eef3ff;
+  --danger: #e53e3e;
+  --danger-bg: #fef2f2;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.07);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.09);
+  --shadow-lg: 0 16px 48px rgba(0,0,0,0.15);
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: "DM Sans", sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+.main { max-width: 1300px; margin: 0 auto; padding: 26px 22px; }
+
+.page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 22px; gap: 14px; flex-wrap: wrap; }
+.page-title  { font-size: 22px; font-weight: 700; letter-spacing: -.4px; }
+.page-subtitle { font-size: 13px; color: var(--muted); margin-top: 3px; }
+
+/* ── BANNER ── */
+.banner {
+  background: linear-gradient(135deg, var(--approved) 0%, #a855f7 100%);
+  border-radius: var(--radius); padding: 20px 24px;
+  color: #fff; margin-bottom: 22px;
+  display: flex; align-items: center; gap: 16px;
+  box-shadow: 0 6px 24px rgba(124,58,237,.3);
+}
+.banner-icon { font-size: 36px; flex-shrink: 0; }
+.banner-text h3 { font-size: 16px; font-weight: 700; }
+.banner-text p  { font-size: 13px; opacity: .85; margin-top: 3px; }
+.banner-count { margin-left: auto; font-size: 40px; font-weight: 700; font-family: "DM Mono",monospace; flex-shrink: 0; }
+
+/* ── CARDS RESUMO ── */
+.cards { display: grid; grid-template-columns: repeat(auto-fit,minmax(150px,1fr)); gap: 14px; margin-bottom: 22px; }
+.card { background: var(--card); padding: 18px; border-radius: var(--radius); box-shadow: var(--shadow-sm); border: 1px solid var(--border); position: relative; overflow: hidden; transition: box-shadow .2s, transform .2s; }
+.card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+.card-icon  { position: absolute; top: 14px; right: 14px; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 15px; }
+.card-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); margin-bottom: 5px; }
+.card-value { font-size: 28px; font-weight: 700; font-family: "DM Mono",monospace; line-height: 1; }
+
+/* ── FILTROS ── */
+.filter-bar {
+  background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 16px 18px; margin-bottom: 18px; box-shadow: var(--shadow-sm);
+  display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+}
+.filter-bar input, .filter-bar select {
+  padding: 8px 12px; border-radius: var(--radius-sm); border: 1.5px solid var(--border);
+  background: var(--bg); font-size: 13.5px; font-family: "DM Sans",sans-serif;
+  color: var(--text); outline: none; transition: all .2s; flex: 1; min-width: 140px;
+}
+.filter-bar input:focus, .filter-bar select:focus { border-color: var(--approved); background: #fff; box-shadow: 0 0 0 3px rgba(124,58,237,.1); }
+.filter-bar input::placeholder { color: var(--muted); }
+.filter-bar select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg fill='none' stroke='%236b7280' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 10px center; background-size:14px; padding-right:32px; cursor:pointer; }
+.btn-limpar { padding: 8px 14px; border-radius: var(--radius-sm); border: 1.5px solid var(--border); background: var(--card); font-size: 13px; font-weight: 500; font-family: "DM Sans",sans-serif; color: var(--text-secondary); cursor: pointer; transition: all .2s; white-space: nowrap; }
+.btn-limpar:hover { border-color: var(--danger); color: var(--danger); background: var(--danger-bg); }
+.filter-count { font-size: 12.5px; color: var(--muted); margin-top: 8px; }
+.filter-count strong { color: var(--approved); }
+
+/* ── TABELA ── */
+.table-wrapper { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow-sm); border: 1px solid var(--border); overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th { padding: 11px 16px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; text-align: left; color: var(--muted); background: #f8fafc; border-bottom: 1px solid var(--border); white-space: nowrap; }
+td { padding: 13px 16px; font-size: 13.5px; border-bottom: 1px solid #f0f4f8; vertical-align: middle; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: #faf8ff; }
+
+.nome-cell { display: flex; align-items: center; gap: 10px; }
+.avatar { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg,#7c3aed,#a78bfa); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #fff; flex-shrink: 0; text-transform: uppercase; }
+.avatar-adm { background: linear-gradient(135deg,#0da868,#34d399); }
+.nome-text  { font-weight: 600; }
+.email-text { font-size: 12px; color: var(--muted); }
+
+.badge-cargo { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 20px; font-size: 11.5px; font-weight: 600; }
+.badge-ti  { background: var(--info-bg); color: var(--primary); }
+.badge-adm { background: var(--success-bg); color: var(--success); }
+
+.badge-aprovado { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 20px; font-size: 11.5px; font-weight: 600; background: var(--approved-bg); color: var(--approved); }
+
+.actions { display: flex; gap: 6px; }
+.btn-action { display: inline-flex; align-items: center; gap: 4px; padding: 5px 11px; border-radius: 6px; font-size: 12.5px; font-weight: 500; cursor: pointer; border: none; font-family: "DM Sans",sans-serif; transition: all .15s; text-decoration: none; }
+.btn-ver      { background: var(--primary-light); color: var(--primary); }
+.btn-ver:hover { background: #dde7ff; }
+.btn-download { background: var(--success-bg); color: var(--success); }
+.btn-download:hover { background: #c8f0e0; }
+.btn-desfazer { background: var(--danger-bg); color: var(--danger); }
+.btn-desfazer:hover { background: #fecaca; }
+
+/* Modal */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.55); align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(3px); }
+.modal-overlay.open { display: flex; animation: fadeIn .2s ease; }
+@keyframes fadeIn { from{opacity:0}to{opacity:1} }
+.modal-box { background: var(--card); padding: 24px 26px; border-radius: 16px; max-width: 560px; width: 94%; box-shadow: var(--shadow-lg); animation: slideUp .22s ease; max-height: 88vh; overflow-y: auto; }
+@keyframes slideUp { from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1} }
+.modal-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 16px; }
+.modal-title { font-size: 17px; font-weight: 700; }
+.modal-sub   { font-size: 12.5px; color: var(--muted); margin-top: 3px; }
+.modal-close { width: 28px; height: 28px; border-radius: 7px; border: none; background: var(--bg); font-size: 16px; cursor: pointer; color: var(--muted); display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all .15s; }
+.modal-close:hover { background: var(--danger-bg); color: var(--danger); }
+.modal-body { font-size: 14px; line-height: 1.7; color: var(--text-secondary); white-space: pre-wrap; background: var(--bg); border-radius: var(--radius-sm); padding: 14px; max-height: 300px; overflow-y: auto; }
+
+/* Empty state */
+.empty-state { padding: 60px 20px; text-align: center; color: var(--muted); }
+.empty-state-icon  { font-size: 44px; margin-bottom: 12px; }
+.empty-state-title { font-size: 16px; font-weight: 600; color: var(--text-secondary); }
+.empty-state-desc  { font-size: 14px; margin-top: 6px; }
+
+/* Toast */
+.toast { position: fixed; bottom: 22px; right: 22px; background: #1a202c; color: #fff; padding: 11px 18px; border-radius: 10px; font-size: 13.5px; font-weight: 500; box-shadow: var(--shadow-lg); z-index: 99999; transform: translateY(70px); opacity: 0; transition: all .3s ease; }
+.toast.show   { transform: translateY(0); opacity: 1; }
+.toast.success { background: var(--success); }
+.toast.danger  { background: var(--danger); }
+
+/* Botão exportar */
+.btn-export { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: var(--radius-sm); font-size: 13.5px; font-weight: 600; font-family: "DM Sans",sans-serif; border: 1.5px solid var(--border); background: var(--card); color: var(--text-secondary); cursor: pointer; transition: all .18s; }
+.btn-export:hover { border-color: var(--approved); color: var(--approved); }
+.btn-export-pdf { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: var(--radius-sm); font-size: 13.5px; font-weight: 600; font-family: "DM Sans",sans-serif; border: 1.5px solid #fecaca; background: var(--danger-bg); color: var(--danger); cursor: pointer; transition: all .18s; }
+.btn-export-pdf:hover { background: #fecaca; border-color: var(--danger); }
+.export-group { display: flex; gap: 8px; flex-wrap: wrap; }
+
+@media (max-width:640px) { td:nth-child(3),th:nth-child(3) { display:none; } }
+</style>
+</head>
+<body>
+<div class="main">
+
+  <div class="page-header">
+    <div>
+      <div class="page-title">✅ Candidatos Aprovados</div>
+      <div class="page-subtitle">Candidatos aprovados nas entrevistas</div>
+    </div>
+    <div class="export-group">
+      <button class="btn-export" onclick="exportarCSV()">📤 Exportar CSV</button>
+      <button class="btn-export-pdf" onclick="exportarPDF()" id="btnPDF">📄 Exportar PDF</button>
+    </div>
+  </div>
+
+  <!-- Banner destacado -->
+  <div class="banner">
+    <div class="banner-icon">🏆</div>
+    <div class="banner-text">
+      <h3>Aprovados para contratação</h3>
+      <p>Estes candidatos foram aprovados na entrevista e estão prontos para a próxima etapa.</p>
+    </div>
+    <div class="banner-count" id="bannerCount">0</div>
+  </div>
+
+  <!-- Cards -->
+  <div class="cards" id="cardsResumo"></div>
+
+  <!-- Filtros -->
+  <div class="filter-bar">
+    <input type="text" id="filtroNome" placeholder="🔍 Buscar por nome…">
+    <select id="filtroCargo"><option value="">Todos os cargos</option></select>
+    <select id="filtroUnidade"><option value="">Todas as unidades</option></select>
+    <select id="filtroInstituicao"><option value="">Todas as instituições</option></select>
+    <button class="btn-limpar" onclick="limparFiltros()">✕ Limpar</button>
+  </div>
+  <div class="filter-count" id="filtroCount"></div>
+
+  <!-- Tabela -->
+  <div class="table-wrapper" style="margin-top:12px;">
+    <table>
+      <thead>
+        <tr>
+          <th>Candidato</th>
+          <th>Telefone</th>
+          <th>Instituição</th>
+          <th>Unidade</th>
+          <th>Cargo</th>
+          <th>Data aprovação</th>
+          <th>Status</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody id="listaAprovados"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal ver currículo (visualizador com abas) -->
+<div class="modal-overlay" id="modalApres">
+  <div class="modal-box" style="max-width:720px;">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="modalNome"></div>
+        <div class="modal-sub" id="modalSub"></div>
+      </div>
+      <button class="modal-close" onclick="fecharModal()">&times;</button>
+    </div>
+
+    <!-- Abas -->
+    <div style="display:flex;gap:4px;background:#f5f7fa;border-radius:8px;padding:4px;margin-bottom:16px;">
+      <button id="tabApresA" onclick="trocarAbaAprov('apres')"
+        style="flex:1;padding:7px;border:none;border-radius:6px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;background:#7c3aed;color:#fff;transition:all .18s;">
+        📝 Apresentação
+      </button>
+      <button id="tabArqA" onclick="trocarAbaAprov('arquivo')"
+        style="flex:1;padding:7px;border:none;border-radius:6px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;background:none;color:#8a94a6;transition:all .18s;">
+        📄 Currículo
+      </button>
+    </div>
+
+    <div id="abaApresA">
+      <div class="modal-body" id="modalConteudo"></div>
+    </div>
+
+    <div id="abaArqA" style="display:none;">
+      <div id="vizArqAprov" style="min-height:180px;"></div>
+    </div>
+
+    <div style="margin-top:14px;display:flex;gap:8px;align-items:center;justify-content:flex-end;">
+      <span id="nomeArqAprov" style="font-size:12px;color:#8a94a6;"></span>
+      <a id="btnDlAprov" class="btn-action btn-download" style="text-decoration:none;" download>⬇ Baixar arquivo</a>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/*
+  GUARD DE LOGIN — descomente para ativar.
+*/
+/*
+const usuario = localStorage.getItem("usuario");
+if (!usuario) { window.location.href = "login.html"; }
+*/
+
+let todos = [];
+
+/* ════ CARREGAR ════ */
+async function carregar() {
+  try {
+    const res  = await fetch("/api/candidatos");
+    const data = await res.json();
+    // Filtra apenas aprovados
+    todos = data.filter(c => c.aprovado);
+
+    renderBanner(todos.length);
+    renderCards(todos);
+    preencherFiltros(todos);
+    renderTabela(todos);
+  } catch (err) {
+    console.error(err);
+    mostrarToast("Erro ao carregar aprovados.", "danger");
+  }
+}
+
+/* ── Banner ── */
+function renderBanner(n) {
+  document.getElementById("bannerCount").textContent = n;
+}
+
+/* ── Cards ── */
+function renderCards(lista) {
+  const cargos = {};
+  lista.forEach(c => { cargos[c.cargo] = (cargos[c.cargo]||0) + 1; });
+  const icones = { TI:"💻", Administrativo:"🗂️" };
+  document.getElementById("cardsResumo").innerHTML =
+    Object.entries(cargos).map(([cargo, qtd]) => `
+      <div class="card" style="border-left:4px solid var(--approved);">
+        <div class="card-icon" style="background:var(--approved-bg);">${icones[cargo]||"📋"}</div>
+        <div class="card-label">${cargo}</div>
+        <div class="card-value" style="color:var(--approved);">${qtd}</div>
+      </div>`).join("") ||
+    `<div class="card" style="border-left:4px solid var(--approved);">
+       <div class="card-label">Aprovados</div>
+       <div class="card-value" style="color:var(--approved);">0</div>
+     </div>`;
+}
+
+/* ── Tabela ── */
+function renderTabela(lista) {
+  const tbody = document.getElementById("listaAprovados");
+  document.getElementById("filtroCount").innerHTML =
+    `Exibindo <strong>${lista.length}</strong> de <strong>${todos.length}</strong> aprovados`;
+
+  if (!lista.length) {
+    tbody.innerHTML = `<tr><td colspan="8">
+      <div class="empty-state">
+        <div class="empty-state-icon">🏆</div>
+        <div class="empty-state-title">Nenhum candidato aprovado ainda</div>
+        <div class="empty-state-desc">Aprove candidatos na tela de Entrevistas</div>
+      </div>
+    </td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = lista.map(c => {
+    const ini  = c.nome.split(" ").slice(0,2).map(n=>n[0]).join("");
+    const data = c.data ? new Date(c.data).toLocaleDateString("pt-BR") : "—";
+    return `
+    <tr>
+      <td>
+        <div class="nome-cell">
+          <div class="avatar ${c.cargo !== "TI" ? "avatar-adm" : ""}">${ini}</div>
+          <div>
+            <div class="nome-text">${c.nome}</div>
+            <div class="email-text">${c.email}</div>
+          </div>
+        </div>
+      </td>
+      <td>${c.telefone || "—"}</td>
+      <td>${c.instituicao}</td>
+      <td>${c.unidade}</td>
+      <td><span class="badge-cargo ${c.cargo==="TI"?"badge-ti":"badge-adm"}">${c.cargo}</span></td>
+      <td style="font-size:12.5px;color:var(--muted);">${data}</td>
+      <td><span class="badge-aprovado">✅ Aprovado</span></td>
+      <td>
+        <div class="actions">
+          <button class="btn-action btn-ver" onclick='abrirModal(${JSON.stringify(c)})'>👁 Ver</button>
+          ${c.arquivo ? `<a class="btn-action btn-download" href="${c.arquivo}" download="${c.nome}-${c.arquivo_nome||"cv"}">⬇ CV</a>` : ""}
+          <button class="btn-action btn-desfazer" onclick="desfazerAprovacao(${c.id})" title="Desfazer aprovação">↩</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join("");
+}
+
+/* ── Filtros ── */
+function preencherFiltros(lista) {
+  const f = { filtroCargo:"cargo", filtroUnidade:"unidade", filtroInstituicao:"instituicao" };
+  for (const [id, campo] of Object.entries(f)) {
+    const sel = document.getElementById(id);
+    const vals = [...new Set(lista.map(c=>c[campo]))];
+    sel.innerHTML = `<option value="">Todos</option>` +
+      vals.map(v=>`<option value="${v}">${v}</option>`).join("");
+  }
+}
+
+function aplicarFiltros() {
+  const nome = document.getElementById("filtroNome").value.toLowerCase();
+  const cargo = document.getElementById("filtroCargo").value;
+  const unid  = document.getElementById("filtroUnidade").value;
+  const inst  = document.getElementById("filtroInstituicao").value;
+  const filtrados = todos.filter(c =>
+    c.nome.toLowerCase().includes(nome) &&
+    (!cargo || c.cargo === cargo) &&
+    (!unid  || c.unidade === unid) &&
+    (!inst  || c.instituicao === inst)
+  );
+  renderTabela(filtrados);
+  renderCards(filtrados);
+  renderBanner(filtrados.length);
+}
+
+function limparFiltros() {
+  document.getElementById("filtroNome").value = "";
+  ["filtroCargo","filtroUnidade","filtroInstituicao"].forEach(id => { document.getElementById(id).value = ""; });
+  aplicarFiltros();
+}
+
+["filtroNome"].forEach(id => document.getElementById(id).addEventListener("input", aplicarFiltros));
+["filtroCargo","filtroUnidade","filtroInstituicao"].forEach(id => document.getElementById(id).addEventListener("change", aplicarFiltros));
+
+/* ── Desfazer aprovação ── */
+async function desfazerAprovacao(id) {
+  if (!confirm("Desfazer a aprovação deste candidato? Ele voltará para a lista de currículos.")) return;
+  try {
+    const res = await fetch("/api/candidatos", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, acao: "desfazer_aprovacao" })
+    });
+    if (!res.ok) throw new Error();
+    mostrarToast("Aprovação desfeita. Candidato retornou à fila.");
+    carregar();
+  } catch { mostrarToast("Erro ao desfazer aprovação.", "danger"); }
+}
+
+/* ── Exportar CSV ── */
+function exportarCSV() {
+  if (!todos.length) { mostrarToast("Nenhum aprovado para exportar."); return; }
+  const cabecalho = ["Nome","Email","Telefone","Cargo","Unidade","Instituição"];
+  const linhas = todos.map(c => [c.nome,c.email,c.telefone||"",c.cargo,c.unidade,c.instituicao].join(";"));
+  const csv = [cabecalho.join(";"), ...linhas].join("\n");
+  const blob = new Blob(["\uFEFF"+csv], { type:"text/csv;charset=utf-8;" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "candidatos_aprovados.csv";
+  a.click();
+  mostrarToast("CSV exportado!", "success");
+}
+
+/* ── Exportar PDF ── */
+function exportarPDF() {
+  if (!todos.length) { mostrarToast("Nenhum aprovado para exportar."); return; }
+
+  const btn = document.getElementById("btnPDF");
+  btn.disabled = true;
+  btn.textContent = "Gerando…";
+
+  try {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+
+    const dataGeracao = new Date().toLocaleDateString("pt-BR", {
+      day: "2-digit", month: "long", year: "numeric"
+    });
+    const horaGeracao = new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+
+    // ── Cabeçalho roxo ──
+    doc.setFillColor(124, 58, 237);
+    doc.rect(0, 0, 297, 28, "F");
+
+    // Título
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(16);
+    doc.text("Candidatos Aprovados — Excelência Lingerie", 14, 11);
+
+    // Subtítulo
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.text(`Gerado em ${dataGeracao} às ${horaGeracao}  •  Total: ${todos.length} aprovado${todos.length !== 1 ? "s" : ""}`, 14, 19);
+
+    // Linha divisória fina
+    doc.setDrawColor(168, 85, 247);
+    doc.setLineWidth(0.5);
+    doc.line(0, 28, 297, 28);
+
+    // ── Cards de resumo ──
+    const cargos = {};
+    todos.forEach(c => { cargos[c.cargo] = (cargos[c.cargo] || 0) + 1; });
+
+    let xCard = 14;
+    const yCard = 34;
+    const cardW = 50;
+    const cardH = 14;
+
+    // Card Total
+    doc.setFillColor(245, 243, 255);
+    doc.roundedRect(xCard, yCard, cardW, cardH, 2, 2, "F");
+    doc.setTextColor(124, 58, 237);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(14);
+    doc.text(String(todos.length), xCard + 6, yCard + 9.5);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7);
+    doc.setTextColor(100, 100, 120);
+    doc.text("TOTAL APROVADOS", xCard + 18, yCard + 9.5);
+    xCard += cardW + 6;
+
+    Object.entries(cargos).forEach(([cargo, qtd]) => {
+      doc.setFillColor(240, 253, 244);
+      doc.roundedRect(xCard, yCard, cardW, cardH, 2, 2, "F");
+      doc.setTextColor(13, 168, 104);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(14);
+      doc.text(String(qtd), xCard + 6, yCard + 9.5);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(7);
+      doc.setTextColor(100, 100, 120);
+      doc.text(cargo.toUpperCase(), xCard + 18, yCard + 9.5);
+      xCard += cardW + 6;
+    });
+
+    // ── Tabela principal ──
+    doc.autoTable({
+      startY: yCard + cardH + 6,
+      head: [["#", "Nome", "E-mail", "Telefone", "Cargo", "Unidade", "Instituição"]],
+      body: todos.map((c, i) => [
+        i + 1,
+        c.nome,
+        c.email,
+        c.telefone || "—",
+        c.cargo,
+        c.unidade,
+        c.instituicao,
+      ]),
+      styles: {
+        font: "helvetica",
+        fontSize: 9,
+        cellPadding: 4,
+        textColor: [13, 17, 23],
+        lineColor: [226, 232, 240],
+        lineWidth: 0.3,
+      },
+      headStyles: {
+        fillColor: [124, 58, 237],
+        textColor: [255, 255, 255],
+        fontStyle: "bold",
+        fontSize: 8.5,
+      },
+      alternateRowStyles: {
+        fillColor: [250, 248, 255],
+      },
+      columnStyles: {
+        0: { halign: "center", cellWidth: 10 },
+        1: { fontStyle: "bold", cellWidth: 52 },
+        2: { cellWidth: 58 },
+        3: { cellWidth: 30 },
+        4: { halign: "center", cellWidth: 24 },
+        5: { cellWidth: 36 },
+        6: { cellWidth: 40 },
+      },
+      margin: { left: 14, right: 14 },
+      didDrawPage: (data) => {
+        // Rodapé em cada página
+        const pageCount = doc.internal.getNumberOfPages();
+        const pageNum   = doc.internal.getCurrentPageInfo().pageNumber;
+        doc.setFontSize(7.5);
+        doc.setTextColor(150, 150, 170);
+        doc.setFont("helvetica", "normal");
+        doc.text(
+          `RH System — Excelência Lingerie  •  Página ${pageNum} de ${pageCount}`,
+          14, doc.internal.pageSize.height - 6
+        );
+        doc.text(
+          `Documento gerado em ${dataGeracao}`,
+          297 - 14, doc.internal.pageSize.height - 6,
+          { align: "right" }
+        );
+      },
+    });
+
+    // ── Marca d'água sutil "CONFIDENCIAL" ──
+    const totalPages = doc.internal.getNumberOfPages();
+    for (let p = 1; p <= totalPages; p++) {
+      doc.setPage(p);
+      doc.setTextColor(200, 190, 220);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(48);
+      doc.setGState(new doc.GState({ opacity: 0.06 }));
+      doc.text("CONFIDENCIAL", 148, 115, { align: "center", angle: 35 });
+      doc.setGState(new doc.GState({ opacity: 1 }));
+    }
+
+    // Salva
+    const nomeArquivo = `aprovados_${new Date().toLocaleDateString("pt-BR").replace(/\//g, "-")}.pdf`;
+    doc.save(nomeArquivo);
+    mostrarToast("PDF gerado com sucesso! 📄", "success");
+
+  } catch (err) {
+    console.error(err);
+    mostrarToast("Erro ao gerar PDF.", "danger");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "📄 Exportar PDF";
+  }
+}
+
+/* ── Modal visualizador completo ── */
+function abrirModal(c) {
+  document.getElementById("modalNome").textContent = c.nome;
+  document.getElementById("modalSub").textContent  = `${c.cargo} • ${c.unidade} • ${c.email}`;
+  document.getElementById("modalConteudo").textContent = c.apresentacao || "Sem apresentação registrada.";
+
+  const btnDl    = document.getElementById("btnDlAprov");
+  const nomeLabel = document.getElementById("nomeArqAprov");
+  if (c.arquivo && c.arquivo !== "#") {
+    btnDl.href     = c.arquivo;
+    btnDl.download = `${c.nome}-${c.arquivo_nome || "curriculo"}`;
+    btnDl.style.display = "inline-flex";
+    nomeLabel.textContent = c.arquivo_nome || "";
+  } else {
+    btnDl.style.display = "none";
+    nomeLabel.textContent = "";
+  }
+
+  const viz = document.getElementById("vizArqAprov");
+  const ext = (c.arquivo_nome || "").split(".").pop().toLowerCase();
+  const ehImagem = ["jpg","jpeg","png","gif","webp","bmp"].includes(ext);
+  const ehPdf    = ext === "pdf";
+
+  if (!c.arquivo || c.arquivo === "#") {
+    viz.innerHTML = `<div style="padding:30px;text-align:center;color:var(--muted);">📎 Nenhum arquivo disponível</div>`;
+  } else if (ehPdf) {
+    viz.innerHTML = `<embed src="${c.arquivo}" type="application/pdf"
+      style="width:100%;height:480px;border-radius:8px;border:1px solid var(--border);"
+      onerror="this.outerHTML='<div style=\\'padding:20px;text-align:center;\\'>PDF indisponível. Use o botão Baixar.</div>'">`;
+  } else if (ehImagem) {
+    viz.innerHTML = `<img src="${c.arquivo}" alt="Currículo de ${c.nome}"
+      style="max-width:100%;border-radius:8px;border:1px solid var(--border);display:block;margin:0 auto;"
+      onerror="this.outerHTML='<div style=\\'padding:20px;text-align:center;\\'>Erro ao carregar imagem.</div>'">`;
+  } else {
+    viz.innerHTML = `<div style="padding:30px;text-align:center;color:var(--muted);">
+      <div style="font-size:40px;margin-bottom:12px;">📄</div>
+      <div style="font-size:14px;font-weight:600;color:var(--text-secondary);">Arquivo: ${c.arquivo_nome || "documento"}</div>
+      <div style="font-size:13px;margin-top:6px;">Este formato não pode ser visualizado no navegador.<br>Use o botão <strong>Baixar arquivo</strong> abaixo.</div>
+    </div>`;
+  }
+
+  trocarAbaAprov("apres");
+  document.getElementById("modalApres").classList.add("open");
+}
+
+function trocarAbaAprov(aba) {
+  const apres   = document.getElementById("abaApresA");
+  const arquivo = document.getElementById("abaArqA");
+  const tabA    = document.getElementById("tabApresA");
+  const tabB    = document.getElementById("tabArqA");
+  if (aba === "apres") {
+    apres.style.display = "block"; arquivo.style.display = "none";
+    tabA.style.background = "#7c3aed"; tabA.style.color = "#fff";
+    tabB.style.background = "none";    tabB.style.color = "#8a94a6";
+  } else {
+    apres.style.display = "none"; arquivo.style.display = "block";
+    tabA.style.background = "none";    tabA.style.color = "#8a94a6";
+    tabB.style.background = "#7c3aed"; tabB.style.color = "#fff";
+  }
+}
+
+function fecharModal() { document.getElementById("modalApres").classList.remove("open"); }
+window.addEventListener("click", e => { if (e.target.id === "modalApres") fecharModal(); });
+
+/* ── Toast ── */
+function mostrarToast(msg, tipo="") {
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.className = `toast ${tipo} show`;
+  setTimeout(() => t.classList.remove("show"), 3500);
+}
+
+/* ── Logout ── */
+function logout() { localStorage.removeItem("usuario"); window.location.href="login.html"; }
+
+carregar();
+</script>
+</body>
+</html>

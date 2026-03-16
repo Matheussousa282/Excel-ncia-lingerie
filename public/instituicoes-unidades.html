@@ -2,121 +2,264 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>RH | Instituições e Unidades</title>
-
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
   --primary: #2563eb;
+  --primary-light: #eff6ff;
   --success: #16a34a;
+  --success-bg: #f0fdf4;
   --danger: #dc2626;
+  --danger-bg: #fef2f2;
+  --warning: #d97706;
+  --warning-bg: #fffbeb;
   --muted: #6b7280;
   --bg: #f3f4f6;
   --card: #ffffff;
   --border: #e5e7eb;
+  --text: #111827;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.07);
+  --radius: 12px;
+  --radius-sm: 8px;
 }
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  margin: 0;
-  font-family: "Segoe UI", Arial;
+  font-family: "DM Sans", "Segoe UI", sans-serif;
   background: var(--bg);
+  color: var(--text);
+  padding: 28px 24px;
 }
 
-.container {
-  max-width: 1200px;
-  margin: auto;
-  padding: 30px;
+.page-title {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.4px;
+  margin-bottom: 22px;
 }
 
-h1 {
-  margin-bottom: 25px;
-}
-
+/* ── GRID ── */
 .grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 25px;
+  gap: 22px;
 }
 
+@media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
+
+/* ── CARD ── */
 .card {
   background: var(--card);
-  padding: 25px;
-  border-radius: 14px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
-.form {
+.card-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  background: #fafafa;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.card-header-title {
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.count-badge {
+  background: var(--primary-light);
+  color: var(--primary);
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 2px 9px;
+  border-radius: 12px;
+}
+
+.card-body { padding: 18px 20px; flex: 1; }
+
+/* ── FORM ── */
+.form-add {
   display: flex;
   gap: 10px;
-  margin-bottom: 15px;
+  margin-bottom: 18px;
+  align-items: flex-end;
+  flex-wrap: wrap;
 }
 
-input, select {
-  padding: 12px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  font-size: 14px;
-  flex: 1;
+.form-add .field { flex: 1; min-width: 120px; }
+
+.field label {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 5px;
 }
 
-button {
-  padding: 12px 16px;
-  border-radius: 8px;
+input[type="text"],
+select {
+  width: 100%;
+  padding: 9px 12px;
+  font-size: 13.5px;
+  font-family: "DM Sans", sans-serif;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text);
+  transition: all 0.2s;
+  outline: none;
+}
+
+input[type="text"]:focus, select:focus {
+  border-color: var(--primary);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+}
+
+input::placeholder { color: #b0b7c3; }
+
+select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg fill='none' stroke='%236b7280' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 14px;
+  padding-right: 32px;
+  cursor: pointer;
+}
+
+/* ── BOTÕES ── */
+.btn {
+  padding: 9px 16px;
+  border-radius: var(--radius-sm);
   border: none;
   cursor: pointer;
   font-weight: 600;
+  font-size: 13px;
+  font-family: "DM Sans", sans-serif;
+  transition: all 0.18s;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
 }
 
 .btn-primary { background: var(--primary); color: #fff; }
-.btn-success { background: var(--success); color: #fff; }
-.btn-danger { background: var(--danger); color: #fff; }
+.btn-primary:hover { background: #1d4ed8; }
 
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
+.btn-danger   { background: var(--danger-bg); color: var(--danger); border: 1px solid #fecaca; }
+.btn-danger:hover   { background: #fee2e2; }
 
-th, td {
-  padding: 12px;
-  font-size: 14px;
-  border-bottom: 1px solid var(--border);
-}
+.btn-success  { background: var(--success-bg); color: var(--success); border: 1px solid #bbf7d0; }
+.btn-success:hover  { background: #dcfce7; }
+
+.btn-sm { padding: 5px 11px; font-size: 12px; }
+
+/* ── TABELA ── */
+table { width: 100%; border-collapse: collapse; }
 
 th {
-  background: #f9fafb;
+  padding: 10px 14px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
   color: var(--muted);
+  background: #f8fafc;
+  border-bottom: 1px solid var(--border);
   text-align: left;
 }
 
+td {
+  padding: 11px 14px;
+  font-size: 13.5px;
+  border-bottom: 1px solid #f0f4f8;
+  vertical-align: middle;
+}
+
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: #f8fbff; }
+
 .badge {
-  padding: 4px 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
   border-radius: 20px;
-  font-size: 12px;
-  color: #fff;
+  font-size: 11.5px;
+  font-weight: 600;
 }
 
-.ativo { background: var(--success); }
-.inativo { background: var(--muted); }
+.badge-ativo   { background: var(--success-bg); color: var(--success); }
+.badge-inativo { background: #f3f4f6; color: var(--muted); }
 
-.actions button {
-  margin-right: 6px;
+.actions { display: flex; gap: 6px; }
+
+/* Hint de seleção de unidade */
+.hint-unidade {
+  padding: 20px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+  background: #f8fafc;
+  border-radius: var(--radius-sm);
+  border: 1.5px dashed var(--border);
 }
+
+/* Empty */
+.empty { padding: 30px; text-align: center; color: var(--muted); font-size: 13px; }
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 22px; right: 22px;
+  background: #1a202c; color: #fff;
+  padding: 11px 18px; border-radius: 9px;
+  font-size: 13.5px; font-weight: 500;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  z-index: 9999;
+  transform: translateY(60px); opacity: 0;
+  transition: all 0.3s ease;
+}
+.toast.show   { transform: translateY(0); opacity: 1; }
+.toast.success { background: var(--success); }
+.toast.danger  { background: var(--danger); }
 </style>
 </head>
-
 <body>
 
-<div class="container">
-  <h1>Instituições & Unidades</h1>
+<div class="page-title">🏢 Instituições & Unidades</div>
 
-  <div class="grid">
+<div class="grid">
 
-    <!-- INSTITUIÇÕES -->
-    <div class="card">
-      <h3>Instituições</h3>
+  <!-- ── INSTITUIÇÕES ── -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-header-title">🏛️ Instituições</div>
+      <span class="count-badge" id="countInst">0</span>
+    </div>
+    <div class="card-body">
 
-      <div class="form">
-        <input id="instNome" placeholder="Nova instituição">
-        <button class="btn-primary" onclick="salvarInstituicao()">Salvar</button>
+      <div class="form-add">
+        <div class="field">
+          <label>Nome</label>
+          <input type="text" id="instNome" placeholder="Nova instituição…"
+            onkeydown="if(event.key==='Enter') salvarInstituicao()">
+        </div>
+        <button class="btn btn-primary" onclick="salvarInstituicao()">✓ Salvar</button>
       </div>
 
       <table>
@@ -129,18 +272,155 @@ th {
         </thead>
         <tbody id="listaInstituicoes"></tbody>
       </table>
+
     </div>
+  </div>
 
-    <!-- UNIDADES -->
-    <div class="card">
-      <h3>Unidades</h3>
+  <!-- ── UNIDADES ── -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-header-title">📍 Unidades</div>
+      <span class="count-badge" id="countUnid">0</span>
+    </div>
+    <div class="card-body">
 
-      <div class="form">
-        <select id="instituicaoSelect"></select>
-        <input id="unidadeNome" placeholder="Nova unidade">
-        <button class="btn-primary" onclick="salvarUnidade()">Salvar</button>
+      <div class="form-add">
+        <div class="field">
+          <label>Instituição</label>
+          <select id="instituicaoSelect">
+            <option value="">Selecione…</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Nome da unidade</label>
+          <input type="text" id="unidadeNome" placeholder="Nova unidade…"
+            onkeydown="if(event.key==='Enter') salvarUnidade()">
+        </div>
+        <button class="btn btn-primary" onclick="salvarUnidade()">✓ Salvar</button>
       </div>
 
+      <div id="unidadesContainer">
+        <div class="hint-unidade">Selecione uma instituição para ver suas unidades</div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/*
+  GUARD DE LOGIN — descomente para ativar proteção por login.
+*/
+/*
+const usuario = localStorage.getItem("usuario");
+if (!usuario) { window.location.href = "login.html"; }
+*/
+
+let instituicoes = [];
+
+/* ── Carrega instituições ── */
+async function carregarInstituicoes() {
+  try {
+    const res = await fetch("/api/instituicoes");
+    instituicoes = await res.json();
+
+    document.getElementById("countInst").textContent = instituicoes.length;
+
+    // Tabela
+    const lista = document.getElementById("listaInstituicoes");
+    if (!instituicoes.length) {
+      lista.innerHTML = `<tr><td colspan="3"><div class="empty">Nenhuma instituição cadastrada</div></td></tr>`;
+    } else {
+      lista.innerHTML = instituicoes.map(i => `
+        <tr>
+          <td>${i.nome}</td>
+          <td><span class="badge ${i.ativo ? "badge-ativo" : "badge-inativo"}">
+            ${i.ativo ? "✓ Ativo" : "✕ Inativo"}
+          </span></td>
+          <td class="actions">
+            <button class="btn btn-sm ${i.ativo ? "btn-danger" : "btn-success"}"
+              onclick="alterarInstituicao(${i.id}, ${!i.ativo})">
+              ${i.ativo ? "Inativar" : "Ativar"}
+            </button>
+          </td>
+        </tr>
+      `).join("");
+    }
+
+    // Select de unidades
+    const sel = document.getElementById("instituicaoSelect");
+    const valAtual = sel.value;
+    sel.innerHTML = `<option value="">Selecione…</option>
+      ${instituicoes.filter(i => i.ativo).map(i =>
+        `<option value="${i.id}" ${valAtual == i.id ? "selected" : ""}>${i.nome}</option>`
+      ).join("")}`;
+
+  } catch (err) {
+    console.error(err);
+    mostrarToast("Erro ao carregar instituições.", "danger");
+  }
+}
+
+async function salvarInstituicao() {
+  const input = document.getElementById("instNome");
+  if (!input.value.trim()) { input.focus(); return; }
+
+  try {
+    await fetch("/api/instituicoes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nome: input.value.trim() })
+    });
+    input.value = "";
+    carregarInstituicoes();
+    mostrarToast("Instituição cadastrada!", "success");
+  } catch {
+    mostrarToast("Erro ao salvar.", "danger");
+  }
+}
+
+async function alterarInstituicao(id, ativo) {
+  try {
+    await fetch("/api/instituicoes", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, ativo })
+    });
+    carregarInstituicoes();
+    mostrarToast(ativo ? "Instituição ativada!" : "Instituição inativada.", ativo ? "success" : "");
+  } catch {
+    mostrarToast("Erro ao alterar.", "danger");
+  }
+}
+
+/* ── Carrega unidades ao selecionar instituição ── */
+document.getElementById("instituicaoSelect").addEventListener("change", carregarUnidades);
+
+async function carregarUnidades() {
+  const id = document.getElementById("instituicaoSelect").value;
+  const container = document.getElementById("unidadesContainer");
+
+  if (!id) {
+    container.innerHTML = `<div class="hint-unidade">Selecione uma instituição para ver suas unidades</div>`;
+    document.getElementById("countUnid").textContent = 0;
+    return;
+  }
+
+  try {
+    const res  = await fetch(`/api/unidades?instituicao_id=${id}`);
+    const data = await res.json();
+
+    document.getElementById("countUnid").textContent = data.length;
+
+    if (!data.length) {
+      container.innerHTML = `<div class="empty">Nenhuma unidade para esta instituição</div>`;
+      return;
+    }
+
+    container.innerHTML = `
       <table>
         <thead>
           <tr>
@@ -149,135 +429,81 @@ th {
             <th>Ações</th>
           </tr>
         </thead>
-        <tbody id="listaUnidades"></tbody>
-      </table>
-    </div>
+        <tbody>
+          ${data.map(u => `
+            <tr>
+              <td>${u.nome}</td>
+              <td><span class="badge ${u.ativo ? "badge-ativo" : "badge-inativo"}">
+                ${u.ativo ? "✓ Ativo" : "✕ Inativo"}
+              </span></td>
+              <td class="actions">
+                <button class="btn btn-sm ${u.ativo ? "btn-danger" : "btn-success"}"
+                  onclick="alterarUnidade(${u.id}, ${!u.ativo})">
+                  ${u.ativo ? "Inativar" : "Ativar"}
+                </button>
+              </td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>`;
 
-  </div>
-</div>
-
-<script>
-  const usuario = localStorage.getItem("usuario");
-if (!usuario) {
-  window.location.href = "login.html";
-}
-
-
-async function carregarInstituicoes() {
-  const res = await fetch("/api/instituicoes");
-  instituicoes = await res.json();
-
-  listaInstituicoes.innerHTML = instituicoes.map(i => `
-    <tr>
-      <td>${i.nome}</td>
-      <td>
-        <span class="badge ${i.ativo ? 'ativo' : 'inativo'}">
-          ${i.ativo ? 'Ativo' : 'Inativo'}
-        </span>
-      </td>
-      <td class="actions">
-        <button class="${i.ativo ? 'btn-danger' : 'btn-success'}"
-          onclick="alterarInstituicao(${i.id}, ${!i.ativo})">
-          ${i.ativo ? 'Inativar' : 'Ativar'}
-        </button>
-      </td>
-    </tr>
-  `).join("");
-
-  instituicaoSelect.innerHTML = `
-    <option value="">Selecione a instituição</option>
-    ${instituicoes.filter(i => i.ativo).map(i =>
-      `<option value="${i.id}">${i.nome}</option>`
-    ).join("")}
-  `;
-}
-
-async function salvarInstituicao() {
-  if (!instNome.value) return;
-
-  await fetch("/api/instituicoes", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ nome: instNome.value })
-  });
-
-  instNome.value = "";
-  carregarInstituicoes();
-}
-
-async function alterarInstituicao(id, ativo) {
-  await fetch("/api/instituicoes", {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ id, ativo })
-  });
-
-  carregarInstituicoes();
-}
-
-instituicaoSelect.addEventListener("change", carregarUnidades);
-
-async function carregarUnidades() {
-  const id = instituicaoSelect.value;
-  if (!id) {
-    listaUnidades.innerHTML = "";
-    return;
+  } catch (err) {
+    console.error(err);
+    mostrarToast("Erro ao carregar unidades.", "danger");
   }
-
-  const res = await fetch(`/api/unidades?instituicao_id=${id}`);
-  const data = await res.json();
-
-  listaUnidades.innerHTML = data.map(u => `
-    <tr>
-      <td>${u.nome}</td>
-      <td>
-        <span class="badge ${u.ativo ? 'ativo' : 'inativo'}">
-          ${u.ativo ? 'Ativo' : 'Inativo'}
-        </span>
-      </td>
-      <td class="actions">
-        <button class="${u.ativo ? 'btn-danger' : 'btn-success'}"
-          onclick="alterarUnidade(${u.id}, ${!u.ativo})">
-          ${u.ativo ? 'Inativar' : 'Ativar'}
-        </button>
-      </td>
-    </tr>
-  `).join("");
 }
 
 async function salvarUnidade() {
-  if (!instituicaoSelect.value || !unidadeNome.value) return;
+  const sel   = document.getElementById("instituicaoSelect");
+  const input = document.getElementById("unidadeNome");
 
-  await fetch("/api/unidades", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      nome: unidadeNome.value,
-      instituicao_id: instituicaoSelect.value
-    })
-  });
+  if (!sel.value)        { mostrarToast("Selecione uma instituição.", "danger"); return; }
+  if (!input.value.trim()) { input.focus(); return; }
 
-  unidadeNome.value = "";
-  carregarUnidades();
+  try {
+    await fetch("/api/unidades", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nome: input.value.trim(), instituicao_id: sel.value })
+    });
+    input.value = "";
+    carregarUnidades();
+    mostrarToast("Unidade cadastrada!", "success");
+  } catch {
+    mostrarToast("Erro ao salvar.", "danger");
+  }
 }
 
 async function alterarUnidade(id, ativo) {
-  await fetch("/api/unidades", {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ id, ativo })
-  });
-
-  carregarUnidades();
+  try {
+    await fetch("/api/unidades", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, ativo })
+    });
+    carregarUnidades();
+    mostrarToast(ativo ? "Unidade ativada!" : "Unidade inativada.", ativo ? "success" : "");
+  } catch {
+    mostrarToast("Erro ao alterar.", "danger");
+  }
 }
 
-// Função de logout
-function logout(){
+/* ── Toast ── */
+function mostrarToast(msg, tipo = "") {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.className = `toast ${tipo} show`;
+  setTimeout(() => t.classList.remove("show"), 3000);
+}
+
+/* ── Logout ── */
+function logout() {
   localStorage.removeItem("usuario");
-  window.location.href="login.html";
+  window.location.href = "login.html";
 }
 
 carregarInstituicoes();
 </script>
+
 </body>
 </html>

@@ -4,155 +4,365 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>RH | Dashboard</title>
-
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
-  --primary: #2563eb;
-  --sidebar: #0f172a;
+  /* Cores originais mantidas */
+  --primary: #c4a264;
+  --primary-dark: #080808;
+  --sidebar-bg: #0f172a;
+  --sidebar-text: #cbd5e1;
+  --sidebar-active: rgba(196,162,100,0.15);
+  --sidebar-active-text: #c4a264;
+  --sidebar-hover: rgba(255,255,255,0.06);
   --bg: #f3f4f6;
-  --card: #ffffff;
-  --text: #111827;
-  --muted: #6b7280;
-  --success: #16a34a;
-  --info: #2563eb;
+  --border: #e5e7eb;
+  --danger: #dc2626;
+  --danger-hover: #b91c1c;
 }
 
-* { box-sizing: border-box; margin:0; padding:0; }
-body { font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); }
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* SIDEBAR */
+body {
+  font-family: "DM Sans", "Segoe UI", sans-serif;
+  background: var(--bg);
+  color: #111827;
+}
+
+/* ════════════════════════
+   SIDEBAR
+════════════════════════ */
 .sidebar {
-  width: 240px;
+  width: 235px;
   height: 100vh;
-  background: var(--sidebar);
-  color: #fff;
+  background: var(--sidebar-bg);
   position: fixed;
-  padding: 25px 20px;
+  top: 0; left: 0;
   display: flex;
   flex-direction: column;
-}
-.sidebar h2 { text-align:center; font-size:20px; margin-bottom:40px; }
-.sidebar a {
-  display: block; color:#cbd5f5; text-decoration:none;
-  padding:12px 14px; border-radius:8px; margin-bottom:8px; font-size:14px;
-  cursor:pointer;
-}
-.sidebar a:not(.logout).active,
-.sidebar a:not(.logout):hover {
-  background: rgba(238, 111, 111, 0.1);
-  color:#fff;
+  padding: 0;
+  overflow: hidden;
+  z-index: 200;
+  box-shadow: 4px 0 20px rgba(0,0,0,0.25);
 }
 
-/* MAIN */
-.main { margin-left:260px; padding:20px; min-height:100vh; }
+/* Topo da sidebar com logo/marca */
+.sidebar-brand {
+  padding: 22px 20px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+}
 
-/* RESPONSIVE */
-@media (max-width:900px) { .sidebar { display:none; } .main { margin-left:0; } }
+.sidebar-logo {
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.3px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sidebar-logo span {
+  color: var(--primary);
+}
+
+/* Bloco do usuário logado */
+.sidebar-user {
+  padding: 14px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  margin-bottom: 8px;
+}
+
+.sidebar-user-label {
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  color: rgba(255,255,255,0.35);
+  margin-bottom: 4px;
+}
+
+.sidebar-user-name {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+/* Seção do menu */
+.sidebar-section-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: rgba(255,255,255,0.28);
+  padding: 10px 20px 6px;
+  font-weight: 600;
+}
+
+/* Links do menu */
+.menu { flex: 1; overflow-y: auto; padding-bottom: 10px; }
+
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  margin: 2px 10px;
+  border-radius: 8px;
+  color: var(--sidebar-text);
+  font-size: 13.5px;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  border: none;
+  background: none;
+  width: calc(100% - 20px);
+  text-align: left;
+  font-family: "DM Sans", "Segoe UI", sans-serif;
+}
+
+.sidebar-link:hover {
+  background: var(--sidebar-hover);
+  color: #fff;
+}
+
+.sidebar-link.active {
+  background: var(--sidebar-active);
+  color: var(--sidebar-active-text);
+  font-weight: 600;
+}
+
+.sidebar-link .link-icon {
+  font-size: 15px;
+  width: 20px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+/* Separador */
+.sidebar-divider {
+  height: 1px;
+  background: rgba(255,255,255,0.07);
+  margin: 8px 16px;
+}
+
+/* Botão logout */
+.sidebar-logout {
+  padding: 14px 20px;
+  border-top: 1px solid rgba(255,255,255,0.07);
+}
+
+.btn-logout {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 14px;
+  background: rgba(220, 38, 38, 0.12);
+  border: 1px solid rgba(220, 38, 38, 0.25);
+  border-radius: 8px;
+  color: #fca5a5;
+  font-size: 13.5px;
+  font-weight: 600;
+  font-family: "DM Sans", "Segoe UI", sans-serif;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+}
+
+.btn-logout:hover {
+  background: rgba(220, 38, 38, 0.25);
+  border-color: rgba(220, 38, 38, 0.5);
+  color: #fff;
+}
+
+/* ════════════════════════
+   MAIN CONTENT
+════════════════════════ */
+.main {
+  margin-left: 235px;
+  height: 100vh;
+  overflow: hidden;
+}
 
 .main iframe {
   width: 100%;
-  height: calc(100vh - 20px);
+  height: 100vh;
   border: none;
+  display: block;
 }
 
-.menu { flex: 1; }
-.logout {
-  margin-top: auto;
-  padding: 12px 14px;
+/* ════════════════════════
+   MOBILE
+════════════════════════ */
+.hamburger {
+  display: none;
+  position: fixed;
+  top: 12px; left: 12px;
+  z-index: 300;
+  background: var(--sidebar-bg);
+  border: none;
+  color: #fff;
+  font-size: 20px;
+  padding: 8px 10px;
   border-radius: 8px;
-  text-align: center;
-  font-weight: 600;
-  color: #fecaca; /* vermelho claro */
   cursor: pointer;
-  transition: all 0.2s ease;
 }
 
-.logout:hover {
-  background: #dc2626; /* vermelho forte */
-  color: #fff;
+.overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 150;
 }
 
-.sidebar .logout {
-  background: #dc2626; /* vermelho */
-  color: #fff;
+@media (max-width: 900px) {
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+  .sidebar.open { transform: translateX(0); }
+  .main { margin-left: 0; }
+  .hamburger { display: block; }
+  .overlay.show { display: block; }
 }
-
-.sidebar .logout:hover {
-  background: #b91c1c; /* vermelho mais escuro */
-}
-
-
 </style>
 </head>
 <body>
 
-<div class="sidebar">
-  <h2>RH System</h2>
-  <p id="usuarioLogado" style="text-align:center; font-size:13px; color:#faba5a; margin-top:-25px; margin-bottom:30px;"></p>
+<!-- Botão mobile -->
+<button class="hamburger" onclick="toggleSidebar()">☰</button>
+<div class="overlay" id="overlay" onclick="fecharSidebar()"></div>
+
+<!-- Sidebar -->
+<div class="sidebar" id="sidebar">
+
+  <div class="sidebar-brand">
+    <div class="sidebar-logo">
+      <span>✦</span> RH<span>System</span>
+    </div>
+  </div>
+
+  <div class="sidebar-user">
+    <div class="sidebar-user-label">Logado como</div>
+    <div class="sidebar-user-name" id="usuarioLogado">—</div>
+  </div>
 
   <div class="menu">
-    <a class="active" onclick="abrirPagina('curriculos.html', event)">Currículos</a>
-    <a onclick="abrirPagina('cadastros.html', event)">Gestão de Cargo</a>
-    <a onclick="abrirPagina('instituicoes-unidades.html', event)">Instituições e Unidades</a>
-    <a id="usuariosLink" style="display:none;" onclick="abrirPagina('criar-usuario.html', event)">Usuários</a>
+    <div class="sidebar-section-label">Recrutamento</div>
+
+    <button class="sidebar-link active" id="link-curriculos"
+      onclick="abrirPagina('curriculos.html', 'link-curriculos')">
+      <span class="link-icon">📄</span> Currículos
+    </button>
+
+    <button class="sidebar-link" id="link-entrevistas"
+      onclick="abrirPagina('entrevistas.html', 'link-entrevistas')">
+      <span class="link-icon">🎯</span> Entrevistas
+    </button>
+
+    <button class="sidebar-link" id="link-aprovados"
+      onclick="abrirPagina('aprovados.html', 'link-aprovados')">
+      <span class="link-icon">✅</span> Aprovados
+    </button>
+
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-section-label">Configurações</div>
+
+    <button class="sidebar-link" id="link-cadastros"
+      onclick="abrirPagina('cadastros.html', 'link-cadastros')">
+      <span class="link-icon">🗂️</span> Gestão de Cargos
+    </button>
+
+    <button class="sidebar-link" id="link-inst"
+      onclick="abrirPagina('instituicoes-unidades.html', 'link-inst')">
+      <span class="link-icon">🏢</span> Instituições e Unidades
+    </button>
+
+    <!--
+      CONTROLE DE ACESSO:
+      O link "Usuários" só aparece para o usuário "Matheus"
+      (verificado pelo nome salvo no localStorage após login).
+      Veja o bloco de script abaixo para a lógica.
+    -->
+    <button class="sidebar-link" id="link-usuarios" style="display:none;"
+      onclick="abrirPagina('criar-usuario.html', 'link-usuarios')">
+      <span class="link-icon">👥</span> Usuários
+    </button>
+
+    <button class="sidebar-link" id="link-configuracoes" style="display:none;"
+      onclick="abrirPagina('configuracoes.html', 'link-configuracoes')">
+      <span class="link-icon">⚙️</span> Configurações
+    </button>
   </div>
 
-  <a onclick="logout()" class="logout">Sair</a>
+  <div class="sidebar-logout">
+    <button class="btn-logout" onclick="logout()">
+      <span>🚪</span> Sair da conta
+    </button>
+  </div>
+
 </div>
 
+<!-- Conteúdo principal em iframe -->
 <div class="main">
-    <iframe id="iframeConteudo" src="curriculos.html"></iframe>
-</div>
-
-<!-- Modal de Apresentação Profissional -->
-<div id="modalApresentacao" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);align-items:center;justify-content:center;z-index:9999;">
-  <div style="background:#fff;padding:25px;border-radius:12px;max-width:600px;width:90%;position:relative;">
-    <span id="fecharModal" style="position:absolute;top:10px;right:15px;font-size:20px;font-weight:bold;cursor:pointer;">&times;</span>
-    <h2>Apresentação Profissional</h2>
-    <p id="conteudoApresentacao" style="margin-top:15px;white-space:pre-wrap;"></p>
-  </div>
+  <iframe id="iframeConteudo" src="curriculos.html"></iframe>
 </div>
 
 <script>
-const usuario = localStorage.getItem("usuario");
-if(!usuario) { window.location.href="login.html"; }
-
-const dadosUsuario = JSON.parse(usuario);
-document.getElementById("usuarioLogado").textContent = "Bem Vindo " + dadosUsuario.nome;
-
-// Mostrar botão "Usuários" somente para Matheus
-if(dadosUsuario.nome === "Matheus"){
-  document.getElementById("usuariosLink").style.display = "block";
+/* ════════════════════════════════════
+   GUARD DE LOGIN
+   ────────────────────────────────────
+   Verifica se há usuário no localStorage.
+   Se não houver, redireciona para login.html.
+   ════════════════════════════════════ */
+const usuarioRaw = localStorage.getItem("usuario");
+if (!usuarioRaw) {
+  window.location.href = "login.html";
 }
 
-// Função para trocar a página no iframe
-function abrirPagina(pagina, event){
-  // Remove classe active de todos
-  document.querySelectorAll('.sidebar a').forEach(a => a.classList.remove('active'));
-  // Adiciona active no clicado
-  if(event) event.currentTarget.classList.add('active');
-  // Troca o iframe
-  document.getElementById('iframeConteudo').src = pagina;
+const dadosUsuario = JSON.parse(usuarioRaw);
+document.getElementById("usuarioLogado").textContent = dadosUsuario.nome;
+
+/* ════════════════════════════════════
+   CONTROLE DE ACESSO
+   ────────────────────────────────────
+   O link "Usuários" só é exibido para
+   o usuário com nome "Matheus".
+   Adapte a lógica se precisar de roles.
+   ════════════════════════════════════ */
+if (dadosUsuario.nome === "Matheus") {
+  document.getElementById("link-usuarios").style.display = "flex";
+  document.getElementById("link-configuracoes").style.display = "flex";
 }
 
-// Função de logout
-function logout(){
+/* ── Troca de página no iframe ── */
+function abrirPagina(pagina, linkId) {
+  // Remove active de todos os links
+  document.querySelectorAll(".sidebar-link").forEach(a => a.classList.remove("active"));
+  // Marca o clicado
+  document.getElementById(linkId).classList.add("active");
+  // Troca o src do iframe
+  document.getElementById("iframeConteudo").src = pagina;
+  // Fecha sidebar no mobile
+  fecharSidebar();
+}
+
+/* ── Logout ── */
+function logout() {
   localStorage.removeItem("usuario");
-  window.location.href="login.html";
+  window.location.href = "login.html";
 }
 
-// Modal
-const modal = document.getElementById("modalApresentacao");
-const fecharModal = document.getElementById("fecharModal");
-const conteudoModal = document.getElementById("conteudoApresentacao");
-
-function abrirModal(texto){
-  conteudoModal.textContent = texto || "Sem apresentação";
-  modal.style.display = "flex";
+/* ── Mobile: abrir/fechar sidebar ── */
+function toggleSidebar() {
+  document.getElementById("sidebar").classList.toggle("open");
+  document.getElementById("overlay").classList.toggle("show");
 }
-
-fecharModal.onclick = () => { modal.style.display = "none"; };
-window.onclick = (e) => { if(e.target == modal) modal.style.display = "none"; };
+function fecharSidebar() {
+  document.getElementById("sidebar").classList.remove("open");
+  document.getElementById("overlay").classList.remove("show");
+}
 </script>
 
 </body>
