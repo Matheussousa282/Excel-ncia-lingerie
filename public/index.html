@@ -606,10 +606,13 @@ cargoSelect.addEventListener("change", () => {
   cargosExtrasSelecionados = [];
   renderizarChips();
 
-  // Só mostra "Outros" — campo de máquinas só aparece via chips
+  // Mostra "Outros" ou campo de máquinas direto se Costureiro(a)
   if (val === cargoOutrosId) {
     campoCargosExtras.classList.add("show");
     preencherSelectExtras();
+  } else if (val === cargoCosTureiraId) {
+    campoCostureira.classList.add("show");
+    maquinas.required = true;
   }
 });
 
@@ -778,9 +781,17 @@ document.getElementById("formCandidato").addEventListener("submit", async (e) =>
       cargos_pretendidos: cargoVal === cargoOutrosId
         ? cargosExtrasSelecionados.map(c => c.nome).join(", ")
         : null,
-      maquinas: cargoVal === cargoCosTureiraId
-        ? document.getElementById("maquinas").value
-        : null,
+      maquinas: (() => {
+        const val = document.getElementById("maquinas").value.trim();
+        // Costureiro direto como cargo principal
+        if (cargoVal === cargoCosTureiraId && val) return val;
+        // Costureiro dentro dos chips de "Outros"
+        const temCostureiro = cargosExtrasSelecionados.some(c =>
+          String(c.id) === cargoCosTureiraId || c.nome.toLowerCase().includes("costurei")
+        );
+        if (temCostureiro && val) return val;
+        return null;
+      })(),
     };
 
     try {
@@ -826,6 +837,7 @@ function novoCadastro() {
   document.getElementById("limiteAviso").classList.remove("show");
   document.getElementById("maquinas").value    = "";
   document.getElementById("maquinas").required = false;
+  verificarCostureira();
 }
 
 /* ── Inicializa ── */

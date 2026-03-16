@@ -348,6 +348,18 @@ tbody tr:last-child td { border-bottom: none; }
   transform: scale(1.04);
 }
 
+.badge-costureira {
+  background: #f0fdf4;
+  color: #15803d;
+  cursor: pointer;
+  border: 1.5px dashed #4ade80;
+  transition: all 0.15s;
+}
+.badge-costureira:hover {
+  background: #dcfce7;
+  transform: scale(1.04);
+}
+
 /* ── NOME COM AVATAR ── */
 .nome-cell {
   display: flex;
@@ -987,10 +999,14 @@ function atualizarTabela(lista) {
       <td>${c.unidade}</td>
       <td>
         ${(c.cargo || "").toLowerCase().includes("outro")
-          ? `<span class="badge badge-outros" onclick="abrirDetalhesCargo(${c.id})" title="Clique para ver detalhes">
+          ? `<span class="badge badge-outros" onclick="abrirDetalhesCargo(${c.id})" title="Clique para ver cargos pretendidos">
                📋 ${c.cargo}
              </span>`
-          : `<span class="badge ${c.cargo === "TI" ? "badge-ti" : "badge-adm"}">${c.cargo}</span>`
+          : (c.cargo || "").toLowerCase().includes("costurei")
+            ? `<span class="badge badge-costureira" onclick="abrirDetalhesCargo(${c.id})" title="Clique para ver máquinas">
+                 🧵 ${c.cargo}
+               </span>`
+            : `<span class="badge ${c.cargo === "TI" ? "badge-ti" : "badge-adm"}">${c.cargo}</span>`
         }
       </td>
       <td>${dataBR}</td>
@@ -1547,8 +1563,18 @@ function abrirDetalhesCargo(id) {
 
   let temInfo = false;
 
-  // Cargos pretendidos
-  if (c.cargos_pretendidos && c.cargos_pretendidos.trim()) {
+  const ehCostureira = (c.cargo || "").toLowerCase().includes("costurei");
+  const temPretendidos = c.cargos_pretendidos && c.cargos_pretendidos.trim();
+  const maquinasVal = (c.maquinas || "").trim();
+
+  // Título do modal muda conforme o tipo
+  document.querySelector("#modalDetalhesCargo .modal-subtitle").textContent =
+    ehCostureira && !temPretendidos
+      ? "🧵 Máquinas informadas pelo candidato"
+      : "📋 Detalhes do cargo pretendido";
+
+  // Cargos pretendidos (só para "Outros")
+  if (temPretendidos) {
     temInfo = true;
     blocoCP.style.display = "block";
     c.cargos_pretendidos.split(",").map(s => s.trim()).filter(Boolean).forEach(cargo => {
@@ -1559,16 +1585,20 @@ function abrirDetalhesCargo(id) {
     });
   }
 
-  // Máquinas
-  if (c.maquinas && c.maquinas.trim()) {
+  // Máquinas — aparece para costureiro direto OU costureiro nos chips
+  if (maquinasVal) {
     temInfo = true;
     blocoMaq.style.display = "block";
-    c.maquinas.split(",").map(s => s.trim()).filter(Boolean).forEach(maq => {
+    maquinasVal.split(",").map(s => s.trim()).filter(Boolean).forEach(maq => {
       listaMaq.innerHTML += `
         <span style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;background:#f0fdf4;color:#15803d;border:1.5px solid #bbf7d0;border-radius:20px;font-size:12.5px;font-weight:600;">
           🧵 ${maq}
         </span>`;
     });
+  } else if (ehCostureira || (temPretendidos && c.cargos_pretendidos.toLowerCase().includes("costurei"))) {
+    temInfo = true;
+    blocoMaq.style.display = "block";
+    listaMaq.innerHTML = `<span style="font-size:13px;color:#8a94a6;font-style:italic;">Nenhuma máquina informada pelo candidato.</span>`;
   }
 
   if (!temInfo) blocoSem.style.display = "block";
