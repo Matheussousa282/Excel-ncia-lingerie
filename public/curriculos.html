@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Currículos | RH System</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<!-- JSZip para download de todos os currículos em .zip -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
 :root {
   --primary: #0f62fe;
@@ -388,6 +390,31 @@ tbody tr:last-child td { border-bottom: none; }
 .btn-selecionar:hover { background: #ffe8df; }
 .btn-selecionar.selecionado { background: #ffe8df; font-weight: 600; }
 
+/* ── BOTÃO BAIXAR TODOS ── */
+.btn-baixar-todos {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 9px 18px; border-radius: var(--radius-sm);
+  font-size: 13.5px; font-weight: 600; font-family: "DM Sans", sans-serif;
+  border: 1.5px solid var(--border); background: var(--card);
+  color: var(--text-secondary); cursor: pointer; transition: all .2s;
+}
+.btn-baixar-todos:hover {
+  border-color: var(--success); color: var(--success);
+  background: var(--success-bg);
+}
+.btn-baixar-todos:disabled { opacity: .6; pointer-events: none; }
+
+/* Barra de progresso do download */
+.progress-bar-wrap {
+  display: none; background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 14px 18px; margin-bottom: 16px;
+  box-shadow: var(--shadow-sm);
+}
+.progress-bar-wrap.show { display: block; }
+.progress-label { font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px; display: flex; justify-content: space-between; }
+.progress-track { height: 7px; background: var(--border); border-radius: 10px; overflow: hidden; }
+.progress-fill  { height: 100%; background: linear-gradient(90deg, var(--primary), var(--success)); border-radius: 10px; transition: width .3s ease; width: 0%; }
+
 /* ── EMPTY STATE ── */
 .empty-state {
   padding: 60px 20px;
@@ -518,10 +545,24 @@ tbody tr:last-child td { border-bottom: none; }
       <div class="page-title">Currículos Recebidos</div>
       <div class="page-subtitle">Gerencie e filtre os candidatos recebidos</div>
     </div>
+    <button class="btn-baixar-todos" id="btnBaixarTodos" onclick="baixarTodosZip()">
+      ⬇ Baixar todos os currículos
+    </button>
   </div>
 
   <!-- Cards de resumo -->
   <div class="cards" id="cardsResumo"></div>
+
+  <!-- Barra de progresso do download -->
+  <div class="progress-bar-wrap" id="progressWrap">
+    <div class="progress-label">
+      <span id="progressLabel">Preparando arquivos…</span>
+      <span id="progressPct">0%</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+  </div>
 
   <!-- Painel de filtros -->
   <div class="filter-panel">
@@ -628,20 +669,40 @@ let ordenacao = { campo: "data", asc: false };
 
 /* ── Carrega currículos da API ── */
 async function carregarCurriculos() {
+  const tbody = document.getElementById("listaCurriculos");
+  tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--muted);">Carregando…</td></tr>`;
+
   try {
     const res = await fetch("/api/candidatos");
-    if (!res.ok) throw new Error("Erro ao buscar currículos");
-    const todos = await res.json();
-    // ── Candidatos aprovados são ocultados aqui e exibidos apenas na tela "Aprovados"
-    curriculos = todos.filter(c => !c.aprovado);
-  } catch (e) {
-    // Dados de demonstração quando a API não está disponível
-    curriculos = dadosDemostracao();
-  }
 
-  atualizarTabela(curriculos);
-  atualizarResumo(curriculos);
-  preencherFiltros(curriculos);
+    // Se der erro HTTP, mostra o detalhe real no console
+    if (!res.ok) {
+      const texto = await res.text();
+      console.error("Erro HTTP", res.status, texto);
+      throw new Error(`HTTP ${res.status}: ${texto}`);
+    }
+
+    const todos = await res.json();
+
+    // Candidatos aprovados ficam apenas na tela "Aprovados"
+    curriculos = todos.filter(c => !c.aprovado);
+
+    atualizarTabela(curriculos);
+    atualizarResumo(curriculos);
+    preencherFiltros(curriculos);
+
+  } catch (e) {
+    console.error("carregarCurriculos:", e);
+    tbody.innerHTML = `
+      <tr><td colspan="7">
+        <div class="empty-state">
+          <div class="empty-state-icon">⚠️</div>
+          <div class="empty-state-title">Erro ao carregar currículos</div>
+          <div class="empty-state-desc">${e.message}<br>Verifique o console e a conexão com o banco.</div>
+        </div>
+      </td></tr>`;
+    atualizarResumo([]);
+  }
 }
 
 /* ── Dados de demonstração ── */
@@ -936,6 +997,161 @@ function logout() {
   localStorage.removeItem("usuario");
   // window.location.href = "login.html"; // descomente ao ativar o login
   mostrarToast("Logout realizado.");
+}
+
+/* ════════════════════════════════════════════════
+   BAIXAR TODOS OS CURRÍCULOS EM .ZIP
+   ────────────────────────────────────────────────
+   Usa JSZip para empacotar todos os arquivos
+   (da lista atual filtrada) em um único .zip.
+   Cada arquivo é nomeado como:
+   "Nome do Candidato - cargo.extensao"
+════════════════════════════════════════════════ */
+async function baixarTodosZip() {
+  // Usa a lista filtrada atual (ou todos se não há filtro)
+  const listaAtual = curriculos.filter(c => {
+    const nome  = document.getElementById("filtroNome").value.toLowerCase();
+    const email = document.getElementById("filtroEmail").value.toLowerCase();
+    const cargo = document.getElementById("filtroCargo").value;
+    const unid  = document.getElementById("filtroUnidade").value;
+    const inst  = document.getElementById("filtroInstituicao").value;
+    return c.nome.toLowerCase().includes(nome) &&
+           c.email.toLowerCase().includes(email) &&
+           (!cargo || c.cargo === cargo) &&
+           (!unid  || c.unidade === unid) &&
+           (!inst  || c.instituicao === inst);
+  });
+
+  if (!listaAtual.length) {
+    mostrarToast("Nenhum currículo para baixar.", "warning");
+    return;
+  }
+
+  // Filtra só quem tem arquivo
+  const comArquivo = listaAtual.filter(c => c.arquivo && c.arquivo !== "#" && c.arquivo !== null);
+  if (!comArquivo.length) {
+    mostrarToast("Nenhum arquivo disponível para download.", "warning");
+    return;
+  }
+
+  const btn = document.getElementById("btnBaixarTodos");
+  btn.disabled = true;
+  btn.textContent = "⏳ Gerando ZIP…";
+
+  const progressWrap = document.getElementById("progressWrap");
+  const progressFill = document.getElementById("progressFill");
+  const progressLabel = document.getElementById("progressLabel");
+  const progressPct   = document.getElementById("progressPct");
+
+  progressWrap.classList.add("show");
+  progressFill.style.width = "0%";
+
+  try {
+    const zip = new JSZip();
+    // Pasta raiz dentro do zip
+    const pasta = zip.folder("curriculos_excelencia");
+
+    // Nomes duplicados: adiciona sufixo numérico se necessário
+    const nomesUsados = {};
+
+    for (let i = 0; i < comArquivo.length; i++) {
+      const c = comArquivo[i];
+
+      // Atualiza progresso
+      const pct = Math.round(((i + 1) / comArquivo.length) * 90);
+      progressFill.style.width = pct + "%";
+      progressLabel.textContent = `Adicionando: ${c.nome}`;
+      progressPct.textContent   = pct + "%";
+
+      try {
+        // O arquivo vem como data URL base64 do backend
+        // Extrai a parte base64 pura
+        let base64Data;
+        let mimeType;
+
+        if (c.arquivo.startsWith("data:")) {
+          const partes = c.arquivo.split(",");
+          base64Data = partes[1];
+          mimeType   = partes[0].split(":")[1].split(";")[0];
+        } else {
+          // Se for URL normal, faz fetch
+          const resp   = await fetch(c.arquivo);
+          const buffer = await resp.arrayBuffer();
+          base64Data   = btoa(String.fromCharCode(...new Uint8Array(buffer)));
+          mimeType     = resp.headers.get("content-type") || "application/octet-stream";
+        }
+
+        // Define extensão pelo arquivo_nome original ou pelo mime
+        const extOriginal = c.arquivo_nome
+          ? "." + c.arquivo_nome.split(".").pop().toLowerCase()
+          : mimeType.includes("pdf") ? ".pdf"
+          : mimeType.includes("word") ? ".docx"
+          : mimeType.includes("image") ? ".jpg"
+          : "";
+
+        // Monta nome do arquivo: "Nome - Cargo.ext"
+        const nomeBase = `${c.nome} - ${c.cargo}${extOriginal}`
+          .replace(/[/\\?%*:|"<>]/g, "-"); // remove caracteres inválidos
+
+        // Evita duplicatas
+        let nomeArquivo = nomeBase;
+        if (nomesUsados[nomeBase]) {
+          nomesUsados[nomeBase]++;
+          const sem = nomeBase.lastIndexOf(".");
+          nomeArquivo = sem > -1
+            ? nomeBase.slice(0, sem) + ` (${nomesUsados[nomeBase]})` + nomeBase.slice(sem)
+            : nomeBase + ` (${nomesUsados[nomeBase]})`;
+        } else {
+          nomesUsados[nomeBase] = 1;
+        }
+
+        pasta.file(nomeArquivo, base64Data, { base64: true });
+
+      } catch (errArq) {
+        console.warn(`Erro ao adicionar ${c.nome}:`, errArq);
+        // Continua mesmo se um arquivo falhar
+      }
+    }
+
+    // Gera o ZIP
+    progressLabel.textContent = "Compactando arquivos…";
+    progressFill.style.width  = "95%";
+    progressPct.textContent   = "95%";
+
+    const blob = await zip.generateAsync(
+      { type: "blob", compression: "DEFLATE", compressionOptions: { level: 6 } },
+      (meta) => {
+        const p = Math.round(95 + meta.percent * 0.05);
+        progressFill.style.width = p + "%";
+        progressPct.textContent  = p + "%";
+      }
+    );
+
+    // Download
+    progressFill.style.width = "100%";
+    progressPct.textContent  = "100%";
+    progressLabel.textContent = `✅ ${comArquivo.length} arquivo${comArquivo.length !== 1 ? "s" : ""} compactado${comArquivo.length !== 1 ? "s" : ""}!`;
+
+    const data = new Date().toLocaleDateString("pt-BR").replace(/\//g, "-");
+    const a    = document.createElement("a");
+    a.href     = URL.createObjectURL(blob);
+    a.download = `curriculos_${data}.zip`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+
+    mostrarToast(`${comArquivo.length} currículo${comArquivo.length !== 1 ? "s" : ""} baixado${comArquivo.length !== 1 ? "s" : ""}! ✅`, "success");
+
+    // Esconde barra após 3s
+    setTimeout(() => progressWrap.classList.remove("show"), 3000);
+
+  } catch (err) {
+    console.error("Erro ao gerar ZIP:", err);
+    mostrarToast("Erro ao gerar o arquivo ZIP.", "danger");
+    progressWrap.classList.remove("show");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "⬇ Baixar todos os currículos";
+  }
 }
 
 /* ── Inicializa ── */
