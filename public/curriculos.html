@@ -733,10 +733,10 @@ function atualizarTabela(lista) {
   }
 
   tbody.innerHTML = lista.map(c => {
-    const iniciais = c.nome.split(" ").slice(0,2).map(n => n[0]).join("");
-    const dataBR = new Date(c.data).toLocaleDateString("pt-BR");
+    const iniciais   = c.nome.split(" ").slice(0,2).map(n => n[0]).join("");
+    const dataBR     = new Date(c.data).toLocaleDateString("pt-BR");
     const isSelecionado = c.selecionado || selecionados.includes(c.id);
-    
+
     return `
     <tr>
       <td>
@@ -755,10 +755,12 @@ function atualizarTabela(lista) {
       <td>${dataBR}</td>
       <td>
         <div class="actions">
-          <button class="btn-action btn-ver" onclick='abrirModal(${JSON.stringify(c)})'>👁 Ver</button>
-          <a class="btn-action btn-download" href="${c.arquivo}" download="${c.nome}-${c.arquivo_nome}">⬇ CV</a>
-          <button class="btn-action btn-selecionar ${isSelecionado ? "selecionado" : ""}" 
-                  onclick="toggleSelecionado(${c.id}, this)">
+          <button class="btn-action btn-ver"
+            onclick="abrirModalPorId(${c.id})">👁 Ver</button>
+          <button class="btn-action btn-download"
+            onclick="baixarCurriculo(${c.id})">⬇ CV</button>
+          <button class="btn-action btn-selecionar ${isSelecionado ? "selecionado" : ""}"
+            onclick="toggleSelecionado(${c.id}, this)">
             ${isSelecionado ? "✅ Selecionado" : "🎯 Selecionar"}
           </button>
         </div>
@@ -768,6 +770,62 @@ function atualizarTabela(lista) {
 
   document.getElementById("filtroContagem").innerHTML =
     `Exibindo <strong>${lista.length}</strong> de <strong>${curriculos.length}</strong> currículos`;
+}
+
+/* ── Busca candidato pelo id no array em memória e abre o modal ──
+   O arquivo NÃO vem na listagem geral (evita RangeError com base64 grande).
+   Ele é carregado sob demanda aqui, apenas quando o usuário clica em "Ver". */
+async function abrirModalPorId(id) {
+  const c = curriculos.find(x => x.id === id);
+  if (!c) return;
+
+  // Se o arquivo ainda não foi carregado, busca agora
+  if (!c.arquivo) {
+    try {
+      const res  = await fetch(`/api/candidatos?arquivo=${id}`);
+      if (res.ok) {
+        const data = await res.json();
+        c.arquivo      = data.arquivo;
+        c.arquivo_nome = data.arquivo_nome || c.arquivo_nome;
+      }
+    } catch (err) {
+      console.warn("Erro ao buscar arquivo:", err);
+    }
+  }
+
+  abrirModal(c);
+}
+
+/* ── Download individual pelo id ── */
+async function baixarCurriculo(id) {
+  const c = curriculos.find(x => x.id === id);
+  if (!c) return;
+
+  // Busca arquivo se ainda não carregado
+  if (!c.arquivo) {
+    mostrarToast("Baixando arquivo…");
+    try {
+      const res  = await fetch(`/api/candidatos?arquivo=${id}`);
+      if (res.ok) {
+        const data = await res.json();
+        c.arquivo      = data.arquivo;
+        c.arquivo_nome = data.arquivo_nome || c.arquivo_nome;
+      }
+    } catch (err) {
+      mostrarToast("Erro ao baixar arquivo.", "danger");
+      return;
+    }
+  }
+
+  if (!c.arquivo || c.arquivo === "#") {
+    mostrarToast("Arquivo não disponível.", "warning");
+    return;
+  }
+
+  const a    = document.createElement("a");
+  a.href     = c.arquivo;
+  a.download = `${c.nome}-${c.arquivo_nome || "curriculo"}`;
+  a.click();
 }
 
 /* ══ SELECIONADOS ══

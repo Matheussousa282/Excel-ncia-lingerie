@@ -79,10 +79,28 @@ export default async function handler(req, res) {
   }
 
   // ════════════════════════════════════════
-  // GET — lista todos os candidatos
+  // GET — lista candidatos ou busca arquivo
   // ════════════════════════════════════════
   if (req.method === "GET") {
     try {
+      // GET /api/candidatos?arquivo=ID  →  retorna só o arquivo daquele candidato
+      if (req.query.arquivo) {
+        const id = Number(req.query.arquivo);
+        const r  = await pool.query(
+          "SELECT arquivo, arquivo_nome FROM candidatos WHERE id = $1", [id]
+        );
+        if (!r.rows.length || !r.rows[0].arquivo) {
+          return res.status(404).json({ error: "Arquivo não encontrado" });
+        }
+        const { arquivo, arquivo_nome } = r.rows[0];
+        const base64 = Buffer.from(arquivo).toString("base64");
+        return res.status(200).json({
+          arquivo:      `data:application/octet-stream;base64,${base64}`,
+          arquivo_nome: arquivo_nome,
+        });
+      }
+
+      // GET /api/candidatos  →  lista SEM o campo arquivo (evita RangeError no front)
       const result = await pool.query(`
         SELECT
           c.id,
@@ -91,7 +109,6 @@ export default async function handler(req, res) {
           c.telefone,
           c.apresentacao,
           c.arquivo_nome,
-          c.arquivo,
           c.aprovado,
           c.criado_em AS data,
           ca.nome AS cargo,
@@ -104,25 +121,9 @@ export default async function handler(req, res) {
         ORDER BY c.criado_em DESC
       `);
 
-      const lista = result.rows.map(c => ({
-        id:           c.id,
-        nome:         c.nome,
-        email:        c.email,
-        telefone:     c.telefone,
-        apresentacao: c.apresentacao,
-        arquivo_nome: c.arquivo_nome,
-        aprovado:     c.aprovado,
-        data:         c.data,
-        cargo:        c.cargo,
-        instituicao:  c.instituicao,
-        unidade:      c.unidade,
-        // Converte BYTEA → base64 data URL para o front-end
-        arquivo: c.arquivo
-          ? `data:application/octet-stream;base64,${Buffer.from(c.arquivo).toString("base64")}`
-          : null,
-      }));
-
-      return res.status(200).json(lista);
+      // Não inclui o campo "arquivo" na listagem geral
+      // O front-end busca o arquivo individualmente via ?arquivo=ID
+      return res.status(200).json(result.rows);
 
     } catch (err) {
       console.error("ERRO GET candidatos:", err);
