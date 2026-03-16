@@ -397,6 +397,22 @@ input[type="file"]::file-selector-button:hover {
 /* Campo máquinas */
 .maquinas-wrap { display: flex; flex-direction: column; }
 
+/* ── LABEL PULSE ── */
+.label-pulse {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--primary);
+  animation: pulse-label 1.6s ease-in-out infinite;
+  letter-spacing: 0.2px;
+}
+
+@keyframes pulse-label {
+  0%   { opacity: 1;    transform: scale(1);    color: var(--primary); }
+  40%  { opacity: 0.75; transform: scale(1.04); color: var(--primary-hover); }
+  55%  { opacity: 1;    transform: scale(1.07); color: var(--primary); }
+  100% { opacity: 1;    transform: scale(1);    color: var(--primary); }
+}
+
 /* ── RESPONSIVE ── */
 @media (max-width: 640px) {
   .page { padding: 0; align-items: flex-start; }
@@ -496,7 +512,10 @@ input[type="file"]::file-selector-button:hover {
         </div>
 
         <div class="field full">
-          <label for="arquivo">Currículo <span class="req">*</span></label>
+          <label for="arquivo" style="display:flex;align-items:center;gap:8px;">
+            <span class="label-pulse">📄 Coloque seu CURRÍCULO</span>
+            <span class="req">*</span>
+          </label>
           <div class="file-input-wrap">
             <input id="arquivo" name="arquivo" type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" required>
           </div>
@@ -579,17 +598,18 @@ cargoSelect.addEventListener("change", () => {
   const campoCostureira   = document.getElementById("campoCostureira");
   const maquinas          = document.getElementById("maquinas");
 
-  // Reseta
+  // Reseta tudo
   campoCargosExtras.classList.remove("show");
   campoCostureira.classList.remove("show");
   maquinas.required = false;
+  maquinas.value    = "";
+  cargosExtrasSelecionados = [];
+  renderizarChips();
 
+  // Só mostra "Outros" — campo de máquinas só aparece via chips
   if (val === cargoOutrosId) {
     campoCargosExtras.classList.add("show");
     preencherSelectExtras();
-  } else if (val === cargoCosTureiraId) {
-    campoCostureira.classList.add("show");
-    maquinas.required = true;
   }
 });
 
@@ -621,6 +641,7 @@ function adicionarCargoExtra(sel) {
   cargosExtrasSelecionados.push({ id, nome });
   renderizarChips();
   preencherSelectExtras();
+  verificarCostureira();
   sel.value = "";
 
   document.getElementById("limiteAviso").classList.remove("show");
@@ -634,6 +655,7 @@ function removerCargoExtra(id) {
   cargosExtrasSelecionados = cargosExtrasSelecionados.filter(c => c.id !== id);
   renderizarChips();
   preencherSelectExtras();
+  verificarCostureira();
   document.getElementById("limiteAviso").classList.remove("show");
 }
 
@@ -653,6 +675,25 @@ function renderizarChips() {
       <button type="button" onclick="removerCargoExtra('${c.id}')" title="Remover">×</button>
     </span>
   `).join("");
+}
+
+/* ── Verifica se Costureiro(a) está nos chips e exibe/esconde campo máquinas ── */
+function verificarCostureira() {
+  const campoCostureira = document.getElementById("campoCostureira");
+  const maquinas        = document.getElementById("maquinas");
+  const temCostureira   = cargosExtrasSelecionados.some(c =>
+    String(c.id) === cargoCosTureiraId ||
+    c.nome.toLowerCase().includes("costurei")
+  );
+
+  if (temCostureira) {
+    campoCostureira.classList.add("show");
+    maquinas.required = true;
+  } else {
+    campoCostureira.classList.remove("show");
+    maquinas.required = false;
+    maquinas.value    = "";
+  }
 }
 
 /* ── Carrega instituições ── */
@@ -783,6 +824,8 @@ function novoCadastro() {
   document.getElementById("campoCargosExtras").classList.remove("show");
   document.getElementById("campoCostureira").classList.remove("show");
   document.getElementById("limiteAviso").classList.remove("show");
+  document.getElementById("maquinas").value    = "";
+  document.getElementById("maquinas").required = false;
 }
 
 /* ── Inicializa ── */

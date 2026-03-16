@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reprovados | RH System</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --primary: #0f62fe;
+  --primary-light: #eef3ff;
+  --bg: #f5f7fa;
+  --card: #ffffff;
+  --text: #0d1117;
+  --text-secondary: #4a5568;
+  --muted: #8a94a6;
+  --border: #e2e8f0;
+  --success: #0da868;
+  --success-bg: #e6f7f1;
+  --danger: #e53e3e;
+  --danger-bg: #fef2f2;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.07);
+  --shadow-lg: 0 12px 40px rgba(0,0,0,0.12);
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: "DM Sans", sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+/* TOPBAR */
+.topbar {
+  background: var(--card); border-bottom: 1px solid var(--border);
+  padding: 0 28px; height: 60px; display: flex; align-items: center;
+  justify-content: space-between; position: sticky; top: 0; z-index: 100;
+  box-shadow: var(--shadow-sm);
+}
+.topbar-brand { font-weight: 700; font-size: 17px; letter-spacing: -0.3px; color: var(--text); }
+.topbar-brand span { color: var(--primary); }
+
+/* MAIN */
+.main { max-width: 1300px; margin: 0 auto; padding: 28px 24px; }
+.page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px; }
+.page-title { font-size: 24px; font-weight: 700; letter-spacing: -0.5px; }
+.page-subtitle { font-size: 14px; color: var(--muted); margin-top: 3px; }
+
+/* CARD RESUMO */
+.card-resumo {
+  background: var(--danger-bg); border: 1.5px solid #fecaca;
+  border-radius: var(--radius); padding: 18px 22px; margin-bottom: 20px;
+  display: flex; align-items: center; gap: 14px;
+}
+.card-resumo-count { font-size: 32px; font-weight: 700; font-family: "DM Mono", monospace; color: var(--danger); line-height: 1; }
+.card-resumo-label { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+/* FILTROS */
+.filter-panel {
+  background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 16px 20px; margin-bottom: 20px; box-shadow: var(--shadow-sm);
+}
+.filtros { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.filtros input, .filtros select {
+  padding: 8px 12px; border-radius: var(--radius-sm); border: 1.5px solid var(--border);
+  background: var(--bg); font-size: 13.5px; font-family: "DM Sans", sans-serif;
+  color: var(--text); transition: all 0.2s; min-width: 160px; flex: 1; outline: none;
+}
+.filtros input:focus, .filtros select:focus { border-color: var(--primary); background: #fff; box-shadow: 0 0 0 3px rgba(15,98,254,0.12); }
+.filtros input::placeholder { color: var(--muted); }
+.filtros select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg fill='none' stroke='%236b7280' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; background-size: 15px; padding-right: 34px; cursor: pointer; }
+.btn-limpar {
+  padding: 8px 16px; border: 1.5px solid var(--border); background: var(--card);
+  border-radius: var(--radius-sm); font-size: 13.5px; font-family: "DM Sans", sans-serif;
+  color: var(--text-secondary); cursor: pointer; font-weight: 500; transition: all 0.2s;
+}
+.btn-limpar:hover { border-color: var(--danger); color: var(--danger); background: var(--danger-bg); }
+.filter-count { font-size: 13px; color: var(--muted); margin-top: 10px; }
+.filter-count strong { color: var(--danger); }
+
+/* TABELA */
+.table-wrapper {
+  background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border); overflow-x: auto;
+}
+table { width: 100%; border-collapse: collapse; }
+th {
+  padding: 12px 16px; font-size: 11.5px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.5px; text-align: left; color: var(--muted); background: #f8fafc;
+  border-bottom: 1px solid var(--border); white-space: nowrap;
+}
+td { padding: 13px 16px; font-size: 13.5px; text-align: left; vertical-align: middle; border-bottom: 1px solid #f0f4f8; }
+tbody tr { transition: background 0.15s; }
+tbody tr:hover { background: #fff5f5; }
+tbody tr:last-child td { border-bottom: none; }
+
+/* NOME CELL */
+.nome-cell { display: flex; align-items: center; gap: 10px; }
+.avatar {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: linear-gradient(135deg, #e53e3e, #fc8181);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; color: #fff; flex-shrink: 0; text-transform: uppercase;
+}
+.nome-text { font-weight: 500; }
+.email-text { font-size: 12px; color: var(--muted); }
+
+/* BADGES */
+.badge {
+  display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px;
+  border-radius: 20px; font-size: 11.5px; font-weight: 600;
+}
+.badge-reprovado { background: var(--danger-bg); color: var(--danger); border: 1px solid #fecaca; }
+.badge-cargo { background: var(--primary-light); color: var(--primary); }
+
+/* OBS CELL */
+.obs-cell {
+  max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-size: 13px; color: var(--text-secondary); cursor: pointer;
+}
+.obs-cell:hover { color: var(--danger); text-decoration: underline; }
+
+/* ACTIONS */
+.actions { display: flex; gap: 4px; align-items: center; }
+.btn-action {
+  display: inline-flex; align-items: center; gap: 3px; padding: 4px 10px;
+  border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer;
+  border: none; font-family: "DM Sans", sans-serif; transition: all 0.15s; white-space: nowrap;
+}
+.btn-ver { background: var(--primary-light); color: var(--primary); }
+.btn-ver:hover { background: #dde7ff; }
+.btn-restaurar { background: var(--success-bg); color: var(--success); }
+.btn-restaurar:hover { background: #c8f0e0; }
+
+/* EMPTY */
+.empty-state { padding: 60px 20px; text-align: center; color: var(--muted); }
+.empty-state-icon { font-size: 42px; margin-bottom: 12px; }
+.empty-state-title { font-size: 16px; font-weight: 600; color: var(--text-secondary); }
+.empty-state-desc { font-size: 14px; margin-top: 6px; }
+
+/* MODAL */
+.modal-overlay {
+  display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.5); align-items: center; justify-content: center;
+  z-index: 9999; backdrop-filter: blur(2px);
+}
+.modal-overlay.open { display: flex; }
+.modal-box {
+  background: #fff; padding: 28px; border-radius: 16px; max-width: 500px; width: 92%;
+  box-shadow: var(--shadow-lg); animation: slideUp 0.25s ease; color-scheme: light;
+}
+@keyframes slideUp { from { transform: translateY(20px); opacity:0 } to { transform:translateY(0); opacity:1 } }
+.modal-close {
+  width: 30px; height: 30px; border-radius: 8px; border: none; background: var(--bg);
+  font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  color: var(--muted);
+}
+.modal-close:hover { background: var(--danger-bg); color: var(--danger); }
+
+/* TOAST */
+.toast {
+  position: fixed; bottom: 24px; right: 24px; background: #1a202c; color: #fff;
+  padding: 12px 20px; border-radius: 10px; font-size: 13.5px; font-weight: 500;
+  box-shadow: var(--shadow-lg); z-index: 99999; transform: translateY(80px); opacity: 0;
+  transition: all 0.3s ease;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.success { background: var(--success); }
+.toast.warning { background: #d4a017; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-brand">RH<span>System</span></div>
+  <div style="font-size:13px;color:var(--muted);">❌ Candidatos Reprovados</div>
+</div>
+
+<div class="main">
+  <div class="page-header">
+    <div>
+      <div class="page-title">❌ Candidatos Reprovados</div>
+      <div class="page-subtitle">Candidatos reprovados nas entrevistas</div>
+    </div>
+  </div>
+
+  <!-- Resumo -->
+  <div class="card-resumo">
+    <div style="font-size:28px;">❌</div>
+    <div>
+      <div class="card-resumo-count" id="totalReprovados">0</div>
+      <div class="card-resumo-label">candidatos reprovados no total</div>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="filter-panel">
+    <div class="filtros">
+      <input type="text" id="filtroNome" placeholder="Buscar por nome…">
+      <input type="text" id="filtroEmail" placeholder="Buscar por e-mail…">
+      <select id="filtroCargo"><option value="">Todos os cargos</option></select>
+      <button class="btn-limpar" onclick="limparFiltros()">✕ Limpar</button>
+    </div>
+    <div class="filter-count" id="filtroContagem"></div>
+  </div>
+
+  <!-- Tabela -->
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Candidato</th>
+          <th>Cargo</th>
+          <th>Unidade</th>
+          <th>Responsável</th>
+          <th>Observações</th>
+          <th>Data entrevista</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody id="listaReprovados"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal Observações -->
+<div class="modal-overlay" id="modalObs">
+  <div class="modal-box">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;gap:12px;">
+      <div>
+        <div style="font-size:17px;font-weight:700;">📋 Observações da Entrevista</div>
+        <div style="font-size:13px;color:var(--muted);margin-top:3px;" id="obsNome">—</div>
+      </div>
+      <button class="modal-close" onclick="fecharModalObs()">×</button>
+    </div>
+    <div style="background:var(--danger-bg);border:1.5px solid #fecaca;border-radius:8px;padding:16px;font-size:14px;line-height:1.7;color:#7f1d1d;" id="obsTexto"></div>
+    <div style="margin-top:12px;font-size:12.5px;color:var(--muted);">
+      👤 Responsável: <strong id="obsResponsavel" style="color:var(--text);">—</strong>
+      &nbsp;·&nbsp; 📅 <span id="obsData">—</span>
+    </div>
+    <div style="margin-top:16px;display:flex;justify-content:flex-end;">
+      <button onclick="fecharModalObs()" style="padding:8px 18px;border:1.5px solid var(--border);background:#fff;border-radius:8px;font-size:13.5px;font-family:'DM Sans',sans-serif;color:var(--text-secondary);cursor:pointer;font-weight:500;">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let reprovados = [];
+
+async function carregar() {
+  const tbody = document.getElementById("listaReprovados");
+  tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--muted);">Carregando…</td></tr>`;
+
+  try {
+    const res  = await fetch("/api/entrevistas?status=reprovado");
+    const data = await res.json();
+    reprovados = data;
+    document.getElementById("totalReprovados").textContent = data.length;
+
+    // Preenche select de cargos
+    const cargos = [...new Set(data.map(e => e.cargo).filter(Boolean))];
+    const sel = document.getElementById("filtroCargo");
+    cargos.forEach(c => { sel.innerHTML += `<option value="${c}">${c}</option>`; });
+
+    renderizar(data);
+  } catch (e) {
+    console.error(e);
+    tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><div class="empty-state-icon">⚠️</div><div class="empty-state-title">Erro ao carregar</div></div></td></tr>`;
+  }
+}
+
+function renderizar(lista) {
+  const tbody = document.getElementById("listaReprovados");
+  document.getElementById("filtroContagem").innerHTML =
+    `Exibindo <strong>${lista.length}</strong> de <strong>${reprovados.length}</strong> reprovados`;
+
+  if (!lista.length) {
+    tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state">
+      <div class="empty-state-icon">❌</div>
+      <div class="empty-state-title">Nenhum candidato reprovado</div>
+      <div class="empty-state-desc">Os reprovados nas entrevistas aparecerão aqui</div>
+    </div></td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = lista.map(e => {
+    const iniciais = e.candidato_nome.split(" ").slice(0,2).map(n => n[0]).join("");
+    const dataEnt  = e.data_hora ? new Date(e.data_hora).toLocaleDateString("pt-BR") : "—";
+    const obs      = e.observacoes || "—";
+
+    return `<tr>
+      <td>
+        <div class="nome-cell">
+          <div class="avatar">${iniciais}</div>
+          <div>
+            <div class="nome-text">${e.candidato_nome}</div>
+            <div class="email-text">${e.candidato_telefone || "—"}</div>
+          </div>
+        </div>
+      </td>
+      <td><span class="badge badge-cargo">${e.cargo || "—"}</span></td>
+      <td>${e.unidade || "—"}</td>
+      <td style="font-size:13px;color:var(--text-secondary);">👤 ${e.responsavel || "—"}</td>
+      <td>
+        <div class="obs-cell" onclick="verObs(${e.id})" title="${obs}">
+          ${obs}
+        </div>
+      </td>
+      <td style="font-size:13px;color:var(--muted);">${dataEnt}</td>
+      <td>
+        <div class="actions">
+          <button class="btn-action btn-restaurar" onclick="restaurar(${e.id}, ${e.candidato_id})">↩ Reativar</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join("");
+}
+
+function aplicarFiltros() {
+  const nome  = document.getElementById("filtroNome").value.toLowerCase();
+  const email = document.getElementById("filtroEmail").value.toLowerCase();
+  const cargo = document.getElementById("filtroCargo").value;
+
+  const filtrado = reprovados.filter(e =>
+    e.candidato_nome.toLowerCase().includes(nome) &&
+    (e.candidato_telefone || "").toLowerCase().includes(email) &&
+    (!cargo || e.cargo === cargo)
+  );
+  renderizar(filtrado);
+}
+
+function limparFiltros() {
+  document.getElementById("filtroNome").value  = "";
+  document.getElementById("filtroEmail").value = "";
+  document.getElementById("filtroCargo").value = "";
+  renderizar(reprovados);
+}
+
+["filtroNome","filtroEmail"].forEach(id =>
+  document.getElementById(id).addEventListener("input", aplicarFiltros));
+document.getElementById("filtroCargo").addEventListener("change", aplicarFiltros);
+
+/* Ver observações */
+function verObs(id) {
+  const e = reprovados.find(x => x.id === id);
+  if (!e) return;
+  document.getElementById("obsNome").textContent        = e.candidato_nome;
+  document.getElementById("obsTexto").textContent       = e.observacoes || "Sem observações registradas.";
+  document.getElementById("obsResponsavel").textContent = e.responsavel || "—";
+  document.getElementById("obsData").textContent        = e.data_hora
+    ? new Date(e.data_hora).toLocaleString("pt-BR") : "—";
+  document.getElementById("modalObs").classList.add("open");
+}
+function fecharModalObs() {
+  document.getElementById("modalObs").classList.remove("open");
+}
+window.addEventListener("click", e => {
+  if (e.target.id === "modalObs") fecharModalObs();
+});
+
+/* Reativar candidato (desfaz reprovação) */
+async function restaurar(entrevistaId, candidatoId) {
+  if (!confirm("Reativar este candidato? O status da entrevista voltará para 'realizada'.")) return;
+  try {
+    await fetch("/api/entrevistas", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: entrevistaId, status: "realizada" }),
+    });
+    reprovados = reprovados.filter(x => x.id !== entrevistaId);
+    document.getElementById("totalReprovados").textContent = reprovados.length;
+    aplicarFiltros();
+    mostrarToast("Candidato reativado! ✅", "success");
+  } catch (err) {
+    mostrarToast("Erro ao reativar.", "warning");
+  }
+}
+
+function mostrarToast(msg, tipo = "") {
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.className = `toast ${tipo} show`;
+  setTimeout(() => t.classList.remove("show"), 3000);
+}
+
+carregar();
+</script>
+</body>
+</html>

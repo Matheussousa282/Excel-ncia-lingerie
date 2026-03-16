@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arquivados | RH System</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --primary: #0f62fe;
+  --primary-hover: #0353e9;
+  --primary-light: #eef3ff;
+  --bg: #f5f7fa;
+  --card: #ffffff;
+  --text: #0d1117;
+  --text-secondary: #4a5568;
+  --muted: #8a94a6;
+  --border: #e2e8f0;
+  --success: #0da868;
+  --success-bg: #e6f7f1;
+  --danger: #e53e3e;
+  --danger-bg: #fef2f2;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.07);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
+  --shadow-lg: 0 12px 40px rgba(0,0,0,0.12);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --purple: #7e22ce;
+  --purple-light: #fdf4ff;
+  --purple-border: #e9d5ff;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: "DM Sans", sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+/* TOPBAR */
+.topbar {
+  background: var(--card); border-bottom: 1px solid var(--border);
+  padding: 0 28px; height: 60px; display: flex; align-items: center;
+  justify-content: space-between; position: sticky; top: 0; z-index: 100;
+  box-shadow: var(--shadow-sm);
+}
+.topbar-brand { font-weight: 700; font-size: 17px; letter-spacing: -0.3px; color: var(--text); }
+.topbar-brand span { color: var(--primary); }
+
+/* MAIN */
+.main { max-width: 1300px; margin: 0 auto; padding: 28px 24px; }
+.page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px; }
+.page-title { font-size: 24px; font-weight: 700; letter-spacing: -0.5px; }
+.page-subtitle { font-size: 14px; color: var(--muted); margin-top: 3px; }
+
+/* CARD RESUMO */
+.card-resumo {
+  background: var(--purple-light); border: 1.5px solid var(--purple-border);
+  border-radius: var(--radius); padding: 18px 22px; margin-bottom: 20px;
+  display: flex; align-items: center; gap: 14px;
+}
+.card-resumo-icon { font-size: 28px; }
+.card-resumo-count { font-size: 32px; font-weight: 700; font-family: "DM Mono", monospace; color: var(--purple); line-height: 1; }
+.card-resumo-label { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+/* FILTROS */
+.filter-panel {
+  background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 16px 20px; margin-bottom: 20px; box-shadow: var(--shadow-sm);
+}
+.filtros { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.filtros input {
+  padding: 8px 12px; border-radius: var(--radius-sm); border: 1.5px solid var(--border);
+  background: var(--bg); font-size: 13.5px; font-family: "DM Sans", sans-serif;
+  color: var(--text); transition: all 0.2s; min-width: 180px; flex: 1; outline: none;
+}
+.filtros input:focus { border-color: var(--primary); background: #fff; box-shadow: 0 0 0 3px rgba(15,98,254,0.12); }
+.filtros input::placeholder { color: var(--muted); }
+.btn-limpar {
+  padding: 8px 16px; border: 1.5px solid var(--border); background: var(--card);
+  border-radius: var(--radius-sm); font-size: 13.5px; font-family: "DM Sans", sans-serif;
+  color: var(--text-secondary); cursor: pointer; font-weight: 500; transition: all 0.2s;
+}
+.btn-limpar:hover { border-color: var(--danger); color: var(--danger); background: var(--danger-bg); }
+.filter-count { font-size: 13px; color: var(--muted); margin-top: 10px; }
+.filter-count strong { color: var(--purple); }
+
+/* TABELA */
+.table-wrapper {
+  background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border); overflow-x: auto;
+}
+table { width: 100%; border-collapse: collapse; }
+th {
+  padding: 12px 16px; font-size: 11.5px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.5px; text-align: left; color: var(--muted); background: #f8fafc;
+  border-bottom: 1px solid var(--border); white-space: nowrap;
+}
+td { padding: 13px 16px; font-size: 13.5px; text-align: left; vertical-align: middle; border-bottom: 1px solid #f0f4f8; }
+tbody tr { transition: background 0.15s; }
+tbody tr:hover { background: #fdf4ff; }
+tbody tr:last-child td { border-bottom: none; }
+
+/* NOME CELL */
+.nome-cell { display: flex; align-items: center; gap: 10px; }
+.avatar {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: linear-gradient(135deg, #7e22ce, #a855f7);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; color: #fff; flex-shrink: 0; text-transform: uppercase;
+}
+.nome-text { font-weight: 500; }
+.email-text { font-size: 12px; color: var(--muted); }
+
+/* MOTIVO */
+.motivo-cell {
+  max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-size: 13px; color: var(--text-secondary); cursor: pointer;
+}
+.motivo-cell:hover { color: var(--purple); text-decoration: underline; }
+
+/* BADGES */
+.badge {
+  display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px;
+  border-radius: 20px; font-size: 11.5px; font-weight: 600;
+}
+.badge-arquivado { background: var(--purple-light); color: var(--purple); border: 1px solid var(--purple-border); }
+
+/* ACTIONS */
+.actions { display: flex; gap: 4px; align-items: center; }
+.btn-action {
+  display: inline-flex; align-items: center; gap: 3px; padding: 4px 10px;
+  border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer;
+  border: none; font-family: "DM Sans", sans-serif; transition: all 0.15s; white-space: nowrap;
+}
+.btn-ver { background: var(--primary-light); color: var(--primary); }
+.btn-ver:hover { background: #dde7ff; }
+.btn-restaurar { background: var(--success-bg); color: var(--success); }
+.btn-restaurar:hover { background: #c8f0e0; }
+
+/* EMPTY */
+.empty-state { padding: 60px 20px; text-align: center; color: var(--muted); }
+.empty-state-icon { font-size: 42px; margin-bottom: 12px; }
+.empty-state-title { font-size: 16px; font-weight: 600; color: var(--text-secondary); }
+.empty-state-desc { font-size: 14px; margin-top: 6px; }
+
+/* MODAL MOTIVO */
+.modal-overlay {
+  display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.5); align-items: center; justify-content: center;
+  z-index: 9999; backdrop-filter: blur(2px);
+}
+.modal-overlay.open { display: flex; }
+.modal-box {
+  background: #fff; padding: 28px; border-radius: 16px; max-width: 480px; width: 92%;
+  box-shadow: var(--shadow-lg); animation: slideUp 0.25s ease; color-scheme: light;
+}
+@keyframes slideUp { from { transform: translateY(20px); opacity:0 } to { transform:translateY(0); opacity:1 } }
+.modal-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 16px; gap: 12px; }
+.modal-title { font-size: 17px; font-weight: 700; }
+.modal-close {
+  width: 30px; height: 30px; border-radius: 8px; border: none; background: var(--bg);
+  font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  color: var(--muted); flex-shrink: 0;
+}
+.modal-close:hover { background: var(--danger-bg); color: var(--danger); }
+
+/* TOAST */
+.toast {
+  position: fixed; bottom: 24px; right: 24px; background: #1a202c; color: #fff;
+  padding: 12px 20px; border-radius: 10px; font-size: 13.5px; font-weight: 500;
+  box-shadow: var(--shadow-lg); z-index: 99999; transform: translateY(80px); opacity: 0;
+  transition: all 0.3s ease;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.success { background: var(--success); }
+.toast.warning { background: #d4a017; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-brand">RH<span>System</span></div>
+  <div style="font-size:13px;color:var(--muted);">🗄️ Candidatos Arquivados</div>
+</div>
+
+<div class="main">
+  <div class="page-header">
+    <div>
+      <div class="page-title">🗄️ Candidatos Arquivados</div>
+      <div class="page-subtitle">Candidatos removidos da fila com motivo registrado</div>
+    </div>
+  </div>
+
+  <!-- Resumo -->
+  <div class="card-resumo">
+    <div class="card-resumo-icon">🗄️</div>
+    <div>
+      <div class="card-resumo-count" id="totalArquivados">0</div>
+      <div class="card-resumo-label">candidatos arquivados no total</div>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="filter-panel">
+    <div class="filtros">
+      <input type="text" id="filtroNome" placeholder="Buscar por nome…">
+      <input type="text" id="filtroMotivo" placeholder="Buscar por motivo…">
+      <input type="text" id="filtroUsuario" placeholder="Buscar por quem arquivou…">
+      <button class="btn-limpar" onclick="limparFiltros()">✕ Limpar</button>
+    </div>
+    <div class="filter-count" id="filtroContagem"></div>
+  </div>
+
+  <!-- Tabela -->
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Candidato</th>
+          <th>Cargo</th>
+          <th>Unidade</th>
+          <th>Motivo</th>
+          <th>Arquivado por</th>
+          <th>Data</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody id="listaArquivados"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal Motivo Completo -->
+<div class="modal-overlay" id="modalMotivo">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">📋 Motivo do Arquivamento</div>
+        <div style="font-size:13px;color:var(--muted);margin-top:3px;" id="motivoNome">—</div>
+      </div>
+      <button class="modal-close" onclick="fecharModalMotivo()">×</button>
+    </div>
+    <div style="background:#fdf4ff;border:1.5px solid #e9d5ff;border-radius:8px;padding:16px;font-size:14px;line-height:1.7;color:#3b0764;" id="motivoTexto"></div>
+    <div style="margin-top:12px;font-size:12.5px;color:var(--muted);">
+      👤 Arquivado por: <strong id="motivoUsuario" style="color:var(--text);">—</strong>
+      &nbsp;·&nbsp; 📅 <span id="motivoData">—</span>
+    </div>
+    <div style="margin-top:16px;display:flex;justify-content:flex-end;">
+      <button onclick="fecharModalMotivo()" style="padding:8px 18px;border:1.5px solid var(--border);background:#fff;border-radius:8px;font-size:13.5px;font-family:'DM Sans',sans-serif;color:var(--text-secondary);cursor:pointer;font-weight:500;">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let arquivados = [];
+
+async function carregar() {
+  const tbody = document.getElementById("listaArquivados");
+  tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--muted);">Carregando…</td></tr>`;
+
+  try {
+    const res  = await fetch("/api/candidatos?arquivados=1");
+    const data = await res.json();
+    arquivados = data;
+    document.getElementById("totalArquivados").textContent = data.length;
+    renderizar(data);
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><div class="empty-state-icon">⚠️</div><div class="empty-state-title">Erro ao carregar</div></div></td></tr>`;
+  }
+}
+
+function renderizar(lista) {
+  const tbody = document.getElementById("listaArquivados");
+  document.getElementById("filtroContagem").innerHTML =
+    `Exibindo <strong>${lista.length}</strong> de <strong>${arquivados.length}</strong> arquivados`;
+
+  if (!lista.length) {
+    tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state">
+      <div class="empty-state-icon">🗄️</div>
+      <div class="empty-state-title">Nenhum candidato arquivado</div>
+      <div class="empty-state-desc">Os candidatos arquivados aparecerão aqui</div>
+    </div></td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = lista.map(c => {
+    const iniciais = c.nome.split(" ").slice(0,2).map(n => n[0]).join("");
+    const dataArq  = c.arquivado_em ? new Date(c.arquivado_em).toLocaleDateString("pt-BR") : "—";
+    const motivo   = c.motivo_arquivamento || "—";
+
+    return `<tr>
+      <td>
+        <div class="nome-cell">
+          <div class="avatar">${iniciais}</div>
+          <div>
+            <div class="nome-text">${c.nome}</div>
+            <div class="email-text">${c.email}</div>
+          </div>
+        </div>
+      </td>
+      <td><span class="badge badge-arquivado">${c.cargo}</span></td>
+      <td>${c.unidade || "—"}</td>
+      <td>
+        <div class="motivo-cell" onclick="verMotivo(${c.id})" title="${motivo}">
+          ${motivo}
+        </div>
+      </td>
+      <td style="font-size:13px;color:var(--text-secondary);">
+        👤 ${c.arquivado_por || "—"}
+      </td>
+      <td style="font-size:13px;color:var(--muted);">${dataArq}</td>
+      <td>
+        <div class="actions">
+          <button class="btn-action btn-restaurar" onclick="restaurar(${c.id})">↩ Restaurar</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join("");
+}
+
+function aplicarFiltros() {
+  const nome    = document.getElementById("filtroNome").value.toLowerCase();
+  const motivo  = document.getElementById("filtroMotivo").value.toLowerCase();
+  const usuario = document.getElementById("filtroUsuario").value.toLowerCase();
+
+  const filtrado = arquivados.filter(c =>
+    c.nome.toLowerCase().includes(nome) &&
+    (c.motivo_arquivamento || "").toLowerCase().includes(motivo) &&
+    (c.arquivado_por || "").toLowerCase().includes(usuario)
+  );
+  renderizar(filtrado);
+}
+
+function limparFiltros() {
+  document.getElementById("filtroNome").value    = "";
+  document.getElementById("filtroMotivo").value  = "";
+  document.getElementById("filtroUsuario").value = "";
+  renderizar(arquivados);
+}
+
+["filtroNome","filtroMotivo","filtroUsuario"].forEach(id =>
+  document.getElementById(id).addEventListener("input", aplicarFiltros));
+
+/* Ver motivo completo */
+function verMotivo(id) {
+  const c = arquivados.find(x => x.id === id);
+  if (!c) return;
+  document.getElementById("motivoNome").textContent    = c.nome;
+  document.getElementById("motivoTexto").textContent   = c.motivo_arquivamento || "Sem motivo registrado.";
+  document.getElementById("motivoUsuario").textContent = c.arquivado_por || "—";
+  document.getElementById("motivoData").textContent    = c.arquivado_em
+    ? new Date(c.arquivado_em).toLocaleString("pt-BR") : "—";
+  document.getElementById("modalMotivo").classList.add("open");
+}
+function fecharModalMotivo() {
+  document.getElementById("modalMotivo").classList.remove("open");
+}
+window.addEventListener("click", e => {
+  if (e.target.id === "modalMotivo") fecharModalMotivo();
+});
+
+/* Restaurar candidato */
+async function restaurar(id) {
+  if (!confirm("Restaurar este candidato para a fila principal?")) return;
+  try {
+    await fetch("/api/candidatos", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, acao: "restaurar" }),
+    });
+    arquivados = arquivados.filter(x => x.id !== id);
+    document.getElementById("totalArquivados").textContent = arquivados.length;
+    aplicarFiltros();
+    mostrarToast("Candidato restaurado! ✅", "success");
+  } catch (err) {
+    mostrarToast("Erro ao restaurar.", "warning");
+  }
+}
+
+function mostrarToast(msg, tipo = "") {
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.className = `toast ${tipo} show`;
+  setTimeout(() => t.classList.remove("show"), 3000);
+}
+
+carregar();
+</script>
+</body>
+</html>

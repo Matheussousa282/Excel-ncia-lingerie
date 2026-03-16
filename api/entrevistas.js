@@ -34,7 +34,7 @@ export default async function handler(req, res) {
     const { method } = req;
 
     if (method === "GET") {
-      const { mes, ano, candidato_id } = req.query;
+      const { mes, ano, candidato_id, status } = req.query;
       let q = `
         SELECT e.id, e.candidato_id, e.data_hora, e.responsavel,
                e.status, e.observacoes, e.criado_em,
@@ -47,13 +47,14 @@ export default async function handler(req, res) {
         JOIN unidades u     ON u.id  = c.unidade_id
         WHERE 1=1`;
       const params = [];
+      if (status) { params.push(status); q += ` AND e.status=$${params.length}`; }
       if (mes && ano) {
         params.push(Number(ano), Number(mes));
         q += ` AND EXTRACT(YEAR FROM e.data_hora)=$${params.length-1}
                AND EXTRACT(MONTH FROM e.data_hora)=$${params.length}`;
       }
       if (candidato_id) { params.push(Number(candidato_id)); q += ` AND e.candidato_id=$${params.length}`; }
-      q += " ORDER BY e.data_hora ASC";
+      q += " ORDER BY e.data_hora DESC";
       const result = await pool.query(q, params);
       return res.status(200).json(result.rows);
     }
