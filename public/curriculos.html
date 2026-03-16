@@ -763,18 +763,21 @@ tbody tr:last-child td { border-bottom: none; }
       <button style="width:30px;height:30px;border-radius:8px;border:none;background:#f5f7fa;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#8a94a6;" onclick="fecharModalEditar()">×</button>
     </div>
     <div class="edit-field">
-      <label>Unidade</label>
-      <input type="text" id="editUnidade" placeholder="Ex: Fortaleza, Sobral…">
+      <label>Instituição</label>
+      <select id="editInstituicao" onchange="editCarregarUnidades()">
+        <option value="">Carregando…</option>
+      </select>
     </div>
     <div class="edit-field">
-      <label>Instituição</label>
-      <input type="text" id="editInstituicao" placeholder="Ex: UFCE, UFC…">
+      <label>Unidade</label>
+      <select id="editUnidade">
+        <option value="">Selecione a instituição primeiro</option>
+      </select>
     </div>
     <div class="edit-field">
       <label>Cargo</label>
       <select id="editCargo">
-        <option value="TI">TI</option>
-        <option value="Administrativo">Administrativo</option>
+        <option value="">Carregando…</option>
       </select>
     </div>
     <div class="edit-actions">
@@ -1535,14 +1538,91 @@ window.addEventListener("click", e => {
 /* ── Modal Editar ── */
 let editandoId = null;
 
-function abrirModalEditar(id) {
+/* Carrega cargos e instituições nos selects do modal de edição */
+async function editCarregarSelects() {
+  try {
+    const [resCargos, resInst] = await Promise.all([
+      fetch("/api/cargos"),
+      fetch("/api/instituicoes")
+    ]);
+    const cargos = await resCargos.json();
+    const insts  = await resInst.json();
+
+    const selCargo = document.getElementById("editCargo");
+    selCargo.innerHTML = '<option value="">Selecione…</option>';
+    cargos.filter(c => c.ativo !== false).forEach(c => {
+      selCargo.innerHTML += `<option value="${c.nome}">${c.nome}</option>`;
+    });
+
+    const selInst = document.getElementById("editInstituicao");
+    selInst.innerHTML = '<option value="">Selecione…</option>';
+    insts.filter(i => i.ativo !== false).forEach(i => {
+      selInst.innerHTML += `<option value="${i.nome}" data-id="${i.id}">${i.nome}</option>`;
+    });
+
+  } catch (err) {
+    console.warn("Erro ao carregar selects de edição:", err);
+  }
+}
+
+/* Carrega unidades ao trocar instituição no modal de edição */
+async function editCarregarUnidades() {
+  const selInst  = document.getElementById("editInstituicao");
+  const selUnid  = document.getElementById("editUnidade");
+  const opt      = selInst.options[selInst.selectedIndex];
+  const instId   = opt ? opt.dataset.id : null;
+
+  selUnid.innerHTML = '<option value="">Carregando…</option>';
+  selUnid.disabled  = true;
+
+  if (!instId) {
+    selUnid.innerHTML = '<option value="">Selecione a instituição primeiro</option>';
+    return;
+  }
+
+  try {
+    const res  = await fetch(`/api/unidades?instituicao_id=${instId}`);
+    const data = await res.json();
+    selUnid.innerHTML = '<option value="">Selecione a unidade…</option>';
+    data.filter(u => u.ativo !== false).forEach(u => {
+      selUnid.innerHTML += `<option value="${u.nome}">${u.nome}</option>`;
+    });
+    selUnid.disabled = false;
+  } catch (err) {
+    selUnid.innerHTML = '<option value="">Erro ao carregar</option>';
+    console.warn(err);
+  }
+}
+
+async function abrirModalEditar(id) {
   const c = curriculos.find(x => x.id === id);
   if (!c) return;
   editandoId = id;
+
   document.getElementById("editNomeLabel").textContent = c.nome;
-  document.getElementById("editUnidade").value = c.unidade || "";
-  document.getElementById("editInstituicao").value = c.instituicao || "";
-  document.getElementById("editCargo").value = c.cargo || "TI";
+
+  // Carrega os selects do banco
+  await editCarregarSelects();
+
+  // Define instituição atual
+  const selInst = document.getElementById("editInstituicao");
+  for (const opt of selInst.options) {
+    if (opt.value === c.instituicao) { opt.selected = true; break; }
+  }
+
+  // Carrega unidades da instituição atual e seleciona a certa
+  await editCarregarUnidades();
+  const selUnid = document.getElementById("editUnidade");
+  for (const opt of selUnid.options) {
+    if (opt.value === c.unidade) { opt.selected = true; break; }
+  }
+
+  // Define cargo atual
+  const selCargo = document.getElementById("editCargo");
+  for (const opt of selCargo.options) {
+    if (opt.value === c.cargo) { opt.selected = true; break; }
+  }
+
   document.getElementById("modalEditar").classList.add("open");
 }
 
@@ -1556,11 +1636,11 @@ async function salvarEdicao() {
   const c = curriculos.find(x => x.id === editandoId);
   if (!c) return;
 
-  const novaUnidade     = document.getElementById("editUnidade").value.trim();
-  const novaInstituicao = document.getElementById("editInstituicao").value.trim();
+  const novaUnidade     = document.getElementById("editUnidade").value;
+  const novaInstituicao = document.getElementById("editInstituicao").value;
   const novoCargo       = document.getElementById("editCargo").value;
 
-  if (!novaUnidade || !novaInstituicao) {
+  if (!novaUnidade || !novaInstituicao || !novoCargo) {
     mostrarToast("Preencha todos os campos.", "warning");
     return;
   }
