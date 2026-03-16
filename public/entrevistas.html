@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Entrevistas | RH System</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <style>
 :root {
   --primary: #0f62fe;
@@ -48,17 +50,25 @@ body { font-family: "DM Sans", sans-serif; background: var(--bg); color: var(--t
 
 /* ── CARDS ── */
 .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(148px,1fr)); gap: 14px; margin-bottom: 22px; }
-.card { background: var(--card); padding: 18px; border-radius: var(--radius); box-shadow: var(--shadow-sm); border: 1px solid var(--border); position: relative; overflow: hidden; transition: box-shadow .2s, transform .2s; }
-.card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+.card { background: var(--card); padding: 18px; border-radius: var(--radius); box-shadow: var(--shadow-sm); border: 1px solid var(--border); position: relative; overflow: hidden; transition: box-shadow .2s, transform .2s; cursor: pointer; user-select: none; }
+.card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
 .card-icon { position: absolute; top: 14px; right: 14px; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 15px; }
 .card-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); margin-bottom: 5px; }
 .card-value { font-size: 28px; font-weight: 700; font-family: "DM Mono", monospace; line-height: 1; }
 
 /* ══ KANBAN ══ */
-.kanban { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.kanban {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(180px, 1fr));
+  gap: 14px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
 .kanban-col { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow-sm); display: flex; flex-direction: column; overflow: hidden; }
 .kanban-header { padding: 12px 15px; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: .5px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); }
 .kanban-count  { font-family: "DM Mono",monospace; font-size: 11px; padding: 2px 7px; border-radius: 10px; font-weight: 700; }
+.col-selecionado .kanban-header { background: var(--accent-light); color: var(--accent); }
+.col-selecionado .kanban-count  { background: #ffd8cc; color: var(--accent); }
 .col-agendada  .kanban-header { background: var(--warning-bg); color: #92650a; }
 .col-agendada  .kanban-count  { background: #fde68a; color: #92650a; }
 .col-realizada .kanban-header { background: var(--info-bg); color: var(--primary); }
@@ -200,8 +210,61 @@ body { font-family: "DM Sans", sans-serif; background: var(--bg); color: var(--t
 .toast.danger  { background: var(--danger); }
 .toast.warning { background: var(--warning); }
 
-@media (max-width:900px) { .kanban { grid-template-columns: repeat(2,1fr); } }
-@media (max-width:600px) { .kanban { grid-template-columns: 1fr; } .horarios-grid { grid-template-columns: repeat(3,1fr); } .lista-item { grid-template-columns: 1fr 1fr; } }
+/* ── Botão PDF nos cards ── */
+.card-pdf-btn {
+  position: absolute; bottom: 10px; right: 10px;
+  padding: 3px 8px; border-radius: 5px; font-size: 10.5px;
+  font-weight: 600; font-family: "DM Sans", sans-serif;
+  border: 1px solid #fecaca; background: var(--danger-bg);
+  color: var(--danger); cursor: pointer; transition: all .15s;
+  z-index: 2;
+}
+.card-pdf-btn:hover { background: #fecaca; }
+
+/* ── Footer do modal de lista ── */
+.modal-lista-footer {
+  padding: 14px 16px; border-top: 1px solid var(--border);
+  display: flex; justify-content: flex-end; gap: 8px;
+  background: #fafafa; border-radius: 0 0 16px 16px;
+}
+.btn-pdf-modal {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px; border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 600; font-family: "DM Sans", sans-serif;
+  background: var(--danger-bg); color: var(--danger);
+  border: 1.5px solid #fecaca; cursor: pointer; transition: all .18s;
+}
+.btn-pdf-modal:hover { background: #fecaca; }
+.btn-pdf-modal:disabled { opacity: .6; pointer-events: none; }
+
+/* ── Lista modal por status ── */
+.modal-lista-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px; border-bottom: 1px solid #f0f4f8;
+  transition: background .15s;
+}
+.modal-lista-item:last-child { border-bottom: none; }
+.modal-lista-item:hover { background: #f8fbff; }
+
+.modal-lista-avatar {
+  width: 38px; height: 38px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; color: #fff; flex-shrink: 0;
+  text-transform: uppercase;
+}
+
+.modal-lista-info { flex: 1; min-width: 0; }
+.modal-lista-nome  { font-size: 14px; font-weight: 600; }
+.modal-lista-meta  { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+.modal-lista-right { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; flex-shrink: 0; }
+.modal-lista-data  { font-size: 12px; color: var(--muted); font-family: "DM Mono", monospace; }
+
+.modal-lista-acoes { display: flex; gap: 5px; }
+.modal-lista-empty { padding: 36px 20px; text-align: center; color: var(--muted); font-size: 14px; }
+
+@media (max-width:1100px) { .kanban { grid-template-columns: repeat(5, minmax(160px, 1fr)); } }
+@media (max-width:600px)  { .kanban { grid-template-columns: repeat(5, 200px); } .horarios-grid { grid-template-columns: repeat(3,1fr); } .lista-item { grid-template-columns: 1fr 1fr; } }
 </style>
 </head>
 <body>
@@ -215,21 +278,15 @@ body { font-family: "DM Sans", sans-serif; background: var(--bg); color: var(--t
     <button class="btn btn-primary-main" onclick="abrirModalAgendar()">+ Agendar entrevista</button>
   </div>
 
-  <!-- Cards resumo -->
+  <!-- Cards resumo (clicáveis) -->
   <div class="cards" id="cardsResumo"></div>
 
-  <!-- Tabs -->
-  <div class="tabs">
-    <button class="tab active" onclick="mostrarSecao('kanban',this)">📋 Pipeline</button>
-    <button class="tab" onclick="mostrarSecao('calendario',this)">📅 Calendário</button>
+  <!-- Botão calendário -->
+  <div style="margin-bottom:18px;">
+    <button class="tab active" id="btnCalendario" onclick="toggleCalendario(this)">📅 Ver Calendário</button>
   </div>
 
-  <!-- Seção kanban -->
-  <div id="secao-kanban">
-    <div class="kanban" id="kanbanBoard"></div>
-  </div>
-
-  <!-- Seção calendário -->
+  <!-- Seção calendário (oculta por padrão) -->
   <div id="secao-calendario" style="display:none;">
     <div class="cal-toolbar">
       <div class="cal-nav">
@@ -312,6 +369,59 @@ body { font-family: "DM Sans", sans-serif; background: var(--bg); color: var(--t
   </div>
 </div>
 
+<!-- Modal: Lista por status -->
+<div class="modal-overlay" id="modalLista">
+  <div class="modal-box" style="max-width:680px;padding:0;overflow:hidden;">
+    <div class="modal-header" style="padding:20px 24px 16px;">
+      <div>
+        <div class="modal-title" id="modalListaTitulo"></div>
+        <div class="modal-subtitle" id="modalListaSubtitulo"></div>
+      </div>
+      <button class="modal-close" onclick="fecharModal('modalLista')">&times;</button>
+    </div>
+    <div id="modalListaConteudo" style="max-height:55vh;overflow-y:auto;"></div>
+    <div class="modal-lista-footer">
+      <button class="btn-pdf-modal" id="btnPDFModal"
+        onclick="exportarPDFStatus(statusAtualModal)">
+        📄 Exportar PDF desta lista
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Editar data/hora da entrevista -->
+<div class="modal-overlay" id="modalEditarData">
+  <div class="modal-box" style="max-width:440px;">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">✏️ Alterar Data da Entrevista</div>
+        <div class="modal-subtitle" id="editarDataNome"></div>
+      </div>
+      <button class="modal-close" onclick="fecharModal('modalEditarData')">&times;</button>
+    </div>
+    <input type="hidden" id="editarEntrevistaId">
+    <div class="mfield">
+      <label>Nova data *</label>
+      <input type="date" id="editarData" onchange="carregarHorariosEdicao()">
+    </div>
+    <div class="mfield">
+      <label>Novo horário *</label>
+      <div class="horarios-grid" id="horariosGridEdicao">
+        <div style="grid-column:span 4;color:var(--muted);font-size:13px;padding:6px 0;">
+          Selecione uma data primeiro
+        </div>
+      </div>
+    </div>
+    <div class="mfield">
+      <label>Responsável</label>
+      <input type="text" id="editarResponsavel" placeholder="Nome do entrevistador…">
+    </div>
+    <button class="btn-confirmar" id="btnConfirmarEdicao" onclick="confirmarEdicaoData()">
+      ✓ Confirmar alteração
+    </button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -320,6 +430,7 @@ let todasEntrevistas = [];
 let candidatos       = [];
 let calAtual         = new Date();
 let horarioSel       = null;
+let statusAtualModal = null; // status do modal de lista aberto atualmente
 
 const HORARIOS  = ["08:00","08:30","09:00","09:30","10:00","10:30","11:00","11:30",
                    "13:00","13:30","14:00","14:30","15:00","15:30","16:00","16:30","17:00","17:30"];
@@ -330,7 +441,6 @@ const MESES_PT  = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho",
 async function inicializar() {
   await Promise.all([buscarCandidatos(), buscarTodasEntrevistas()]);
   renderCards();
-  renderKanban();
 }
 
 async function buscarCandidatos() {
@@ -338,10 +448,49 @@ async function buscarCandidatos() {
     const r = await fetch("/api/candidatos");
     const todos = await r.json();
     candidatos = todos.filter(c => !c.aprovado);
+
+    // Pega apenas os IDs marcados como "selecionados" no curriculos.html
+    const idsSelecionados = JSON.parse(localStorage.getItem("selecionados") || "[]");
+
+    // IDs que já têm entrevista agendada (não reprovada) — não aparecem no select
+    const comEntrevista = new Set(
+      todasEntrevistas
+        .filter(e => e.status !== "reprovado")
+        .map(e => e.candidato_id)
+    );
+
+    // Mostra no select: selecionados que ainda não têm entrevista agendada
+    const disponiveis = candidatos.filter(
+      c => idsSelecionados.includes(c.id) && !comEntrevista.has(c.id)
+    );
+
     const sel = document.getElementById("selectCand");
-    sel.innerHTML = '<option value="">Selecione…</option>' +
-      candidatos.map(c => `<option value="${c.id}">${c.nome} — ${c.cargo}/${c.unidade}</option>`).join("");
+    if (disponiveis.length === 0) {
+      sel.innerHTML = '<option value="">Nenhum candidato selecionado ainda</option>';
+    } else {
+      sel.innerHTML = '<option value="">Selecione…</option>' +
+        disponiveis.map(c =>
+          `<option value="${c.id}">${c.nome} — ${c.cargo} / ${c.unidade}</option>`
+        ).join("");
+    }
   } catch(e) { console.error(e); }
+}
+
+/* ── Retorna candidatos selecionados no curriculos.html (localStorage)
+   que ainda NÃO têm entrevista agendada no banco ── */
+function candidatosSelecionadosSemEntrevista() {
+  const ids = JSON.parse(localStorage.getItem("selecionados") || "[]");
+  if (!ids.length) return [];
+
+  // IDs que já têm entrevista no banco (qualquer status exceto reprovado)
+  const comEntrevista = new Set(
+    todasEntrevistas
+      .filter(e => e.status !== "reprovado")
+      .map(e => e.candidato_id)
+  );
+
+  // Candidatos selecionados que ainda não entraram no kanban
+  return candidatos.filter(c => ids.includes(c.id) && !comEntrevista.has(c.id));
 }
 
 async function buscarTodasEntrevistas() {
@@ -362,49 +511,48 @@ async function buscarEntrevistasMes(mes, ano) {
 function renderCards() {
   const c = { agendada:0, realizada:0, aprovado:0, reprovado:0 };
   todasEntrevistas.forEach(e => { if(c[e.status]!==undefined) c[e.status]++; });
-  document.getElementById("cardsResumo").innerHTML = `
-    <div class="card" style="border-left:4px solid var(--primary);">
-      <div class="card-icon" style="background:var(--info-bg);">📋</div>
-      <div class="card-label">Total</div>
-      <div class="card-value" style="color:var(--primary);">${todasEntrevistas.length}</div>
-    </div>
-    <div class="card" style="border-left:4px solid var(--warning);">
-      <div class="card-icon" style="background:var(--warning-bg);">⏳</div>
-      <div class="card-label">Agendadas</div>
-      <div class="card-value" style="color:var(--warning);">${c.agendada}</div>
-    </div>
-    <div class="card" style="border-left:4px solid var(--primary);">
-      <div class="card-icon" style="background:var(--info-bg);">📝</div>
-      <div class="card-label">Realizadas</div>
-      <div class="card-value" style="color:var(--primary);">${c.realizada}</div>
-    </div>
-    <div class="card" style="border-left:4px solid var(--success);">
-      <div class="card-icon" style="background:var(--success-bg);">✅</div>
-      <div class="card-label">Aprovados</div>
-      <div class="card-value" style="color:var(--success);">${c.aprovado}</div>
-    </div>
-    <div class="card" style="border-left:4px solid var(--danger);">
-      <div class="card-icon" style="background:var(--danger-bg);">✕</div>
-      <div class="card-label">Reprovados</div>
-      <div class="card-value" style="color:var(--danger);">${c.reprovado}</div>
+  const qtdSelecionados = candidatosSelecionadosSemEntrevista().length;
+
+  const cardHTML = (status, borderColor, iconBg, icon, label, valor, textColor) => `
+    <div class="card" style="border-left:4px solid ${borderColor}; padding-bottom:32px;"
+      onclick="abrirListaStatus('${status}')">
+      <div class="card-icon" style="background:${iconBg};">${icon}</div>
+      <div class="card-label">${label}</div>
+      <div class="card-value" style="color:${textColor};">${valor}</div>
+      <button class="card-pdf-btn"
+        onclick="event.stopPropagation(); exportarPDFStatus('${status}')"
+        title="Exportar PDF">📄 PDF</button>
     </div>`;
+
+  document.getElementById("cardsResumo").innerHTML =
+    cardHTML("selecionado","var(--accent)","var(--accent-light)","🎯","Selecionados", qtdSelecionados,"var(--accent)") +
+    cardHTML("agendada",   "var(--warning)","var(--warning-bg)",  "⏳","Agendadas",    c.agendada,     "var(--warning)") +
+    cardHTML("realizada",  "var(--primary)","var(--info-bg)",     "📝","Realizadas",   c.realizada,    "var(--primary)") +
+    cardHTML("aprovado",   "var(--success)","var(--success-bg)",  "✅","Aprovados",    c.aprovado,     "var(--success)") +
+    cardHTML("reprovado",  "var(--danger)", "var(--danger-bg)",   "✕","Reprovados",  c.reprovado,    "var(--danger)");
 }
 
 /* ════ KANBAN ════ */
 function renderKanban() {
+  const selecionadosSemEntrevista = candidatosSelecionadosSemEntrevista();
+
   const cols = {
-    agendada:  { label:"⏳ Agendadas",  cls:"col-agendada",  items:[] },
-    realizada: { label:"📝 Realizadas", cls:"col-realizada", items:[] },
-    aprovado:  { label:"✅ Aprovados",  cls:"col-aprovado",  items:[] },
-    reprovado: { label:"✕ Reprovados", cls:"col-reprovado", items:[] },
+    selecionado: { label:"🎯 Selecionados", cls:"col-selecionado", items: selecionadosSemEntrevista },
+    agendada:    { label:"⏳ Agendadas",    cls:"col-agendada",    items:[] },
+    realizada:   { label:"📝 Realizadas",   cls:"col-realizada",   items:[] },
+    aprovado:    { label:"✅ Aprovados",    cls:"col-aprovado",    items:[] },
+    reprovado:   { label:"✕ Reprovados",  cls:"col-reprovado",   items:[] },
   };
   todasEntrevistas.forEach(e => { if(cols[e.status]) cols[e.status].items.push(e); });
 
-  document.getElementById("kanbanBoard").innerHTML = Object.entries(cols).map(([k,col]) => `
+  document.getElementById("kanbanBoard").innerHTML = Object.entries(cols).map(([k, col]) => `
     <div class="kanban-col ${col.cls}">
       <div class="kanban-header">${col.label}<span class="kanban-count">${col.items.length}</span></div>
       <div class="kanban-body">
-        ${col.items.length ? col.items.map(e => cardKanban(e, k)).join("") : '<div class="empty-col">Nenhuma</div>'}
+        ${col.items.length
+          ? col.items.map(e => k === "selecionado" ? cardSelecionado(e) : cardKanban(e, k)).join("")
+          : '<div class="empty-col">Nenhum</div>'
+        }
       </div>
     </div>`).join("");
 }
@@ -434,6 +582,51 @@ function cardKanban(e, status) {
     ${e.responsavel ? `<div style="font-size:11px;color:var(--muted);margin-bottom:8px;">👤 ${e.responsavel}</div>` : ""}
     <div class="cand-actions">${botoes}</div>
   </div>`;
+}
+
+/* ── Card para candidatos selecionados ainda sem entrevista agendada ── */
+function cardSelecionado(c) {
+  const ini   = c.nome.split(" ").slice(0,2).map(n=>n[0]).join("");
+  const avCls = c.cargo !== "TI" ? "avatar-adm" : "";
+
+  return `<div class="cand-card">
+    <div class="cand-header">
+      <div class="avatar ${avCls}">${ini}</div>
+      <div>
+        <div class="cand-nome">${c.nome}</div>
+        <div class="cand-cargo">${c.cargo} • ${c.unidade}</div>
+      </div>
+    </div>
+    <div style="font-size:11.5px;color:var(--muted);margin-bottom:9px;">📧 ${c.email}</div>
+    <div class="cand-actions">
+      <button class="btn-mini" style="background:var(--accent-light);color:var(--accent);"
+        onclick="abrirModalAgendarCandidato(${c.id})">
+        📅 Agendar entrevista
+      </button>
+      <button class="btn-mini btn-cancelar"
+        onclick="removerSelecionado(${c.id})">
+        ✕ Remover
+      </button>
+    </div>
+  </div>`;
+}
+
+/* ── Abre modal de agendar já com o candidato pré-selecionado ── */
+function abrirModalAgendarCandidato(id) {
+  abrirModalAgendar();
+  setTimeout(() => {
+    const sel = document.getElementById("selectCand");
+    if (sel) sel.value = id;
+  }, 60);
+}
+
+/* ── Remove candidato da lista de selecionados (localStorage) ── */
+function removerSelecionado(id) {
+  let ids = JSON.parse(localStorage.getItem("selecionados") || "[]");
+  ids = ids.filter(i => i !== id);
+  localStorage.setItem("selecionados", JSON.stringify(ids));
+  renderCards();
+  mostrarToast("Candidato removido da lista de selecionados.");
 }
 
 /* ════ CALENDÁRIO ════ */
@@ -625,8 +818,15 @@ async function confirmarAgendamento() {
     if (!res.ok) { mostrarToast(json.error||"Erro ao agendar.", "danger"); return; }
     fecharModal("modalAgendar");
     mostrarToast("Entrevista agendada! ✅", "success");
+
+    // Remove o candidato da lista de "selecionados" do localStorage
+    // pois agora ele já está no kanban como "agendado"
+    let ids = JSON.parse(localStorage.getItem("selecionados") || "[]");
+    ids = ids.filter(i => i !== Number(candidatoId));
+    localStorage.setItem("selecionados", JSON.stringify(ids));
+
     await Promise.all([buscarCandidatos(), buscarTodasEntrevistas()]);
-    renderCards(); renderKanban();
+    renderCards();
     if (document.getElementById("secao-calendario").style.display !== "none") renderCalendario();
   } catch { mostrarToast("Erro de conexão.", "danger"); }
   finally { btn.disabled = false; btn.textContent = "✓ Confirmar Agendamento"; }
@@ -673,7 +873,7 @@ async function mudarStatus(id, novoStatus) {
     const msgs = { realizada:"Marcada como realizada!", aprovado:"Candidato aprovado! ✅", reprovado:"Candidato reprovado." };
     mostrarToast(msgs[novoStatus]||"Atualizado!", novoStatus==="aprovado"?"success":"");
     await Promise.all([buscarCandidatos(), buscarTodasEntrevistas()]);
-    renderCards(); renderKanban();
+    renderCards();
     if (document.getElementById("secao-calendario").style.display !== "none") renderCalendario();
   } catch { mostrarToast("Erro ao atualizar.", "danger"); }
 }
@@ -684,29 +884,333 @@ async function excluir(id) {
     await fetch(`/api/entrevistas?id=${id}`, { method: "DELETE" });
     mostrarToast("Entrevista cancelada.");
     await Promise.all([buscarCandidatos(), buscarTodasEntrevistas()]);
-    renderCards(); renderKanban();
+    renderCards();
     if (document.getElementById("secao-calendario").style.display !== "none") renderCalendario();
   } catch { mostrarToast("Erro.", "danger"); }
 }
 
 /* ════ UI ════ */
-function mostrarSecao(s, btn) {
-  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-  btn.classList.add("active");
-  document.getElementById("secao-kanban").style.display    = s==="kanban"    ? "block" : "none";
-  document.getElementById("secao-calendario").style.display = s==="calendario" ? "block" : "none";
-  if (s === "calendario") renderCalendario();
+function toggleCalendario(btn) {
+  const sec = document.getElementById("secao-calendario");
+  const aberto = sec.style.display !== "none";
+  if (aberto) {
+    sec.style.display = "none";
+    btn.textContent = "📅 Ver Calendário";
+    btn.classList.remove("active");
+  } else {
+    sec.style.display = "block";
+    btn.textContent = "📅 Fechar Calendário";
+    btn.classList.add("active");
+    renderCalendario();
+  }
 }
 
-function fecharModal(id) { document.getElementById(id).classList.remove("open"); }
+/* ════ EDITAR DATA DA ENTREVISTA ════ */
+let horarioSelEdicao = null;
+
+function abrirEditarData(id, nomeCanditado, dataHoraAtual, responsavelAtual) {
+  horarioSelEdicao = null;
+  document.getElementById("editarEntrevistaId").value = id;
+  document.getElementById("editarDataNome").textContent = nomeCanditado;
+  document.getElementById("editarResponsavel").value = responsavelAtual || "";
+
+  // Pré-preenche data atual
+  const dt = new Date(dataHoraAtual);
+  const dataStr = `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,"0")}-${String(dt.getDate()).padStart(2,"0")}`;
+  document.getElementById("editarData").value = dataStr;
+
+  // Pré-seleciona horário atual
+  const hrAtual = dt.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
+  horarioSelEdicao = hrAtual;
+
+  carregarHorariosEdicao(id); // passa id para excluir o próprio horário da lista de ocupados
+  document.getElementById("modalEditarData").classList.add("open");
+}
+
+async function carregarHorariosEdicao(idExcluir) {
+  const data = document.getElementById("editarData").value;
+  if (!data) return;
+  horarioSelEdicao = null;
+  const grid = document.getElementById("horariosGridEdicao");
+  grid.innerHTML = `<div style="grid-column:span 4;color:var(--muted);font-size:13px;">Verificando…</div>`;
+
+  try {
+    const [a, m, d] = data.split("-");
+    const lista = await buscarEntrevistasMes(Number(m), Number(a));
+    const entId = Number(document.getElementById("editarEntrevistaId").value);
+
+    // Horários ocupados — exclui o próprio agendamento sendo editado
+    const ocupados = new Set(
+      lista
+        .filter(e => {
+          const dt = new Date(e.data_hora);
+          return dt.getDate() === Number(d) && e.status !== "reprovado" && e.id !== entId;
+        })
+        .map(e => new Date(e.data_hora).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}))
+    );
+
+    grid.innerHTML = HORARIOS.map(h => {
+      const ocup = ocupados.has(h);
+      const sel  = h === horarioSelEdicao;
+      return `<button class="btn-horario ${ocup ? "ocupado" : ""} ${sel ? "selecionado" : ""}"
+        ${ocup ? `disabled title="Ocupado"` : `onclick="selHorarioEdicao(this,'${h}')"`}>
+        ${h}${ocup ? "<br><small style='font-size:9px'>ocupado</small>" : ""}
+      </button>`;
+    }).join("");
+  } catch {
+    grid.innerHTML = `<div style="grid-column:span 4;color:var(--danger);font-size:13px;">Erro ao verificar horários.</div>`;
+  }
+}
+
+function selHorarioEdicao(btn, h) {
+  document.querySelectorAll("#horariosGridEdicao .btn-horario").forEach(b => b.classList.remove("selecionado"));
+  btn.classList.add("selecionado");
+  horarioSelEdicao = h;
+}
+
+async function confirmarEdicaoData() {
+  const id   = document.getElementById("editarEntrevistaId").value;
+  const data = document.getElementById("editarData").value;
+  const resp = document.getElementById("editarResponsavel").value;
+
+  if (!data)            { mostrarToast("Selecione uma data.", "warning"); return; }
+  if (!horarioSelEdicao){ mostrarToast("Selecione um horário.", "warning"); return; }
+
+  const btn = document.getElementById("btnConfirmarEdicao");
+  btn.disabled = true; btn.textContent = "Salvando…";
+
+  try {
+    const res = await fetch("/api/entrevistas", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: Number(id),
+        data_hora: `${data}T${horarioSelEdicao}:00`,
+        responsavel: resp || null,
+      })
+    });
+    if (!res.ok) throw new Error();
+    fecharModal("modalEditarData");
+    mostrarToast("Data alterada com sucesso! ✅", "success");
+    await Promise.all([buscarCandidatos(), buscarTodasEntrevistas()]);
+    renderCards();
+    if (document.getElementById("secao-calendario").style.display !== "none") renderCalendario();
+  } catch { mostrarToast("Erro ao alterar data.", "danger"); }
+  finally { btn.disabled = false; btn.textContent = "✓ Confirmar alteração"; }
+}
 window.addEventListener("click", e => {
-  ["modalAgendar","modalDetalhe"].forEach(id => { if(e.target.id===id) fecharModal(id); });
+  ["modalAgendar","modalDetalhe","modalLista","modalEditarData"].forEach(id => {
+    if(e.target.id===id) fecharModal(id);
+  });
 });
+
+/* ════ MODAL LISTA POR STATUS ════ */
+const CONFIG_STATUS = {
+  selecionado: { titulo:"🎯 Candidatos Selecionados"  },
+  agendada:    { titulo:"⏳ Entrevistas Agendadas"     },
+  realizada:   { titulo:"📝 Entrevistas Realizadas"    },
+  aprovado:    { titulo:"✅ Candidatos Aprovados"      },
+  reprovado:   { titulo:"✕ Candidatos Reprovados"    },
+};
+
+function abrirListaStatus(status) {
+  const cfg = CONFIG_STATUS[status];
+  statusAtualModal = status;
+  document.getElementById("modalListaTitulo").textContent = cfg.titulo;
+  const conteudo = document.getElementById("modalListaConteudo");
+
+  // ── Selecionados: vem do localStorage ──
+  if (status === "selecionado") {
+    const lista = candidatosSelecionadosSemEntrevista();
+    document.getElementById("modalListaSubtitulo").textContent =
+      `${lista.length} candidato${lista.length !== 1 ? "s" : ""} aguardando agendamento`;
+
+    if (!lista.length) {
+      conteudo.innerHTML = `<div class="modal-lista-empty">
+        🎯 Nenhum candidato selecionado ainda.<br>
+        <span style="font-size:13px;color:var(--muted);">Acesse Currículos e clique em "Selecionar".</span>
+      </div>`;
+    } else {
+      conteudo.innerHTML = lista.map(c => {
+        const ini  = c.nome.split(" ").slice(0,2).map(n=>n[0]).join("");
+        const avBg = c.cargo !== "TI"
+          ? "background:linear-gradient(135deg,#0da868,#34d399)"
+          : "background:linear-gradient(135deg,#ff6b35,#ff9a6c)";
+        return `
+        <div class="modal-lista-item">
+          <div class="modal-lista-avatar" style="${avBg}">${ini}</div>
+          <div class="modal-lista-info">
+            <div class="modal-lista-nome">${c.nome}</div>
+            <div class="modal-lista-meta">${c.cargo} • ${c.unidade} • ${c.email}</div>
+          </div>
+          <div class="modal-lista-right">
+            <div class="modal-lista-acoes">
+              <button class="btn-mini" style="background:var(--accent-light);color:var(--accent);"
+                onclick="fecharModal('modalLista');abrirModalAgendarCandidato(${c.id})">
+                📅 Agendar
+              </button>
+              <button class="btn-mini btn-cancelar"
+                onclick="removerSelecionado(${c.id});abrirListaStatus('selecionado')">✕</button>
+            </div>
+          </div>
+        </div>`;
+      }).join("");
+    }
+
+  // ── Demais status: vem do banco ──
+  } else {
+    const lista = todasEntrevistas.filter(e => e.status === status);
+    document.getElementById("modalListaSubtitulo").textContent =
+      `${lista.length} candidato${lista.length !== 1 ? "s" : ""}`;
+
+    if (!lista.length) {
+      conteudo.innerHTML = `<div class="modal-lista-empty">Nenhum candidato neste status ainda.</div>`;
+    } else {
+      conteudo.innerHTML = lista.map(e => {
+        const ini   = e.candidato_nome.split(" ").slice(0,2).map(n=>n[0]).join("");
+        const dt    = new Date(e.data_hora);
+        const dtStr = dt.toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit",year:"numeric"});
+        const hrStr = dt.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
+        const avBg  = e.cargo !== "TI"
+          ? "background:linear-gradient(135deg,#0da868,#34d399)"
+          : "background:linear-gradient(135deg,#0f62fe,#5b9cf6)";
+
+        let acoes = "";
+        if (status === "agendada") acoes = `
+          <button class="btn-mini" style="background:#f0f4ff;color:var(--primary);"
+            onclick="fecharModal('modalLista');abrirEditarData(${e.id},'${e.candidato_nome.replace(/'/g,"\\'")}','${e.data_hora}','${(e.responsavel||"").replace(/'/g,"\\'")}')">
+            ✏️ Alterar data
+          </button>
+          <button class="btn-mini btn-realizada"
+            onclick="mudarStatus(${e.id},'realizada');fecharModal('modalLista')">📝 Realizada</button>
+          <button class="btn-mini btn-cancelar"
+            onclick="excluir(${e.id});fecharModal('modalLista')">🗑</button>`;
+        else if (status === "realizada") acoes = `
+          <button class="btn-mini btn-aprovado"
+            onclick="mudarStatus(${e.id},'aprovado');fecharModal('modalLista')">✅ Aprovar</button>
+          <button class="btn-mini btn-reprovado"
+            onclick="mudarStatus(${e.id},'reprovado');fecharModal('modalLista')">✕ Reprovar</button>`;
+        else if (status === "reprovado") acoes = `
+          <button class="btn-mini btn-cancelar"
+            onclick="excluir(${e.id});fecharModal('modalLista')">🗑 Remover</button>`;
+
+        return `
+        <div class="modal-lista-item">
+          <div class="modal-lista-avatar" style="${avBg}">${ini}</div>
+          <div class="modal-lista-info">
+            <div class="modal-lista-nome">${e.candidato_nome}</div>
+            <div class="modal-lista-meta">
+              ${e.cargo} • ${e.unidade}${e.responsavel ? ` • 👤 ${e.responsavel}` : ""}
+            </div>
+          </div>
+          <div class="modal-lista-right">
+            <div class="modal-lista-data">📅 ${dtStr} ${hrStr}</div>
+            <div class="modal-lista-acoes">${acoes}</div>
+          </div>
+        </div>`;
+      }).join("");
+    }
+  }
+
+  document.getElementById("modalLista").classList.add("open");
+}
 
 function mostrarToast(msg, tipo="") {
   const t = document.getElementById("toast");
   t.textContent = msg; t.className = `toast ${tipo} show`;
   setTimeout(() => t.classList.remove("show"), 3500);
+}
+
+/* ════ EXPORTAR PDF POR STATUS ════ */
+function exportarPDFStatus(status) {
+  const { jsPDF } = window.jspdf;
+
+  const CFG = {
+    selecionado: { titulo:"Candidatos Selecionados",   emoji:"🎯", cor:[255,107,53],  cabecalho:["#","Nome","E-mail","Telefone","Cargo","Unidade"] },
+    agendada:    { titulo:"Entrevistas Agendadas",      emoji:"⏳", cor:[212,160,23],  cabecalho:["#","Candidato","Cargo","Unidade","Data","Horário","Responsável"] },
+    realizada:   { titulo:"Entrevistas Realizadas",     emoji:"📝", cor:[15,98,254],   cabecalho:["#","Candidato","Cargo","Unidade","Data","Horário","Responsável"] },
+    aprovado:    { titulo:"Candidatos Aprovados",       emoji:"✅", cor:[13,168,104],  cabecalho:["#","Candidato","Cargo","Unidade","Data Entrevista","Responsável"] },
+    reprovado:   { titulo:"Candidatos Reprovados",      emoji:"✕", cor:[229,62,62],   cabecalho:["#","Candidato","Cargo","Unidade","Data Entrevista","Responsável"] },
+  };
+
+  const cfg = CFG[status];
+  if (!cfg) return;
+
+  // Monta os dados conforme o status
+  let linhas = [];
+
+  if (status === "selecionado") {
+    const lista = candidatosSelecionadosSemEntrevista();
+    if (!lista.length) { mostrarToast("Nenhum candidato selecionado para exportar.", "warning"); return; }
+    linhas = lista.map((c, i) => [i+1, c.nome, c.email, c.telefone||"—", c.cargo, c.unidade]);
+  } else {
+    const lista = todasEntrevistas.filter(e => e.status === status);
+    if (!lista.length) { mostrarToast("Nenhum item neste status para exportar.", "warning"); return; }
+    linhas = lista.map((e, i) => {
+      const dt  = new Date(e.data_hora);
+      const dia = dt.toLocaleDateString("pt-BR");
+      const hr  = dt.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
+      if (status === "aprovado" || status === "reprovado") {
+        return [i+1, e.candidato_nome, e.cargo, e.unidade, `${dia} ${hr}`, e.responsavel||"—"];
+      }
+      return [i+1, e.candidato_nome, e.cargo, e.unidade, dia, hr, e.responsavel||"—"];
+    });
+  }
+
+  const doc = new jsPDF({ orientation:"landscape", unit:"mm", format:"a4" });
+  const dataGer = new Date().toLocaleDateString("pt-BR",{day:"2-digit",month:"long",year:"numeric"});
+  const horaGer = new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
+  const [r,g,b] = cfg.cor;
+
+  // Cabeçalho colorido
+  doc.setFillColor(r,g,b);
+  doc.rect(0, 0, 297, 26, "F");
+  doc.setTextColor(255,255,255);
+  doc.setFont("helvetica","bold");
+  doc.setFontSize(15);
+  doc.text(`${cfg.titulo} — Excelência Lingerie`, 14, 10);
+  doc.setFont("helvetica","normal");
+  doc.setFontSize(8.5);
+  doc.text(`Gerado em ${dataGer} às ${horaGer}  •  Total: ${linhas.length} registro${linhas.length!==1?"s":""}`, 14, 18);
+
+  // Tabela
+  doc.autoTable({
+    startY: 30,
+    head: [cfg.cabecalho],
+    body: linhas,
+    styles: {
+      font: "helvetica", fontSize: 9,
+      cellPadding: 4,
+      textColor: [13,17,23],
+      lineColor: [226,232,240],
+      lineWidth: 0.3,
+    },
+    headStyles: {
+      fillColor: [r,g,b],
+      textColor: [255,255,255],
+      fontStyle: "bold",
+      fontSize: 8.5,
+    },
+    alternateRowStyles: { fillColor: [250,250,252] },
+    columnStyles: {
+      0: { halign:"center", cellWidth:10 },
+      1: { fontStyle:"bold" },
+    },
+    margin: { left:14, right:14 },
+    didDrawPage: (data) => {
+      const pg  = doc.internal.getCurrentPageInfo().pageNumber;
+      const tot = doc.internal.getNumberOfPages();
+      doc.setFontSize(7.5);
+      doc.setTextColor(160,160,180);
+      doc.setFont("helvetica","normal");
+      doc.text(`RH System — Excelência Lingerie  •  Página ${pg} de ${tot}`, 14, doc.internal.pageSize.height - 6);
+      doc.text(`Gerado em ${dataGer}`, 297-14, doc.internal.pageSize.height - 6, {align:"right"});
+    },
+  });
+
+  const nomeArq = `${status}_${new Date().toLocaleDateString("pt-BR").replace(/\//g,"-")}.pdf`;
+  doc.save(nomeArq);
+  mostrarToast(`PDF "${cfg.titulo}" exportado! 📄`, "success");
 }
 
 inicializar();
