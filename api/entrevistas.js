@@ -99,7 +99,7 @@ export default async function handler(req, res) {
 
       await pool.query(
         `UPDATE entrevistas SET
-           status=$1, observacoes=COALESCE($2,observacoes),
+           status=COALESCE($1,status), observacoes=COALESCE($2,observacoes),
            data_hora=COALESCE($3,data_hora), responsavel=COALESCE($4,responsavel)
          WHERE id=$5`,
         [status||null, observacoes||null, data_hora||null, responsavel||null, id]
