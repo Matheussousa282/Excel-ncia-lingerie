@@ -620,7 +620,7 @@ function renderKanban() {
 
 function cardKanban(e, status) {
   const ini = e.candidato_nome.split(" ").slice(0,2).map(n=>n[0]).join("");
-  const dt  = new Date(e.data_hora);
+  const dt  = new Date(e.data_hora.replace("T"," ").replace(/-/g,"/"));
   const dtStr = dt.toLocaleDateString("pt-BR") + " " +
     dt.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
   const avCls = status === "aprovado" ? "avatar-aprov" : (e.cargo !== "TI" ? "avatar-adm" : "");
@@ -892,7 +892,7 @@ async function renderCalendario() {
     const ePassado = new Date(ano,mes,d) < new Date(hoje.getFullYear(),hoje.getMonth(),hoje.getDate());
 
     const dodia = entrevistas.filter(e => {
-      const dt = new Date(e.data_hora);
+      const dt = new Date(e.data_hora.replace("T"," ").replace(/-/g,"/"));
       return dt.getDate()===d && dt.getMonth()===mes && dt.getFullYear()===ano;
     });
 
@@ -903,7 +903,7 @@ async function renderCalendario() {
     ].filter(Boolean).join(" ");
 
     const eventos = dodia.map(e => {
-      const hr = new Date(e.data_hora).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
+      const hr = new Date(e.data_hora.replace("T"," ").replace(/-/g,"/")).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
       return `<div class="cal-evento ${e.status}" onclick='abrirDetalhe(${JSON.stringify(e).replace(/'/g,"&#39;")})'>
         ${hr} ${e.candidato_nome.split(" ")[0]}
       </div>`;
@@ -939,7 +939,7 @@ function renderListaMes(lista, mes, ano) {
     return;
   }
   body.innerHTML = lista.map(e => {
-    const dt  = new Date(e.data_hora);
+    const dt  = new Date(e.data_hora.replace("T"," ").replace(/-/g,"/"));
     const hr  = dt.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
     const dia = dt.toLocaleDateString("pt-BR",{weekday:"short",day:"2-digit",month:"2-digit"});
     return `<div class="lista-item" onclick='abrirDetalhe(${JSON.stringify(e).replace(/'/g,"&#39;")})'>
@@ -1009,9 +1009,9 @@ async function carregarHorarios() {
     const lista = await buscarEntrevistasMes(Number(m), Number(a));
     const ocupados = new Set(
       lista.filter(e => {
-        const dt = new Date(e.data_hora);
+        const dt = new Date(e.data_hora.replace("T"," ").replace(/-/g,"/"));
         return dt.getDate()===Number(d) && e.status!=="reprovado";
-      }).map(e => new Date(e.data_hora).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}))
+      }).map(e => new Date(e.data_hora.replace("T"," ").replace(/-/g,"/")).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}))
     );
 
     grid.innerHTML = HORARIOS.map(h => {
@@ -1072,7 +1072,7 @@ async function confirmarAgendamento() {
 /* ════ MODAL DETALHE ════ */
 function abrirDetalhe(e) {
   if (typeof e === "string") e = JSON.parse(e);
-  const dt    = new Date(e.data_hora);
+  const dt    = new Date(e.data_hora.replace("T"," ").replace(/-/g,"/"));
   const dtLg  = dt.toLocaleDateString("pt-BR",{weekday:"long",day:"2-digit",month:"long",year:"numeric"});
   const hrStr = dt.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
 
@@ -1182,10 +1182,10 @@ async function carregarHorariosEdicao(idExcluir) {
     const ocupados = new Set(
       lista
         .filter(e => {
-          const dt = new Date(e.data_hora);
+          const dt = new Date(e.data_hora.replace("T"," ").replace(/-/g,"/"));
           return dt.getDate() === Number(d) && e.status !== "reprovado" && e.id !== entId;
         })
-        .map(e => new Date(e.data_hora).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}))
+        .map(e => new Date(e.data_hora.replace("T"," ").replace(/-/g,"/")).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}))
     );
 
     grid.innerHTML = HORARIOS.map(h => {
@@ -1362,7 +1362,8 @@ function abrirListaStatus(status) {
     } else {
       conteudo.innerHTML = lista.map(e => {
         const ini   = e.candidato_nome.split(" ").slice(0,2).map(n=>n[0]).join("");
-        const dt    = new Date(e.data_hora);
+        // Força parse como horário local adicionando timezone offset
+        const dt    = new Date(e.data_hora.replace("T", " ").replace(/-/g, "/"));
         const dtStr = dt.toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit",year:"numeric"});
         const hrStr = dt.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
         const avBg  = e.cargo !== "TI"
@@ -1398,6 +1399,7 @@ function abrirListaStatus(status) {
             <div class="modal-lista-meta">
               ${e.cargo} • ${e.unidade}${e.responsavel ? ` • 👤 ${e.responsavel}` : ""}
             </div>
+            ${e.observacoes ? `<div style="font-size:11.5px;color:var(--muted);margin-top:3px;">📋 ${e.observacoes}</div>` : ""}
           </div>
           <div class="modal-lista-right">
             <div class="modal-lista-data">📅 ${dtStr} ${hrStr}</div>
@@ -1448,7 +1450,7 @@ function exportarPDFStatus(status) {
     const lista = todasEntrevistas.filter(e => e.status === status);
     if (!lista.length) { mostrarToast("Nenhum item neste status para exportar.", "warning"); return; }
     linhas = lista.map((e, i) => {
-      const dt  = new Date(e.data_hora);
+      const dt  = new Date(e.data_hora.replace("T"," ").replace(/-/g,"/"));
       const dia = dt.toLocaleDateString("pt-BR");
       const hr  = dt.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
       if (status === "aprovado" || status === "reprovado") {
