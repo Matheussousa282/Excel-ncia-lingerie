@@ -10,10 +10,6 @@ if (!connectionString) throw new Error("DATABASE_URL não configurada");
 
 const pool = new Pool({ connectionString, ssl: { rejectUnauthorized: false } });
 
-pool.on("connect", (client) => {
-  client.query("SET timezone = 'America/Fortaleza'");
-});
-
 /* ── Import dinâmico do WhatsApp (não quebra se o módulo falhar) ── */
 async function notificarSelecionado(nome, telefone) {
   try {
