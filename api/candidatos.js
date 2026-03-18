@@ -10,6 +10,10 @@ if (!connectionString) throw new Error("DATABASE_URL não configurada");
 
 const pool = new Pool({ connectionString, ssl: { rejectUnauthorized: false } });
 
+pool.on("connect", (client) => {
+  client.query("SET timezone = 'America/Fortaleza'");
+});
+
 /* ── Import dinâmico do WhatsApp (não quebra se o módulo falhar) ── */
 async function notificarSelecionado(nome, telefone) {
   try {
@@ -133,7 +137,6 @@ export default async function handler(req, res) {
           c.arquivo_nome,
           c.aprovado,
           c.em_teste,
-          c.selecionado,
           c.criado_em AS data,
           ca.nome AS cargo,
           i.nome  AS instituicao,
@@ -206,26 +209,15 @@ export default async function handler(req, res) {
         return res.status(200).json({ success: true });
       }
 
-      // ── Selecionar / desselecionar candidato (salva no banco)
+      // ── Selecionado: dispara mensagem WhatsApp etapa 1
       if (acao === "selecionado") {
-        const novoValor = req.body.valor === true || req.body.valor === "true";
-
-        await pool.query(
-          "UPDATE candidatos SET selecionado = $1 WHERE id = $2",
-          [novoValor, id]
+        const cand = await pool.query(
+          "SELECT nome, telefone FROM candidatos WHERE id = $1", [id]
         );
-
-        // Dispara WhatsApp apenas quando SELECIONA (não quando remove)
-        if (novoValor) {
-          const cand = await pool.query(
-            "SELECT nome, telefone FROM candidatos WHERE id = $1", [id]
-          );
-          if (cand.rows.length > 0) {
-            const { nome, telefone } = cand.rows[0];
-            if (telefone) await notificarSelecionado(nome, telefone);
-          }
+        if (cand.rows.length > 0) {
+          const { nome, telefone } = cand.rows[0];
+          if (telefone) await notificarSelecionado(nome, telefone);
         }
-
         return res.status(200).json({ success: true });
       }
 
