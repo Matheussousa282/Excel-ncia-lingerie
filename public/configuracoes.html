@@ -328,6 +328,17 @@ body { font-family: "DM Sans", sans-serif; background: var(--bg); color: var(--t
 
           <div class="toggle-wrap">
             <div>
+              <div class="toggle-label">🧪 Selecionado para teste</div>
+              <div class="toggle-sub">Avisa o candidato que foi selecionado para etapa de teste</div>
+            </div>
+            <label class="toggle primary">
+              <input type="checkbox" id="notif_teste" onchange="salvarToggle('notif_teste', this.checked)">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <div class="toggle-wrap">
+            <div>
               <div class="toggle-label">✕ Candidato reprovado</div>
               <div class="toggle-sub">Mensagem educada informando que não foi selecionado</div>
             </div>
@@ -423,6 +434,23 @@ body { font-family: "DM Sans", sans-serif; background: var(--bg); color: var(--t
 
       <div class="card">
         <div class="card-header">
+          <div class="card-header-left"><span class="card-header-icon">🧪</span>
+            <div><div class="card-header-title">Selecionado para teste</div></div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="field">
+            <textarea id="msg_teste" rows="4"></textarea>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="salvarMensagem('msg_teste')">💾 Salvar</button>
+            <button class="btn btn-outline" onclick="restaurarPadrao('msg_teste')">↩ Padrão</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
           <div class="card-header-left"><span class="card-header-icon">✕</span>
             <div><div class="card-header-title">Candidato reprovado</div></div>
           </div>
@@ -457,6 +485,7 @@ const PADROES = {
   msg_agendado:    "Olá {nome}! 🎉 Sua entrevista foi *agendada* com sucesso!\n\n📅 *Data:* {data}\n🕐 *Horário:* {hora}\n👤 *Responsável:* {responsavel}\n\nPor favor, confirme sua presença respondendo esta mensagem. Qualquer dúvida, estamos à disposição! 💼",
   msg_realizado:   "Olá {nome}! ✅ Sua entrevista foi *realizada* com sucesso. Nossa equipe está avaliando seu perfil e em breve você receberá o resultado. Obrigado pela participação! 🙏",
   msg_aprovado:    "Olá {nome}! 🎉🎊 Parabéns! Você foi *APROVADO(A)* no processo seletivo da Excelência Lingerie!\n\nEstamos muito felizes em tê-lo(a) em nossa equipe. Em breve entraremos em contato com os próximos passos. Bem-vindo(a)! 🌟",
+  msg_teste:       "Olá {nome}! 🧪 Você foi *selecionado(a) para a etapa de teste* no processo seletivo da Excelência Lingerie!\n\nEntraremos em contato com as instruções. Fique atento! 😊",
   msg_reprovado:   "Olá {nome}! Agradecemos sua participação no processo seletivo da Excelência Lingerie. Infelizmente, desta vez não daremos continuidade à sua candidatura. Agradecemos o interesse e desejamos sucesso! 💪",
 };
 
@@ -490,15 +519,16 @@ async function carregarConfiguracoes() {
     if (cfg.whatsapp_api_url) document.getElementById("apiUrl").value = cfg.whatsapp_api_url;
 
     // Toggles de notificação
-    ["notif_selecionado","notif_agendado","notif_realizado","notif_aprovado","notif_reprovado"].forEach(k => {
+    ["notif_selecionado","notif_agendado","notif_realizado","notif_aprovado","notif_teste","notif_reprovado"].forEach(k => {
       const el = document.getElementById(k);
       if (el) el.checked = cfg[k] !== "false";
     });
 
     // Mensagens
-    ["msg_selecionado","msg_agendado","msg_realizado","msg_aprovado","msg_reprovado"].forEach(k => {
+    ["msg_selecionado","msg_agendado","msg_realizado","msg_aprovado","msg_teste","msg_reprovado"].forEach(k => {
       const el = document.getElementById(k);
       if (el && cfg[k]) el.value = cfg[k].replace(/\\n/g, "\n");
+      else if (el && PADROES[k]) el.value = PADROES[k];
     });
 
   } catch (err) {

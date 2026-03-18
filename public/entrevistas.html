@@ -69,6 +69,8 @@ body { font-family: "DM Sans", sans-serif; background: var(--bg); color: var(--t
 .kanban-count  { font-family: "DM Mono",monospace; font-size: 11px; padding: 2px 7px; border-radius: 10px; font-weight: 700; }
 .col-selecionado .kanban-header { background: var(--accent-light); color: var(--accent); }
 .col-selecionado .kanban-count  { background: #ffd8cc; color: var(--accent); }
+.col-teste       .kanban-header { background: #f5f3ff; color: #7c3aed; }
+.col-teste       .kanban-count  { background: #ddd6fe; color: #7c3aed; }
 .col-agendada  .kanban-header { background: var(--warning-bg); color: #92650a; }
 .col-agendada  .kanban-count  { background: #fde68a; color: #92650a; }
 .col-realizada .kanban-header { background: var(--info-bg); color: var(--primary); }
@@ -380,7 +382,7 @@ body { font-family: "DM Sans", sans-serif; background: var(--bg); color: var(--t
     <div class="modal-body-scroll">
       <div class="mfield">
         <label>Candidato *</label>
-        <select id="selectCand"><option value="">Carregando…</option></select>
+        <select id="selectCand" onchange="preencherObservacao()"><option value="">Carregando…</option></select>
       </div>
       <div class="mfield">
         <label>Data *</label>
@@ -566,6 +568,7 @@ function renderCards() {
   const c = { agendada:0, realizada:0, aprovado:0, reprovado:0 };
   todasEntrevistas.forEach(e => { if(c[e.status]!==undefined) c[e.status]++; });
   const qtdSelecionados = candidatosSelecionadosSemEntrevista().length;
+  const qtdTeste        = candidatosEmTeste().length;
 
   const cardHTML = (status, borderColor, iconBg, icon, label, valor, textColor) => `
     <div class="card" style="border-left:4px solid ${borderColor}; padding-bottom:32px;"
@@ -579,23 +582,26 @@ function renderCards() {
     </div>`;
 
   document.getElementById("cardsResumo").innerHTML =
-    cardHTML("selecionado","var(--accent)","var(--accent-light)","🎯","Selecionados", qtdSelecionados,"var(--accent)") +
-    cardHTML("agendada",   "var(--warning)","var(--warning-bg)",  "⏳","Agendadas",    c.agendada,     "var(--warning)") +
-    cardHTML("realizada",  "var(--primary)","var(--info-bg)",     "📝","Realizadas",   c.realizada,    "var(--primary)") +
-    cardHTML("aprovado",   "var(--success)","var(--success-bg)",  "✅","Aprovados",    c.aprovado,     "var(--success)") +
-    cardHTML("reprovado",  "var(--danger)", "var(--danger-bg)",   "✕","Reprovados",  c.reprovado,    "var(--danger)");
+    cardHTML("selecionado","var(--accent)",  "var(--accent-light)", "🎯","Selecionados", qtdSelecionados,"var(--accent)") +
+    cardHTML("teste",      "#7c3aed",        "#f5f3ff",             "🧪","Em Teste",      qtdTeste,        "#7c3aed") +
+    cardHTML("agendada",   "var(--warning)","var(--warning-bg)",   "⏳","Agendadas",     c.agendada,      "var(--warning)") +
+    cardHTML("realizada",  "var(--primary)","var(--info-bg)",      "📝","Realizadas",    c.realizada,     "var(--primary)") +
+    cardHTML("aprovado",   "var(--success)","var(--success-bg)",   "✅","Aprovados",     c.aprovado,      "var(--success)") +
+    cardHTML("reprovado",  "var(--danger)", "var(--danger-bg)",    "✕","Reprovados",    c.reprovado,     "var(--danger)");
 }
 
 /* ════ KANBAN ════ */
 function renderKanban() {
   const selecionadosSemEntrevista = candidatosSelecionadosSemEntrevista();
+  const emTesteList               = candidatosEmTeste();
 
   const cols = {
     selecionado: { label:"🎯 Selecionados", cls:"col-selecionado", items: selecionadosSemEntrevista },
+    teste:       { label:"🧪 Em Teste",     cls:"col-teste",       items: emTesteList },
     agendada:    { label:"⏳ Agendadas",    cls:"col-agendada",    items:[] },
     realizada:   { label:"📝 Realizadas",   cls:"col-realizada",   items:[] },
     aprovado:    { label:"✅ Aprovados",    cls:"col-aprovado",    items:[] },
-    reprovado:   { label:"✕ Reprovados",  cls:"col-reprovado",   items:[] },
+    reprovado:   { label:"✕ Reprovados",   cls:"col-reprovado",   items:[] },
   };
   todasEntrevistas.forEach(e => { if(cols[e.status]) cols[e.status].items.push(e); });
 
@@ -604,7 +610,11 @@ function renderKanban() {
       <div class="kanban-header">${col.label}<span class="kanban-count">${col.items.length}</span></div>
       <div class="kanban-body">
         ${col.items.length
-          ? col.items.map(e => k === "selecionado" ? cardSelecionado(e) : cardKanban(e, k)).join("")
+          ? col.items.map(e =>
+              k === "selecionado" ? cardSelecionado(e) :
+              k === "teste"       ? cardTeste(e)       :
+              cardKanban(e, k)
+            ).join("")
           : '<div class="empty-col">Nenhum</div>'
         }
       </div>
@@ -622,7 +632,8 @@ function cardKanban(e, status) {
     agendada:  `<button class="btn-mini btn-realizada" onclick="mudarStatus(${e.id},'realizada')">📝 Realizada</button>
                 <button class="btn-mini btn-cancelar"  onclick="excluir(${e.id})">🗑</button>`,
     realizada: `<button class="btn-mini btn-aprovado"  onclick="mudarStatus(${e.id},'aprovado')">✅ Aprovar</button>
-                <button class="btn-mini btn-reprovado" onclick="mudarStatus(${e.id},'reprovado')">✕ Reprovar</button>`,
+                <button class="btn-mini btn-reprovado" onclick="mudarStatus(${e.id},'reprovado')">✕ Reprovar</button>
+                <button class="btn-mini" style="background:#f5f3ff;color:#7c3aed;" onclick="enviarParaTeste(${e.id},${e.candidato_id})">🧪 Teste</button>`,
     aprovado:  ``,
     reprovado: `<button class="btn-mini btn-cancelar"  onclick="excluir(${e.id})">🗑 Remover</button>`,
   }[status] || "";
@@ -633,15 +644,25 @@ function cardKanban(e, status) {
       <div><div class="cand-nome">${e.candidato_nome}</div><div class="cand-cargo">${e.cargo} • ${e.unidade}</div></div>
     </div>
     <div class="cand-data-hora">📅 ${dtStr}</div>
-    ${e.responsavel ? `<div style="font-size:11px;color:var(--muted);margin-bottom:8px;">👤 ${e.responsavel}</div>` : ""}
+    ${e.responsavel ? `<div style="font-size:11px;color:var(--muted);margin-bottom:4px;">👤 ${e.responsavel}</div>` : ""}
+    ${e.observacoes ? `<div style="font-size:11px;color:var(--muted);margin-bottom:8px;">📋 ${e.observacoes}</div>` : ""}
     <div class="cand-actions">${botoes}</div>
   </div>`;
 }
 
+/* ── Retorna candidatos marcados para teste (vem do banco via campo em_teste) ── */
+function candidatosEmTeste() {
+  const comEntrevista = new Set(
+    todasEntrevistas.filter(e => e.status !== "reprovado").map(e => e.candidato_id)
+  );
+  return candidatos.filter(c => c.em_teste && !comEntrevista.has(c.id));
+}
+
 /* ── Card para candidatos selecionados ainda sem entrevista agendada ── */
 function cardSelecionado(c) {
-  const ini   = c.nome.split(" ").slice(0,2).map(n=>n[0]).join("");
-  const avCls = c.cargo !== "TI" ? "avatar-adm" : "";
+  const ini     = c.nome.split(" ").slice(0,2).map(n=>n[0]).join("");
+  const avCls   = c.cargo !== "TI" ? "avatar-adm" : "";
+  const emTeste = c.em_teste === true || c.em_teste === "true";
 
   return `<div class="cand-card">
     <div class="cand-header">
@@ -652,25 +673,167 @@ function cardSelecionado(c) {
       </div>
     </div>
     <div style="font-size:11.5px;color:var(--muted);margin-bottom:9px;">📧 ${c.email}</div>
-    <div class="cand-actions">
+    <div class="cand-actions" style="flex-wrap:wrap;gap:5px;">
       <button class="btn-mini" style="background:var(--accent-light);color:var(--accent);"
         onclick="abrirModalAgendarCandidato(${c.id})">
-        📅 Agendar entrevista
+        📅 Agendar
+      </button>
+      <button class="btn-mini" style="background:${emTeste ? '#ede9fe' : '#f5f3ff'};color:#7c3aed;${emTeste ? 'font-weight:700;' : ''}"
+        onclick="toggleTeste(${c.id}, this, ${emTeste})">
+        🧪 ${emTeste ? "Em Teste ✓" : "Enviar p/ Teste"}
       </button>
       <button class="btn-mini btn-cancelar"
         onclick="removerSelecionado(${c.id})">
-        ✕ Remover
+        ✕
       </button>
     </div>
   </div>`;
 }
 
-/* ── Abre modal de agendar já com o candidato pré-selecionado ── */
+/* ── Toggle candidato em teste — salva no banco ── */
+async function toggleTeste(id, btn, estaEmTeste) {
+  const novoValor = !estaEmTeste;
+  btn.disabled = true;
+
+  try {
+    const res = await fetch("/api/candidatos", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, acao: "em_teste", valor: novoValor })
+    });
+    if (!res.ok) throw new Error();
+
+    mostrarToast(novoValor ? "Candidato marcado para teste! 🧪" : "Removido da lista de teste.");
+    // Recarrega para refletir mudança
+    await Promise.all([buscarCandidatos(), buscarTodasEntrevistas()]);
+    renderCards();
+  } catch {
+    mostrarToast("Erro ao atualizar.", "danger");
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+/* ── Card para candidatos em teste — com botões Aprovar e Reprovar ── */
+function cardTeste(c) {
+  const ini   = c.nome.split(" ").slice(0,2).map(n=>n[0]).join("");
+  const avCls = c.cargo !== "TI" ? "avatar-adm" : "";
+
+  // Busca a entrevista mais recente do candidato (se tiver)
+  const entrevista = todasEntrevistas
+    .filter(e => e.candidato_id === c.id)
+    .sort((a, b) => new Date(b.data_hora) - new Date(a.data_hora))[0];
+
+  const dtStr = entrevista
+    ? new Date(entrevista.data_hora).toLocaleDateString("pt-BR")
+    : "";
+
+  return `<div class="cand-card" style="border-left:3px solid #7c3aed;">
+    <div class="cand-header">
+      <div class="avatar ${avCls}" style="background:linear-gradient(135deg,#7c3aed,#a78bfa);">${ini}</div>
+      <div>
+        <div class="cand-nome">${c.nome}</div>
+        <div class="cand-cargo">${c.cargo} • ${c.unidade}</div>
+      </div>
+    </div>
+    ${dtStr ? `<div class="cand-data-hora" style="background:#f5f3ff;color:#7c3aed;">📅 ${dtStr}</div>` : ""}
+    <div style="font-size:11.5px;color:var(--muted);margin-bottom:9px;">📧 ${c.email}</div>
+    <div class="cand-actions" style="flex-wrap:wrap;gap:5px;">
+      <button class="btn-mini btn-aprovado"
+        onclick="aprovarDoTeste(${c.id})">✅ Aprovar</button>
+      <button class="btn-mini btn-reprovado"
+        onclick="reprovarDoTeste(${c.id})">✕ Reprovar</button>
+      <button class="btn-mini btn-cancelar"
+        onclick="toggleTeste(${c.id}, this, true)">🗑</button>
+    </div>
+  </div>`;
+}
+
+/* ── Envia candidato de "realizada" para teste ── */
+async function enviarParaTeste(entrevistaId, candidatoId) {
+  try {
+    // Marca em_teste no banco
+    await fetch("/api/candidatos", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: candidatoId, acao: "em_teste", valor: true })
+    });
+    mostrarToast("Candidato enviado para teste! 🧪", "success");
+    await Promise.all([buscarCandidatos(), buscarTodasEntrevistas()]);
+    renderCards();
+    if (document.getElementById("secao-calendario").style.display !== "none") renderCalendario();
+  } catch {
+    mostrarToast("Erro ao enviar para teste.", "danger");
+  }
+}
+
+/* ── Aprovar candidato direto do card de teste ── */
+async function aprovarDoTeste(candidatoId) {
+  try {
+    // Marca aprovado no banco
+    await fetch("/api/candidatos", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: candidatoId, acao: "em_teste", valor: false })
+    });
+    await fetch("/api/candidatos", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: candidatoId, acao: "desfazer_aprovacao" })
+    });
+
+    // Aprova a entrevista mais recente
+    const entrevista = todasEntrevistas
+      .filter(e => e.candidato_id === candidatoId)
+      .sort((a, b) => new Date(b.data_hora) - new Date(a.data_hora))[0];
+
+    if (entrevista) await mudarStatus(entrevista.id, "aprovado");
+    else {
+      mostrarToast("Candidato aprovado! ✅", "success");
+      await Promise.all([buscarCandidatos(), buscarTodasEntrevistas()]);
+      renderCards();
+    }
+  } catch {
+    mostrarToast("Erro ao aprovar.", "danger");
+  }
+}
+
+/* ── Reprovar candidato direto do card de teste ── */
+async function reprovarDoTeste(candidatoId) {
+  try {
+    // Remove do teste
+    await fetch("/api/candidatos", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: candidatoId, acao: "em_teste", valor: false })
+    });
+
+    // Reprova a entrevista mais recente
+    const entrevista = todasEntrevistas
+      .filter(e => e.candidato_id === candidatoId)
+      .sort((a, b) => new Date(b.data_hora) - new Date(a.data_hora))[0];
+
+    if (entrevista) await mudarStatus(entrevista.id, "reprovado");
+    else {
+      mostrarToast("Candidato reprovado.", "");
+      await Promise.all([buscarCandidatos(), buscarTodasEntrevistas()]);
+      renderCards();
+    }
+  } catch {
+    mostrarToast("Erro ao reprovar.", "danger");
+  }
+}
 function abrirModalAgendarCandidato(id) {
   abrirModalAgendar();
   setTimeout(() => {
     const sel = document.getElementById("selectCand");
     if (sel) sel.value = id;
+
+    // Preenche observação automaticamente com o cargo do candidato
+    const c = candidatos.find(x => x.id === id);
+    if (c && c.cargo) {
+      document.getElementById("obsAgendar").value = `Para o cargo: ${c.cargo}`;
+    }
   }, 60);
 }
 
@@ -799,6 +962,18 @@ function abrirModalAgendar() {
   document.getElementById("horariosGrid").innerHTML =
     `<div style="grid-column:span 4;color:var(--muted);font-size:13px;padding:6px 0;">Selecione uma data primeiro</div>`;
   document.getElementById("modalAgendar").classList.add("open");
+}
+
+/* Preenche observação automaticamente com o cargo ao selecionar candidato */
+function preencherObservacao() {
+  const sel = document.getElementById("selectCand");
+  const id  = Number(sel.value);
+  const c   = candidatos.find(x => x.id === id);
+  if (c && c.cargo) {
+    document.getElementById("obsAgendar").value = `Para o cargo: ${c.cargo}`;
+  } else {
+    document.getElementById("obsAgendar").value = "";
+  }
 }
 
 function abrirModalAgendarDia(dataStr) {
@@ -1068,6 +1243,7 @@ window.addEventListener("click", function(e) {
 /* ════ MODAL LISTA POR STATUS ════ */
 const CONFIG_STATUS = {
   selecionado: { titulo:"🎯 Candidatos Selecionados"  },
+  teste:       { titulo:"🧪 Candidatos em Teste"       },
   agendada:    { titulo:"⏳ Entrevistas Agendadas"     },
   realizada:   { titulo:"📝 Entrevistas Realizadas"    },
   aprovado:    { titulo:"✅ Candidatos Aprovados"      },
@@ -1118,6 +1294,44 @@ function abrirListaStatus(status) {
       }).join("");
     }
 
+  // ── Em Teste: vem do localStorage ──
+  } else if (status === "teste") {
+    const lista = candidatosEmTeste();
+    document.getElementById("modalListaSubtitulo").textContent =
+      `${lista.length} candidato${lista.length !== 1 ? "s" : ""} em processo de teste`;
+
+    if (!lista.length) {
+      conteudo.innerHTML = `<div class="modal-lista-empty">
+        🧪 Nenhum candidato marcado para teste.<br>
+        <span style="font-size:13px;color:var(--muted);">No card de Selecionados clique em "🧪 Enviar p/ Teste".</span>
+      </div>`;
+    } else {
+      conteudo.innerHTML = lista.map(c => {
+        const ini  = c.nome.split(" ").slice(0,2).map(n=>n[0]).join("");
+        const avBg = c.cargo !== "TI"
+          ? "background:linear-gradient(135deg,#0da868,#34d399)"
+          : "background:linear-gradient(135deg,#7c3aed,#a78bfa)";
+        return `
+        <div class="modal-lista-item">
+          <div class="modal-lista-avatar" style="${avBg}">${ini}</div>
+          <div class="modal-lista-info">
+            <div class="modal-lista-nome">${c.nome}</div>
+            <div class="modal-lista-meta">${c.cargo} • ${c.unidade} • ${c.email}</div>
+          </div>
+          <div class="modal-lista-right">
+            <div class="modal-lista-acoes">
+              <button class="btn-mini" style="background:var(--accent-light);color:var(--accent);"
+                onclick="fecharModal('modalLista');abrirModalAgendarCandidato(${c.id})">
+                📅 Agendar
+              </button>
+              <button class="btn-mini btn-cancelar"
+                onclick="toggleTeste(${c.id}, this, true);fecharModal('modalLista')">✕ Remover</button>
+            </div>
+          </div>
+        </div>`;
+      }).join("");
+    }
+
   // ── Demais status: vem do banco ──
   } else {
     const lista = todasEntrevistas.filter(e => e.status === status);
@@ -1150,7 +1364,9 @@ function abrirListaStatus(status) {
           <button class="btn-mini btn-aprovado"
             onclick="mudarStatus(${e.id},'aprovado');fecharModal('modalLista')">✅ Aprovar</button>
           <button class="btn-mini btn-reprovado"
-            onclick="mudarStatus(${e.id},'reprovado');fecharModal('modalLista')">✕ Reprovar</button>`;
+            onclick="mudarStatus(${e.id},'reprovado');fecharModal('modalLista')">✕ Reprovar</button>
+          <button class="btn-mini" style="background:#f5f3ff;color:#7c3aed;"
+            onclick="enviarParaTeste(${e.id},${e.candidato_id});fecharModal('modalLista')">🧪 Teste</button>`;
         else if (status === "reprovado") acoes = `
           <button class="btn-mini btn-cancelar"
             onclick="excluir(${e.id});fecharModal('modalLista')">🗑 Remover</button>`;
@@ -1188,6 +1404,7 @@ function exportarPDFStatus(status) {
 
   const CFG = {
     selecionado: { titulo:"Candidatos Selecionados",   emoji:"🎯", cor:[255,107,53],  cabecalho:["#","Nome","E-mail","Telefone","Cargo","Unidade"] },
+    teste:       { titulo:"Candidatos em Teste",        emoji:"🧪", cor:[124,58,237],  cabecalho:["#","Nome","E-mail","Telefone","Cargo","Unidade"] },
     agendada:    { titulo:"Entrevistas Agendadas",      emoji:"⏳", cor:[212,160,23],  cabecalho:["#","Candidato","Cargo","Unidade","Data","Horário","Responsável"] },
     realizada:   { titulo:"Entrevistas Realizadas",     emoji:"📝", cor:[15,98,254],   cabecalho:["#","Candidato","Cargo","Unidade","Data","Horário","Responsável"] },
     aprovado:    { titulo:"Candidatos Aprovados",       emoji:"✅", cor:[13,168,104],  cabecalho:["#","Candidato","Cargo","Unidade","Data Entrevista","Responsável"] },
@@ -1203,6 +1420,10 @@ function exportarPDFStatus(status) {
   if (status === "selecionado") {
     const lista = candidatosSelecionadosSemEntrevista();
     if (!lista.length) { mostrarToast("Nenhum candidato selecionado para exportar.", "warning"); return; }
+    linhas = lista.map((c, i) => [i+1, c.nome, c.email, c.telefone||"—", c.cargo, c.unidade]);
+  } else if (status === "teste") {
+    const lista = candidatosEmTeste();
+    if (!lista.length) { mostrarToast("Nenhum candidato em teste para exportar.", "warning"); return; }
     linhas = lista.map((c, i) => [i+1, c.nome, c.email, c.telefone||"—", c.cargo, c.unidade]);
   } else {
     const lista = todasEntrevistas.filter(e => e.status === status);
