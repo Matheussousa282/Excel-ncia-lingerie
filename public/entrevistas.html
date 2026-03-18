@@ -521,29 +521,27 @@ async function buscarCandidatos() {
     const todos = await r.json();
     candidatos = todos.filter(c => !c.aprovado);
 
-    // Pega apenas os IDs marcados como selecionados no banco
-    const idsSelecionados = candidatos.filter(c => c.selecionado).map(c => c.id);
-
-    // IDs que já têm entrevista agendada (não reprovada) — não aparecem no select
+    // IDs que já têm entrevista agendada ou aprovada — não aparecem no select
     const comEntrevista = new Set(
       todasEntrevistas
-        .filter(e => e.status !== "reprovado")
+        .filter(e => e.status === "agendada" || e.status === "aprovado")
         .map(e => e.candidato_id)
     );
 
-    // Mostra no select: selecionados que ainda não têm entrevista agendada
+    // Mostra no select: selecionados OU em teste que ainda não têm entrevista ativa
     const disponiveis = candidatos.filter(
-      c => c.selecionado && !comEntrevista.has(c.id)
+      c => (c.selecionado || c.em_teste) && !comEntrevista.has(c.id)
     );
 
     const sel = document.getElementById("selectCand");
     if (disponiveis.length === 0) {
-      sel.innerHTML = '<option value="">Nenhum candidato selecionado ainda</option>';
+      sel.innerHTML = '<option value="">Nenhum candidato disponível</option>';
     } else {
       sel.innerHTML = '<option value="">Selecione…</option>' +
-        disponiveis.map(c =>
-          `<option value="${c.id}">${c.nome} — ${c.cargo} / ${c.unidade}</option>`
-        ).join("");
+        disponiveis.map(c => {
+          const tag = c.em_teste ? "🧪" : "🎯";
+          return `<option value="${c.id}">${tag} ${c.nome} — ${c.cargo} / ${c.unidade}</option>`;
+        }).join("");
     }
   } catch(e) { console.error(e); }
 }
@@ -839,11 +837,14 @@ function abrirModalAgendarCandidato(id) {
   abrirModalAgendar();
   setTimeout(() => {
     const sel = document.getElementById("selectCand");
-    if (sel) sel.value = id;
+    if (!sel) return;
 
-    // Preenche observação automaticamente com o cargo do candidato
     const c = candidatos.find(x => x.id === id);
-    if (c && c.cargo) {
+    if (c) {
+      // Substitui o select por só esse candidato já selecionado
+      sel.innerHTML = `<option value="${c.id}">${c.nome} — ${c.cargo} / ${c.unidade}</option>`;
+      sel.value = c.id;
+      // Preenche observação automaticamente
       document.getElementById("obsAgendar").value = `Para o cargo: ${c.cargo}`;
     }
   }, 60);
