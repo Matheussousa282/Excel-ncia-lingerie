@@ -493,12 +493,22 @@ const HORARIOS  = ["08:00","08:30","09:00","09:30","10:00","10:30","11:00","11:3
 
 /* ── Parse de data sem conversão de fuso ── */
 function parseDateLocal(str) {
-  // Extrai as partes diretamente da string para evitar qualquer conversão de fuso
-  // Formato esperado: "2026-03-20T10:30:00" ou "2026-03-20T10:30:00.000Z"
   const m = str.match(/(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
   if (!m) return new Date(str);
-  // new Date(ano, mes-1, dia, hora, min) — sempre local
   return new Date(Number(m[1]), Number(m[2])-1, Number(m[3]), Number(m[4]), Number(m[5]));
+}
+
+/* Retorna só a data no formato DD/MM/AAAA a partir da string ISO */
+function dataStr(str) {
+  const m = str.match(/(\d{4})-(\d{2})-(\d{2})/);
+  if (!m) return str;
+  return `${m[3]}/${m[2]}/${m[1]}`;
+}
+
+/* Retorna o horário — usa hora_local (texto salvo no banco) se disponível */
+function horaStr(e) {
+  if (e.hora_local) return e.hora_local;
+  return parseDateLocal(e.data_hora).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
 }
 const MESES_PT  = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho",
                    "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
@@ -631,8 +641,7 @@ function renderKanban() {
 function cardKanban(e, status) {
   const ini = e.candidato_nome.split(" ").slice(0,2).map(n=>n[0]).join("");
   const dt  = parseDateLocal(e.data_hora);
-  const dtStr = dt.toLocaleDateString("pt-BR") + " " +
-    dt.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
+  const dtStr = dataStr(e.data_hora) + " " + horaStr(e);
   const avCls = status === "aprovado" ? "avatar-aprov" : (e.cargo !== "TI" ? "avatar-adm" : "");
 
   const botoes = {
@@ -913,7 +922,7 @@ async function renderCalendario() {
     ].filter(Boolean).join(" ");
 
     const eventos = dodia.map(e => {
-      const hr = parseDateLocal(e.data_hora).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
+      const hr = horaStr(e);
       return `<div class="cal-evento ${e.status}" onclick='abrirDetalhe(${JSON.stringify(e).replace(/'/g,"&#39;")})'>
         ${hr} ${e.candidato_nome.split(" ")[0]}
       </div>`;
@@ -1021,7 +1030,7 @@ async function carregarHorarios() {
       lista.filter(e => {
         const dt = parseDateLocal(e.data_hora);
         return dt.getDate()===Number(d) && e.status!=="reprovado";
-      }).map(e => parseDateLocal(e.data_hora).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}))
+      }).map(e => horaStr(e))
     );
 
     grid.innerHTML = HORARIOS.map(h => {
@@ -1084,7 +1093,7 @@ function abrirDetalhe(e) {
   if (typeof e === "string") e = JSON.parse(e);
   const dt    = parseDateLocal(e.data_hora);
   const dtLg  = dt.toLocaleDateString("pt-BR",{weekday:"long",day:"2-digit",month:"long",year:"numeric"});
-  const hrStr = dt.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
+  const hrStr = horaStr(e);
 
   document.getElementById("detTitulo").textContent = e.candidato_nome;
   document.getElementById("detSub").textContent    = `${e.cargo} • ${e.unidade}`;
@@ -1195,7 +1204,7 @@ async function carregarHorariosEdicao(idExcluir) {
           const dt = parseDateLocal(e.data_hora);
           return dt.getDate() === Number(d) && e.status !== "reprovado" && e.id !== entId;
         })
-        .map(e => parseDateLocal(e.data_hora).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}))
+        .map(e => horaStr(e))
     );
 
     grid.innerHTML = HORARIOS.map(h => {
@@ -1374,8 +1383,8 @@ function abrirListaStatus(status) {
         const ini   = e.candidato_nome.split(" ").slice(0,2).map(n=>n[0]).join("");
         // Força parse como horário local adicionando timezone offset
         const dt    = new Date(e.data_hora.replace("T", " ").replace(/-/g, "/"));
-        const dtStr = dt.toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit",year:"numeric"});
-        const hrStr = dt.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
+        const dtStr = dataStr(e.data_hora);
+        const hrStr = horaStr(e);
         const avBg  = e.cargo !== "TI"
           ? "background:linear-gradient(135deg,#0da868,#34d399)"
           : "background:linear-gradient(135deg,#0f62fe,#5b9cf6)";
