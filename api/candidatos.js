@@ -133,6 +133,7 @@ export default async function handler(req, res) {
           c.arquivo_nome,
           c.aprovado,
           c.em_teste,
+          c.selecionado,
           c.criado_em AS data,
           ca.nome AS cargo,
           i.nome  AS instituicao,

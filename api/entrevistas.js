@@ -36,7 +36,7 @@ export default async function handler(req, res) {
     if (method === "GET") {
       const { mes, ano, candidato_id, status } = req.query;
       let q = `
-        SELECT e.id, e.candidato_id, e.data_hora, e.responsavel,
+        SELECT e.id, e.candidato_id, e.data_hora, e.hora_local, e.responsavel,
                e.status, e.observacoes, e.criado_em,
                c.nome AS candidato_nome, c.telefone AS candidato_telefone,
                ca.nome AS cargo, i.nome AS instituicao, u.nome AS unidade
@@ -64,6 +64,10 @@ export default async function handler(req, res) {
       if (!candidato_id || !data_hora)
         return res.status(400).json({ error: "candidato_id e data_hora são obrigatórios" });
 
+      // Extrai a hora do string enviado pelo front (ex: "2026-03-20T10:30:00") 
+      const hora_local = data_hora.substring(11, 16); // "10:30"
+      const data_local = data_hora.substring(0, 10);  // "2026-03-20"
+
       const conflito = await pool.query(
         "SELECT id FROM entrevistas WHERE data_hora=$1 AND status!='reprovado'", [data_hora]
       );
@@ -71,8 +75,8 @@ export default async function handler(req, res) {
         return res.status(409).json({ error: "Já existe uma entrevista agendada neste horário." });
 
       const ins = await pool.query(
-        "INSERT INTO entrevistas(candidato_id,data_hora,responsavel,observacoes) VALUES($1,$2,$3,$4) RETURNING id",
-        [candidato_id, data_hora, responsavel||null, observacoes||null]
+        "INSERT INTO entrevistas(candidato_id,data_hora,hora_local,responsavel,observacoes) VALUES($1,$2,$3,$4,$5) RETURNING id",
+        [candidato_id, data_hora, hora_local, responsavel||null, observacoes||null]
       );
 
       // WhatsApp: entrevista agendada
@@ -97,12 +101,15 @@ export default async function handler(req, res) {
       const { id, status, observacoes, data_hora, responsavel } = req.body;
       if (!id) return res.status(400).json({ error: "id é obrigatório" });
 
+      const hora_local = data_hora ? data_hora.substring(11, 16) : null;
+
       await pool.query(
         `UPDATE entrevistas SET
-           status=$1, observacoes=COALESCE($2,observacoes),
-           data_hora=COALESCE($3,data_hora), responsavel=COALESCE($4,responsavel)
-         WHERE id=$5`,
-        [status||null, observacoes||null, data_hora||null, responsavel||null, id]
+           status=COALESCE($1,status), observacoes=COALESCE($2,observacoes),
+           data_hora=COALESCE($3,data_hora), responsavel=COALESCE($4,responsavel),
+           hora_local=COALESCE($5,hora_local)
+         WHERE id=$6`,
+        [status||null, observacoes||null, data_hora||null, responsavel||null, hora_local||null, id]
       );
 
       if (status === "aprovado") {
