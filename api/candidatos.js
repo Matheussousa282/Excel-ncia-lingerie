@@ -27,8 +27,30 @@ async function notificarSelecionado(nome, telefone) {
     if (msg && telefone) await enviarWhatsApp({ telefone, mensagem: msg });
 
   } catch (err) {
-    // Nunca deixa o WhatsApp quebrar o fluxo principal
     console.error("[candidatos] WhatsApp silencioso:", err.message);
+  }
+}
+
+async function notificarTeste(nome, telefone) {
+  try {
+    const { enviarWhatsApp, formatarMensagem } = await import("./whatsapp.js");
+
+    const cfg = await pool.query(
+      "SELECT chave, valor FROM configuracoes WHERE chave IN ('whatsapp_ativo','notif_teste','msg_teste')"
+    );
+    const c = {};
+    cfg.rows.forEach(r => { c[r.chave] = r.valor; });
+
+    if (c.whatsapp_ativo !== "true" || c.notif_teste !== "true") return;
+
+    const msg = formatarMensagem(
+      c.msg_teste || "Olá {nome}! 🧪 Você foi selecionado(a) para a etapa de teste!",
+      { nome }
+    );
+    if (msg && telefone) await enviarWhatsApp({ telefone, mensagem: msg });
+
+  } catch (err) {
+    console.error("[candidatos] WhatsApp teste silencioso:", err.message);
   }
 }
 
@@ -42,8 +64,7 @@ export default async function handler(req, res) {
       const {
         nome, telefone, email,
         cargo_id, instituicao_id, unidade_id,
-        apresentacao, arquivo_base64, arquivo_nome,
-        cargos_pretendidos, maquinas
+        apresentacao, arquivo_base64, arquivo_nome
       } = req.body;
 
       if (!arquivo_base64) {
@@ -55,9 +76,8 @@ export default async function handler(req, res) {
       const result = await pool.query(
         `INSERT INTO candidatos
            (nome, telefone, email, cargo_id, instituicao_id, unidade_id,
-            apresentacao, arquivo, arquivo_nome,
-            cargos_pretendidos, maquinas)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+            apresentacao, arquivo, arquivo_nome)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
          RETURNING id`,
         [
           nome,
@@ -69,8 +89,6 @@ export default async function handler(req, res) {
           apresentacao || null,
           arquivoBuffer,
           arquivo_nome,
-          cargos_pretendidos || null,
-          maquinas || null,
         ]
       );
 
@@ -104,25 +122,6 @@ export default async function handler(req, res) {
         });
       }
 
-      // GET /api/candidatos?arquivados=1  →  lista somente arquivados
-      if (req.query.arquivados === "1") {
-        const result = await pool.query(`
-          SELECT
-            c.id, c.nome, c.email, c.telefone,
-            c.arquivo_nome, c.aprovado, c.criado_em AS data,
-            c.cargos_pretendidos, c.maquinas,
-            c.arquivado, c.motivo_arquivamento, c.arquivado_por, c.arquivado_em,
-            ca.nome AS cargo, i.nome AS instituicao, u.nome AS unidade
-          FROM candidatos c
-          JOIN cargos       ca ON ca.id = c.cargo_id
-          JOIN instituicoes i  ON i.id  = c.instituicao_id
-          JOIN unidades     u  ON u.id  = c.unidade_id
-          WHERE c.arquivado = true
-          ORDER BY c.arquivado_em DESC
-        `);
-        return res.status(200).json(result.rows);
-      }
-
       // GET /api/candidatos  →  lista SEM o campo arquivo (evita RangeError no front)
       const result = await pool.query(`
         SELECT
@@ -133,9 +132,8 @@ export default async function handler(req, res) {
           c.apresentacao,
           c.arquivo_nome,
           c.aprovado,
+          c.em_teste,
           c.criado_em AS data,
-          c.cargos_pretendidos,
-          c.maquinas,
           ca.nome AS cargo,
           i.nome  AS instituicao,
           u.nome  AS unidade
@@ -143,7 +141,6 @@ export default async function handler(req, res) {
         JOIN cargos       ca ON ca.id = c.cargo_id
         JOIN instituicoes i  ON i.id  = c.instituicao_id
         JOIN unidades     u  ON u.id  = c.unidade_id
-        WHERE (c.arquivado IS NULL OR c.arquivado = false)
         ORDER BY c.criado_em DESC
       `);
 
@@ -162,38 +159,49 @@ export default async function handler(req, res) {
   // ════════════════════════════════════════
   if (req.method === "PUT") {
     try {
-      const { id, acao, unidade, instituicao, cargo,
-              motivo_arquivamento, arquivado_por } = req.body;
+      const { id, acao } = req.body;
 
-      if (!id) {
-        return res.status(400).json({ error: "id é obrigatório" });
+      if (!id || !acao) {
+        return res.status(400).json({ error: "id e acao são obrigatórios" });
       }
 
-      // ── Editar: atualiza unidade, instituição e cargo
-      if (!acao || acao === "editar") {
-        if (!unidade || !instituicao || !cargo) {
-          return res.status(400).json({ error: "unidade, instituicao e cargo são obrigatórios" });
+      // ── Editar cargo, instituição e unidade
+      if (acao === "editar") {
+        const { cargo_id, inst_id, unidade_id } = req.body;
+
+        if (!cargo_id || !inst_id || !unidade_id) {
+          return res.status(400).json({ error: "cargo_id, inst_id e unidade_id são obrigatórios" });
         }
 
-        const [resUnidade, resInstituicao, resCargo] = await Promise.all([
-          pool.query("SELECT id FROM unidades WHERE nome = $1 LIMIT 1", [unidade]),
-          pool.query("SELECT id FROM instituicoes WHERE nome = $1 LIMIT 1", [instituicao]),
-          pool.query("SELECT id FROM cargos WHERE nome = $1 LIMIT 1", [cargo]),
-        ]);
+        await pool.query(
+          `UPDATE candidatos
+           SET cargo_id = $1, instituicao_id = $2, unidade_id = $3
+           WHERE id = $4`,
+          [cargo_id, inst_id, unidade_id, id]
+        );
+        return res.status(200).json({ success: true });
+      }
 
-        const unidade_id = resUnidade.rows[0]?.id
-          || (await pool.query("INSERT INTO unidades (nome) VALUES ($1) RETURNING id", [unidade])).rows[0].id;
-
-        const instituicao_id = resInstituicao.rows[0]?.id
-          || (await pool.query("INSERT INTO instituicoes (nome) VALUES ($1) RETURNING id", [instituicao])).rows[0].id;
-
-        const cargo_id = resCargo.rows[0]?.id
-          || (await pool.query("INSERT INTO cargos (nome) VALUES ($1) RETURNING id", [cargo])).rows[0].id;
+      // ── Marcar/desmarcar como em teste
+      if (acao === "em_teste") {
+        const { valor } = req.body;
+        const novoValor = valor === true || valor === "true";
 
         await pool.query(
-          `UPDATE candidatos SET unidade_id = $1, instituicao_id = $2, cargo_id = $3 WHERE id = $4`,
-          [unidade_id, instituicao_id, cargo_id, id]
+          "UPDATE candidatos SET em_teste = $1 WHERE id = $2",
+          [novoValor, id]
         );
+
+        // Dispara WhatsApp quando MARCA como em teste (não quando desmarca)
+        if (novoValor) {
+          const cand = await pool.query(
+            "SELECT nome, telefone FROM candidatos WHERE id = $1", [id]
+          );
+          if (cand.rows.length > 0 && cand.rows[0].telefone) {
+            await notificarTeste(cand.rows[0].nome, cand.rows[0].telefone);
+          }
+        }
+
         return res.status(200).json({ success: true });
       }
 
@@ -209,28 +217,12 @@ export default async function handler(req, res) {
         return res.status(200).json({ success: true });
       }
 
-      // ── Arquivar: registra motivo e usuário responsável
-      if (acao === "arquivar") {
-        if (!motivo_arquivamento) {
-          return res.status(400).json({ error: "Motivo do arquivamento é obrigatório" });
-        }
-        await pool.query(
-          `UPDATE candidatos
-           SET arquivado          = true,
-               motivo_arquivamento = $1,
-               arquivado_por       = $2,
-               arquivado_em        = NOW()
-           WHERE id = $3`,
-          [motivo_arquivamento, arquivado_por || "Sistema", id]
-        );
-        return res.status(200).json({ success: true });
-      }
-
       // ── Desfazer aprovação: volta candidato para a fila
       if (acao === "desfazer_aprovacao") {
         await pool.query(
           "UPDATE candidatos SET aprovado = false WHERE id = $1", [id]
         );
+        // Reverte entrevista mais recente de 'aprovado' para 'realizada'
         await pool.query(
           `UPDATE entrevistas
            SET status = 'realizada'
@@ -240,18 +232,6 @@ export default async function handler(req, res) {
              ORDER BY data_hora DESC
              LIMIT 1
            )`,
-          [id]
-        );
-        return res.status(200).json({ success: true });
-      }
-
-      // ── Restaurar: remove arquivamento e volta candidato para a fila
-      if (acao === "restaurar") {
-        await pool.query(
-          `UPDATE candidatos
-           SET arquivado = false, motivo_arquivamento = NULL,
-               arquivado_por = NULL, arquivado_em = NULL
-           WHERE id = $1`,
           [id]
         );
         return res.status(200).json({ success: true });
