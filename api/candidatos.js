@@ -105,6 +105,23 @@ export default async function handler(req, res) {
   // ════════════════════════════════════════
   if (req.method === "GET") {
     try {
+      // GET /api/candidatos?arquivados=1  →  retorna só os arquivados
+      if (req.query.arquivados === "1") {
+        const r = await pool.query(`
+          SELECT
+            c.id, c.nome, c.email, c.telefone, c.aprovado,
+            c.arquivado, c.motivo_arquivamento, c.arquivado_por, c.arquivado_em,
+            ca.nome AS cargo, i.nome AS instituicao, u.nome AS unidade
+          FROM candidatos c
+          JOIN cargos       ca ON ca.id = c.cargo_id
+          JOIN instituicoes i  ON i.id  = c.instituicao_id
+          JOIN unidades     u  ON u.id  = c.unidade_id
+          WHERE c.arquivado = true
+          ORDER BY c.arquivado_em DESC
+        `);
+        return res.status(200).json(r.rows);
+      }
+
       // GET /api/candidatos?arquivo=ID  →  retorna só o arquivo daquele candidato
       if (req.query.arquivo) {
         const id = Number(req.query.arquivo);
@@ -142,6 +159,7 @@ export default async function handler(req, res) {
         JOIN cargos       ca ON ca.id = c.cargo_id
         JOIN instituicoes i  ON i.id  = c.instituicao_id
         JOIN unidades     u  ON u.id  = c.unidade_id
+        WHERE c.arquivado IS NOT TRUE
         ORDER BY c.criado_em DESC
       `);
 
