@@ -1077,6 +1077,19 @@ async function confirmarAgendamento() {
     });
     const json = await res.json();
     if (!res.ok) { mostrarToast(json.error||"Erro ao agendar.", "danger"); return; }
+
+    // Limpa em_teste e selecionado pois o candidato agora está no pipeline
+    await fetch("/api/candidatos", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: Number(candidatoId), acao: "em_teste", valor: false })
+    });
+    await fetch("/api/candidatos", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: Number(candidatoId), acao: "selecionado", valor: false })
+    });
+
     fecharModal("modalAgendar");
     mostrarToast("Entrevista agendada! ✅", "success");
 
