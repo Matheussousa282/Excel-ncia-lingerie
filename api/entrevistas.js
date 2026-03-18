@@ -10,15 +10,6 @@ const pool = new Pool({
 });
 
 async function lerConfigs(chaves) {
-
-/* Extrai data/hora da string ISO sem converter fuso */
-function parseDateLocal(str) {
-  const m = str.match(/(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
-  if (!m) return new Date(str);
-  return new Date(Number(m[1]), Number(m[2])-1, Number(m[3]), Number(m[4]), Number(m[5]));
-}
-
-async function lerConfigs(chaves) {
   const r = await pool.query(
     "SELECT chave, valor FROM configuracoes WHERE chave = ANY($1)", [chaves]
   );
@@ -45,7 +36,7 @@ export default async function handler(req, res) {
     if (method === "GET") {
       const { mes, ano, candidato_id, status } = req.query;
       let q = `
-        SELECT e.id, e.candidato_id, e.data_hora, e.hora_local, e.responsavel,
+        SELECT e.id, e.candidato_id, e.data_hora, e.responsavel,
                e.status, e.observacoes, e.criado_em,
                c.nome AS candidato_nome, c.telefone AS candidato_telefone,
                ca.nome AS cargo, i.nome AS instituicao, u.nome AS unidade
@@ -73,10 +64,6 @@ export default async function handler(req, res) {
       if (!candidato_id || !data_hora)
         return res.status(400).json({ error: "candidato_id e data_hora são obrigatórios" });
 
-      // Extrai a hora do string enviado pelo front (ex: "2026-03-20T10:30:00") 
-      const hora_local = data_hora.substring(11, 16); // "10:30"
-      const data_local = data_hora.substring(0, 10);  // "2026-03-20"
-
       const conflito = await pool.query(
         "SELECT id FROM entrevistas WHERE data_hora=$1 AND status!='reprovado'", [data_hora]
       );
@@ -84,21 +71,21 @@ export default async function handler(req, res) {
         return res.status(409).json({ error: "Já existe uma entrevista agendada neste horário." });
 
       const ins = await pool.query(
-        "INSERT INTO entrevistas(candidato_id,data_hora,hora_local,responsavel,observacoes) VALUES($1,$2,$3,$4,$5) RETURNING id",
-        [candidato_id, data_hora, hora_local, responsavel||null, observacoes||null]
+        "INSERT INTO entrevistas(candidato_id,data_hora,responsavel,observacoes) VALUES($1,$2,$3,$4) RETURNING id",
+        [candidato_id, data_hora, responsavel||null, observacoes||null]
       );
 
       // WhatsApp: entrevista agendada
       const cand = await pool.query("SELECT nome, telefone FROM candidatos WHERE id=$1", [candidato_id]);
       if (cand.rows.length > 0 && cand.rows[0].telefone) {
-        const dt = parseDateLocal(data_hora);
+        const dt = new Date(data_hora);
         await notificar({
           notifKey: "notif_agendado", msgKey: "msg_agendado",
           telefone: cand.rows[0].telefone,
           vars: {
             nome: cand.rows[0].nome,
             data: dt.toLocaleDateString("pt-BR",{weekday:"long",day:"2-digit",month:"long",year:"numeric"}),
-            hora: hora_local,
+            hora: dt.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}),
             responsavel: responsavel || "nossa equipe",
             observacoes: observacoes || "",
           },
@@ -111,15 +98,12 @@ export default async function handler(req, res) {
       const { id, status, observacoes, data_hora, responsavel } = req.body;
       if (!id) return res.status(400).json({ error: "id é obrigatório" });
 
-      const hora_local = data_hora ? data_hora.substring(11, 16) : null;
-
       await pool.query(
         `UPDATE entrevistas SET
-           status=COALESCE($1,status), observacoes=COALESCE($2,observacoes),
-           data_hora=COALESCE($3,data_hora), responsavel=COALESCE($4,responsavel),
-           hora_local=COALESCE($5,hora_local)
-         WHERE id=$6`,
-        [status||null, observacoes||null, data_hora||null, responsavel||null, hora_local||null, id]
+           status=$1, observacoes=COALESCE($2,observacoes),
+           data_hora=COALESCE($3,data_hora), responsavel=COALESCE($4,responsavel)
+         WHERE id=$5`,
+        [status||null, observacoes||null, data_hora||null, responsavel||null, id]
       );
 
       if (status === "aprovado") {
@@ -130,12 +114,12 @@ export default async function handler(req, res) {
       // WhatsApp por status
       if (status) {
         const row = await pool.query(
-          `SELECT c.nome, c.telefone, e.data_hora, e.hora_local, e.observacoes, e.responsavel
+          `SELECT c.nome, c.telefone, e.data_hora, e.responsavel, e.observacoes
            FROM entrevistas e JOIN candidatos c ON c.id=e.candidato_id WHERE e.id=$1`, [id]
         );
         if (row.rows.length && row.rows[0].telefone) {
-          const { nome, telefone, data_hora: dtHr, hora_local: hl, observacoes: obs, responsavel: resp } = row.rows[0];
-          const dt = parseDateLocal(dtHr);
+          const { nome, telefone, data_hora: dtHr, responsavel: resp, observacoes: obs } = row.rows[0];
+          const dt = new Date(dtHr);
           const mapa = {
             realizada: { notifKey:"notif_realizado", msgKey:"msg_realizado" },
             aprovado:  { notifKey:"notif_aprovado",  msgKey:"msg_aprovado"  },
@@ -146,7 +130,7 @@ export default async function handler(req, res) {
             vars: {
               nome,
               data: dt.toLocaleDateString("pt-BR",{weekday:"long",day:"2-digit",month:"long",year:"numeric"}),
-              hora: hl || dt.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}),
+              hora: dt.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}),
               responsavel: resp || "nossa equipe",
               observacoes: obs || "",
             },
