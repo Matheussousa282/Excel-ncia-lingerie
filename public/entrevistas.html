@@ -490,22 +490,17 @@ let statusAtualModal = null; // status do modal de lista aberto atualmente
 
 const HORARIOS  = ["08:00","08:30","09:00","09:30","10:00","10:30","11:00","11:30",
                    "13:00","13:30","14:00","14:30","15:00","15:30","16:00","16:30","17:00","17:30"];
-
 /* ── Parse de data sem conversão de fuso ── */
 function parseDateLocal(str) {
   const m = str.match(/(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
   if (!m) return new Date(str);
   return new Date(Number(m[1]), Number(m[2])-1, Number(m[3]), Number(m[4]), Number(m[5]));
 }
-
-/* Retorna só a data no formato DD/MM/AAAA a partir da string ISO */
 function dataStr(str) {
   const m = str.match(/(\d{4})-(\d{2})-(\d{2})/);
   if (!m) return str;
   return `${m[3]}/${m[2]}/${m[1]}`;
 }
-
-/* Retorna o horário — usa hora_local (texto salvo no banco) se disponível */
 function horaStr(e) {
   if (e.hora_local) return e.hora_local;
   return parseDateLocal(e.data_hora).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
@@ -526,7 +521,7 @@ async function buscarCandidatos() {
     const todos = await r.json();
     candidatos = todos.filter(c => !c.aprovado);
 
-    // Pega apenas os IDs marcados como "selecionados" no banco
+    // Pega apenas os IDs marcados como selecionados no banco
     const idsSelecionados = candidatos.filter(c => c.selecionado).map(c => c.id);
 
     // IDs que já têm entrevista agendada (não reprovada) — não aparecem no select
@@ -608,7 +603,7 @@ function renderCards() {
 /* ════ KANBAN ════ */
 function renderKanban() {
   const board = document.getElementById("kanbanBoard");
-  if (!board) return; // div removido intencionalmente
+  if (!board) return;
   const selecionadosSemEntrevista = candidatosSelecionadosSemEntrevista();
   const emTesteList               = candidatosEmTeste();
 
@@ -641,7 +636,8 @@ function renderKanban() {
 function cardKanban(e, status) {
   const ini = e.candidato_nome.split(" ").slice(0,2).map(n=>n[0]).join("");
   const dt  = parseDateLocal(e.data_hora);
-  const dtStr = dataStr(e.data_hora) + " " + horaStr(e);
+  const dtStr = dt.toLocaleDateString("pt-BR") + " " +
+    dt.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
   const avCls = status === "aprovado" ? "avatar-aprov" : (e.cargo !== "TI" ? "avatar-adm" : "");
 
   const botoes = {
@@ -668,8 +664,6 @@ function cardKanban(e, status) {
 
 /* ── Retorna candidatos marcados para teste (vem do banco via campo em_teste) ── */
 function candidatosEmTeste() {
-  // Só bloqueia quem ainda está em processo ativo (agendada ou aprovado)
-  // "realizada" não bloqueia — o candidato foi pra teste depois da entrevista realizada
   const comEntrevistaAtiva = new Set(
     todasEntrevistas
       .filter(e => e.status === "agendada" || e.status === "aprovado")
@@ -727,7 +721,6 @@ async function toggleTeste(id, btn, estaEmTeste) {
     // Recarrega para refletir mudança
     await Promise.all([buscarCandidatos(), buscarTodasEntrevistas()]);
     renderCards();
-    renderKanban();
   } catch {
     mostrarToast("Erro ao atualizar.", "danger");
   } finally {
@@ -782,7 +775,6 @@ async function enviarParaTeste(entrevistaId, candidatoId) {
     mostrarToast("Candidato enviado para teste! 🧪", "success");
     await Promise.all([buscarCandidatos(), buscarTodasEntrevistas()]);
     renderCards();
-    renderKanban();
     if (document.getElementById("secao-calendario").style.display !== "none") renderCalendario();
   } catch {
     mostrarToast("Erro ao enviar para teste.", "danger");
@@ -814,7 +806,6 @@ async function aprovarDoTeste(candidatoId) {
       mostrarToast("Candidato aprovado! ✅", "success");
       await Promise.all([buscarCandidatos(), buscarTodasEntrevistas()]);
       renderCards();
-    renderKanban();
     }
   } catch {
     mostrarToast("Erro ao aprovar.", "danger");
@@ -841,7 +832,6 @@ async function reprovarDoTeste(candidatoId) {
       mostrarToast("Candidato reprovado.", "");
       await Promise.all([buscarCandidatos(), buscarTodasEntrevistas()]);
       renderCards();
-    renderKanban();
     }
   } catch {
     mostrarToast("Erro ao reprovar.", "danger");
@@ -873,9 +863,7 @@ async function removerSelecionado(id) {
     renderCards();
     renderKanban();
     mostrarToast("Candidato removido da lista de selecionados.");
-  } catch {
-    mostrarToast("Erro ao remover.", "danger");
-  }
+  } catch { mostrarToast("Erro ao remover.", "danger"); }
 }
 
 /* ════ CALENDÁRIO ════ */
@@ -922,7 +910,7 @@ async function renderCalendario() {
     ].filter(Boolean).join(" ");
 
     const eventos = dodia.map(e => {
-      const hr = horaStr(e);
+      const hr = parseDateLocal(e.data_hora).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
       return `<div class="cal-evento ${e.status}" onclick='abrirDetalhe(${JSON.stringify(e).replace(/'/g,"&#39;")})'>
         ${hr} ${e.candidato_nome.split(" ")[0]}
       </div>`;
@@ -1030,7 +1018,7 @@ async function carregarHorarios() {
       lista.filter(e => {
         const dt = parseDateLocal(e.data_hora);
         return dt.getDate()===Number(d) && e.status!=="reprovado";
-      }).map(e => horaStr(e))
+      }).map(e => parseDateLocal(e.data_hora).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}))
     );
 
     grid.innerHTML = HORARIOS.map(h => {
@@ -1077,22 +1065,18 @@ async function confirmarAgendamento() {
     });
     const json = await res.json();
     if (!res.ok) { mostrarToast(json.error||"Erro ao agendar.", "danger"); return; }
-
-    // Limpa em_teste e selecionado pois o candidato agora está no pipeline
+    // Limpa em_teste e selecionado do banco
     await fetch("/api/candidatos", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      method: "PUT", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id: Number(candidatoId), acao: "em_teste", valor: false })
     });
     await fetch("/api/candidatos", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      method: "PUT", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id: Number(candidatoId), acao: "selecionado", valor: false })
     });
 
     fecharModal("modalAgendar");
     mostrarToast("Entrevista agendada! ✅", "success");
-
     await Promise.all([buscarCandidatos(), buscarTodasEntrevistas()]);
     renderCards();
     renderKanban();
@@ -1106,7 +1090,7 @@ function abrirDetalhe(e) {
   if (typeof e === "string") e = JSON.parse(e);
   const dt    = parseDateLocal(e.data_hora);
   const dtLg  = dt.toLocaleDateString("pt-BR",{weekday:"long",day:"2-digit",month:"long",year:"numeric"});
-  const hrStr = horaStr(e);
+  const hrStr = dt.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
 
   document.getElementById("detTitulo").textContent = e.candidato_nome;
   document.getElementById("detSub").textContent    = `${e.cargo} • ${e.unidade}`;
@@ -1143,7 +1127,6 @@ async function mudarStatus(id, novoStatus) {
     mostrarToast(msgs[novoStatus]||"Atualizado!", novoStatus==="aprovado"?"success":"");
     await Promise.all([buscarCandidatos(), buscarTodasEntrevistas()]);
     renderCards();
-    renderKanban();
     if (document.getElementById("secao-calendario").style.display !== "none") renderCalendario();
   } catch { mostrarToast("Erro ao atualizar.", "danger"); }
 }
@@ -1155,7 +1138,6 @@ async function excluir(id) {
     mostrarToast("Entrevista cancelada.");
     await Promise.all([buscarCandidatos(), buscarTodasEntrevistas()]);
     renderCards();
-    renderKanban();
     if (document.getElementById("secao-calendario").style.display !== "none") renderCalendario();
   } catch { mostrarToast("Erro.", "danger"); }
 }
@@ -1217,7 +1199,7 @@ async function carregarHorariosEdicao(idExcluir) {
           const dt = parseDateLocal(e.data_hora);
           return dt.getDate() === Number(d) && e.status !== "reprovado" && e.id !== entId;
         })
-        .map(e => horaStr(e))
+        .map(e => parseDateLocal(e.data_hora).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}))
     );
 
     grid.innerHTML = HORARIOS.map(h => {
@@ -1265,7 +1247,6 @@ async function confirmarEdicaoData() {
     mostrarToast("Data alterada com sucesso! ✅", "success");
     await Promise.all([buscarCandidatos(), buscarTodasEntrevistas()]);
     renderCards();
-    renderKanban();
     if (document.getElementById("secao-calendario").style.display !== "none") renderCalendario();
   } catch { mostrarToast("Erro ao alterar data.", "danger"); }
   finally { btn.disabled = false; btn.textContent = "✓ Confirmar alteração"; }
@@ -1299,7 +1280,7 @@ function abrirListaStatus(status) {
   document.getElementById("modalListaTitulo").textContent = cfg.titulo;
   const conteudo = document.getElementById("modalListaConteudo");
 
-  // ── Selecionados: vem do banco ──
+  // ── Selecionados: vem do localStorage ──
   if (status === "selecionado") {
     const lista = candidatosSelecionadosSemEntrevista();
     document.getElementById("modalListaSubtitulo").textContent =
@@ -1341,7 +1322,7 @@ function abrirListaStatus(status) {
       }).join("");
     }
 
-  // ── Em Teste: vem do banco ──
+  // ── Em Teste: vem do localStorage ──
   } else if (status === "teste") {
     const lista = candidatosEmTeste();
     document.getElementById("modalListaSubtitulo").textContent =
@@ -1394,8 +1375,7 @@ function abrirListaStatus(status) {
     } else {
       conteudo.innerHTML = lista.map(e => {
         const ini   = e.candidato_nome.split(" ").slice(0,2).map(n=>n[0]).join("");
-        // Força parse como horário local adicionando timezone offset
-        const dt    = new Date(e.data_hora.replace("T", " ").replace(/-/g, "/"));
+        const dt    = parseDateLocal(e.data_hora);
         const dtStr = dataStr(e.data_hora);
         const hrStr = horaStr(e);
         const avBg  = e.cargo !== "TI"
@@ -1431,7 +1411,6 @@ function abrirListaStatus(status) {
             <div class="modal-lista-meta">
               ${e.cargo} • ${e.unidade}${e.responsavel ? ` • 👤 ${e.responsavel}` : ""}
             </div>
-            ${e.observacoes ? `<div style="font-size:11.5px;color:var(--muted);margin-top:3px;">📋 ${e.observacoes}</div>` : ""}
           </div>
           <div class="modal-lista-right">
             <div class="modal-lista-data">📅 ${dtStr} ${hrStr}</div>
