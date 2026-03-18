@@ -587,6 +587,8 @@ function renderCards() {
 
 /* ════ KANBAN ════ */
 function renderKanban() {
+  const board = document.getElementById("kanbanBoard");
+  if (!board) return; // div removido intencionalmente
   const selecionadosSemEntrevista = candidatosSelecionadosSemEntrevista();
   const emTesteList               = candidatosEmTeste();
 
@@ -1295,6 +1297,10 @@ function abrirListaStatus(status) {
                 onclick="fecharModal('modalLista');abrirModalAgendarCandidato(${c.id})">
                 📅 Agendar
               </button>
+              <button class="btn-mini" style="background:#f5f3ff;color:#7c3aed;"
+                onclick="toggleTeste(${c.id}, this, false);abrirListaStatus('selecionado')">
+                🧪 Teste
+              </button>
               <button class="btn-mini btn-cancelar"
                 onclick="removerSelecionado(${c.id});abrirListaStatus('selecionado')">✕</button>
             </div>
@@ -1329,12 +1335,12 @@ function abrirListaStatus(status) {
           </div>
           <div class="modal-lista-right">
             <div class="modal-lista-acoes">
-              <button class="btn-mini" style="background:var(--accent-light);color:var(--accent);"
-                onclick="fecharModal('modalLista');abrirModalAgendarCandidato(${c.id})">
-                📅 Agendar
-              </button>
+              <button class="btn-mini btn-aprovado"
+                onclick="aprovarDoTeste(${c.id});fecharModal('modalLista')">✅ Aprovar</button>
+              <button class="btn-mini btn-reprovado"
+                onclick="reprovarDoTeste(${c.id});fecharModal('modalLista')">✕ Reprovar</button>
               <button class="btn-mini btn-cancelar"
-                onclick="toggleTeste(${c.id}, this, true);fecharModal('modalLista')">✕ Remover</button>
+                onclick="toggleTeste(${c.id}, this, true);fecharModal('modalLista')">🗑 Remover</button>
             </div>
           </div>
         </div>`;
