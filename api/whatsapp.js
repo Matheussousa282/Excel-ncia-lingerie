@@ -1,15 +1,5 @@
 // /api/whatsapp.js
-// ─────────────────────────────────────────────
-// Envia mensagens WhatsApp via Evolution API.
-//
-// Endpoint interno chamado pelos outros handlers
-// (entrevistas.js, candidatos.js) — não exposto
-// diretamente ao front-end.
-//
-// Também pode ser chamado via POST diretamente:
-// POST /api/whatsapp
-// Body: { telefone, mensagem }
-// ─────────────────────────────────────────────
+// Envia mensagens via servidor local whatsapp-web.js
 
 import { Pool } from "pg";
 
@@ -18,65 +8,40 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false },
 });
 
-/* ════════════════════════════════════════════
-   Função principal — importável por outros handlers
-════════════════════════════════════════════ */
 export async function enviarWhatsApp({ telefone, mensagem }) {
-  // 1. Lê configurações do banco
   const result = await pool.query(
-    "SELECT chave, valor FROM configuracoes WHERE chave IN ('whatsapp_ativo','whatsapp_api_url','whatsapp_api_key','whatsapp_instance')"
+    "SELECT chave, valor FROM configuracoes WHERE chave IN ('whatsapp_ativo','whatsapp_api_url')"
   );
   const cfg = {};
   result.rows.forEach(r => { cfg[r.chave] = r.valor; });
 
-  // 2. Verifica se WhatsApp está ativo
   if (cfg.whatsapp_ativo !== "true") {
-    console.log("[WhatsApp] Notificações desativadas. Mensagem não enviada.");
-    return { skipped: true, reason: "WhatsApp desativado nas configurações" };
+    console.log("[WhatsApp] Desativado.");
+    return { skipped: true };
   }
 
-  if (!cfg.whatsapp_api_url || !cfg.whatsapp_api_key || !cfg.whatsapp_instance) {
-    console.warn("[WhatsApp] Configurações incompletas (URL, Key ou Instance ausentes).");
-    return { skipped: true, reason: "Configurações incompletas" };
+  if (!cfg.whatsapp_api_url) {
+    console.warn("[WhatsApp] URL não configurada.");
+    return { skipped: true };
   }
 
-  // 3. Formata número: remove tudo exceto dígitos, garante DDI 55
-  const numeroLimpo = telefone.replace(/\D/g, "");
-  const numeroFinal = numeroLimpo.startsWith("55") ? numeroLimpo : `55${numeroLimpo}`;
-
-  // 4. Chama a Evolution API
-  // Endpoint padrão da Evolution API v2: POST /message/sendText/{instance}
-  const url = `${cfg.whatsapp_api_url.replace(/\/$/, "")}/message/sendText/${cfg.whatsapp_instance}`;
+  const numero = telefone.replace(/\D/g, "");
+  const numeroFinal = numero.startsWith("55") ? numero : `55${numero}`;
+  const url = `${cfg.whatsapp_api_url.replace(/\/$/, "")}/enviar`;
 
   const response = await fetch(url, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "apikey": cfg.whatsapp_api_key,
-    },
-    body: JSON.stringify({
-      number: numeroFinal,
-      text: mensagem,
-      // delay opcional (ms) — evita bloqueio por envio muito rápido
-      delay: 1000,
-    }),
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ telefone: numeroFinal, mensagem }),
   });
 
   const body = await response.json().catch(() => ({}));
+  if (!response.ok) return { success: false, error: body };
 
-  if (!response.ok) {
-    console.error("[WhatsApp] Erro ao enviar:", body);
-    return { success: false, error: body };
-  }
-
-  console.log(`[WhatsApp] Mensagem enviada para ${numeroFinal}`);
-  return { success: true, data: body };
+  console.log(`[WhatsApp] Enviado para ${numeroFinal}`);
+  return { success: true };
 }
 
-/* ════════════════════════════════════════════
-   Substitui variáveis na mensagem template
-   {nome}, {data}, {hora}, {responsavel}
-════════════════════════════════════════════ */
 export function formatarMensagem(template, vars = {}) {
   return template
     .replace(/\{nome\}/g,        vars.nome        || "")
@@ -86,26 +51,18 @@ export function formatarMensagem(template, vars = {}) {
     .replace(/\\n/g, "\n");
 }
 
-/* ════════════════════════════════════════════
-   Handler HTTP — chamada direta ao endpoint
-════════════════════════════════════════════ */
 export default async function handler(req, res) {
-  if (req.method !== "POST") {
+  if (req.method !== "POST")
     return res.status(405).json({ error: "Método não permitido" });
-  }
 
   try {
     const { telefone, mensagem } = req.body;
-
-    if (!telefone || !mensagem) {
+    if (!telefone || !mensagem)
       return res.status(400).json({ error: "telefone e mensagem são obrigatórios" });
-    }
 
     const resultado = await enviarWhatsApp({ telefone, mensagem });
     return res.status(200).json(resultado);
-
   } catch (err) {
-    console.error("ERRO API WHATSAPP:", err);
-    return res.status(500).json({ error: "Erro ao enviar mensagem", details: err.message });
+    return res.status(500).json({ error: err.message });
   }
 }
