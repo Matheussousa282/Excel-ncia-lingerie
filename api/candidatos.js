@@ -133,6 +133,7 @@ export default async function handler(req, res) {
           c.arquivo_nome,
           c.aprovado,
           c.em_teste,
+          c.selecionado,
           c.criado_em AS data,
           ca.nome AS cargo,
           i.nome  AS instituicao,
@@ -205,15 +206,26 @@ export default async function handler(req, res) {
         return res.status(200).json({ success: true });
       }
 
-      // ── Selecionado: dispara mensagem WhatsApp etapa 1
+      // ── Selecionar / desselecionar candidato (salva no banco)
       if (acao === "selecionado") {
-        const cand = await pool.query(
-          "SELECT nome, telefone FROM candidatos WHERE id = $1", [id]
+        const novoValor = req.body.valor === true || req.body.valor === "true";
+
+        await pool.query(
+          "UPDATE candidatos SET selecionado = $1 WHERE id = $2",
+          [novoValor, id]
         );
-        if (cand.rows.length > 0) {
-          const { nome, telefone } = cand.rows[0];
-          if (telefone) await notificarSelecionado(nome, telefone);
+
+        // Dispara WhatsApp apenas quando SELECIONA (não quando remove)
+        if (novoValor) {
+          const cand = await pool.query(
+            "SELECT nome, telefone FROM candidatos WHERE id = $1", [id]
+          );
+          if (cand.rows.length > 0) {
+            const { nome, telefone } = cand.rows[0];
+            if (telefone) await notificarSelecionado(nome, telefone);
+          }
         }
+
         return res.status(200).json({ success: true });
       }
 
