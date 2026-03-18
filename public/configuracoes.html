@@ -231,8 +231,8 @@ body { font-family: "DM Sans", sans-serif; background: var(--bg); color: var(--t
           <div class="card-header-left">
             <span class="card-header-icon">🌐</span>
             <div>
-              <div class="card-header-title">Credenciais da API</div>
-              <div class="card-header-sub">Configure a URL, chave e instância da Evolution API</div>
+              <div class="card-header-title">Servidor WhatsApp</div>
+              <div class="card-header-sub">URL do servidor local rodando o whatsapp-web.js</div>
             </div>
           </div>
           <div id="statusConexao" class="conn-status conn-inativo">
@@ -240,26 +240,13 @@ body { font-family: "DM Sans", sans-serif; background: var(--bg); color: var(--t
           </div>
         </div>
         <div class="card-body">
-          <div class="grid-2">
-            <div class="field">
-              <label>URL da API *</label>
-              <input type="url" id="apiUrl" placeholder="https://sua-evolution-api.com">
-            </div>
-            <div class="field">
-              <label>Instância *</label>
-              <input type="text" id="apiInstance" placeholder="nome-da-instancia">
-            </div>
-          </div>
           <div class="field">
-            <label>API Key *</label>
-            <div class="input-group">
-              <input type="password" id="apiKey" placeholder="Sua chave de API…">
-              <button class="btn-eye" onclick="toggleSenha('apiKey', this)" type="button">👁️</button>
-            </div>
+            <label>URL do servidor *</label>
+            <input type="url" id="apiUrl" placeholder="http://localhost:3001">
           </div>
 
           <div class="btn-row">
-            <button class="btn btn-primary" onclick="salvarConexao()" id="btnSalvarConexao">💾 Salvar conexão</button>
+            <button class="btn btn-primary" onclick="salvarConexao()" id="btnSalvarConexao">💾 Salvar</button>
             <button class="btn btn-whatsapp" onclick="testarConexao()" id="btnTestar">📡 Testar conexão</button>
           </div>
         </div>
@@ -500,9 +487,7 @@ async function carregarConfiguracoes() {
     atualizarPainelWhatsapp(cfg.whatsapp_ativo === "true");
 
     // Credenciais
-    if (cfg.whatsapp_api_url)  document.getElementById("apiUrl").value      = cfg.whatsapp_api_url;
-    if (cfg.whatsapp_api_key)  document.getElementById("apiKey").value      = cfg.whatsapp_api_key;
-    if (cfg.whatsapp_instance) document.getElementById("apiInstance").value = cfg.whatsapp_instance;
+    if (cfg.whatsapp_api_url) document.getElementById("apiUrl").value = cfg.whatsapp_api_url;
 
     // Toggles de notificação
     ["notif_selecionado","notif_agendado","notif_realizado","notif_aprovado","notif_reprovado"].forEach(k => {
@@ -540,12 +525,10 @@ async function salvarConexao() {
   const btn = document.getElementById("btnSalvarConexao");
   btn.disabled = true; btn.textContent = "Salvando…";
   await salvarConfig({
-    whatsapp_api_url:  document.getElementById("apiUrl").value.trim(),
-    whatsapp_api_key:  document.getElementById("apiKey").value.trim(),
-    whatsapp_instance: document.getElementById("apiInstance").value.trim(),
+    whatsapp_api_url: document.getElementById("apiUrl").value.trim(),
   });
-  mostrarToast("Conexão salva!", "success");
-  btn.disabled = false; btn.textContent = "💾 Salvar conexão";
+  mostrarToast("URL salva!", "success");
+  btn.disabled = false; btn.textContent = "💾 Salvar";
 }
 
 async function testarConexao() {
@@ -553,33 +536,32 @@ async function testarConexao() {
   const statusEl = document.getElementById("statusConexao");
   btn.disabled = true; btn.textContent = "Testando…";
 
-  const url      = document.getElementById("apiUrl").value.trim();
-  const apikey   = document.getElementById("apiKey").value.trim();
-  const instance = document.getElementById("apiInstance").value.trim();
+  const url = document.getElementById("apiUrl").value.trim();
 
-  if (!url || !apikey || !instance) {
-    mostrarToast("Preencha URL, Key e Instância antes de testar.", "warning");
+  if (!url) {
+    mostrarToast("Preencha a URL do servidor antes de testar.", "warning");
     btn.disabled = false; btn.textContent = "📡 Testar conexão";
     return;
   }
 
   try {
-    // Evolution API v2: GET /instance/fetchInstances
-    const res = await fetch(`${url.replace(/\/$/,"")}/instance/fetchInstances`, {
-      headers: { "apikey": apikey }
-    });
+    // Bate no endpoint /status do whatsapp-server.js
+    const res  = await fetch(`${url.replace(/\/$/,"")}/status`);
+    const data = await res.json();
 
-    if (res.ok) {
+    if (data.pronto) {
       statusEl.className = "conn-status conn-ativo";
-      statusEl.innerHTML = `<span class="conn-dot dot-ativo"></span> Conectado`;
-      mostrarToast("Conexão bem-sucedida! ✅", "success");
+      statusEl.innerHTML = `<span class="conn-dot dot-ativo"></span> Conectado ✅`;
+      mostrarToast("WhatsApp conectado e pronto! ✅", "success");
     } else {
-      throw new Error(`Status ${res.status}`);
+      statusEl.className = "conn-status conn-inativo";
+      statusEl.innerHTML = `<span class="conn-dot dot-inativo"></span> Servidor online, WhatsApp desconectado`;
+      mostrarToast("Servidor OK, mas WhatsApp não está conectado.", "warning");
     }
-  } catch (err) {
+  } catch {
     statusEl.className = "conn-status conn-erro";
-    statusEl.innerHTML = `<span class="conn-dot dot-erro"></span> Erro de conexão`;
-    mostrarToast("Falha na conexão. Verifique os dados.", "danger");
+    statusEl.innerHTML = `<span class="conn-dot dot-erro"></span> Servidor offline`;
+    mostrarToast("Servidor offline. Inicie o whatsapp-server.js.", "danger");
   } finally {
     btn.disabled = false; btn.textContent = "📡 Testar conexão";
   }
