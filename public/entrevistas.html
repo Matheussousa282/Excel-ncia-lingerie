@@ -490,6 +490,13 @@ let statusAtualModal = null; // status do modal de lista aberto atualmente
 
 const HORARIOS  = ["08:00","08:30","09:00","09:30","10:00","10:30","11:00","11:30",
                    "13:00","13:30","14:00","14:30","15:00","15:30","16:00","16:30","17:00","17:30"];
+
+/* ── Parse de data sem conversão de fuso ── */
+function parseDateLocal(str) {
+  // Remove o Z ou offset (+00:00, -03:00 etc) para tratar como horário local
+  const s = str.replace(/Z$/, "").replace(/[+-]\d{2}:\d{2}$/, "");
+  return new Date(s);
+}
 const MESES_PT  = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho",
                    "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 
@@ -620,7 +627,7 @@ function renderKanban() {
 
 function cardKanban(e, status) {
   const ini = e.candidato_nome.split(" ").slice(0,2).map(n=>n[0]).join("");
-  const dt  = new Date(e.data_hora.replace("T"," ").replace(/-/g,"/"));
+  const dt  = parseDateLocal(e.data_hora);
   const dtStr = dt.toLocaleDateString("pt-BR") + " " +
     dt.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
   const avCls = status === "aprovado" ? "avatar-aprov" : (e.cargo !== "TI" ? "avatar-adm" : "");
@@ -892,7 +899,7 @@ async function renderCalendario() {
     const ePassado = new Date(ano,mes,d) < new Date(hoje.getFullYear(),hoje.getMonth(),hoje.getDate());
 
     const dodia = entrevistas.filter(e => {
-      const dt = new Date(e.data_hora.replace("T"," ").replace(/-/g,"/"));
+      const dt = parseDateLocal(e.data_hora);
       return dt.getDate()===d && dt.getMonth()===mes && dt.getFullYear()===ano;
     });
 
@@ -903,7 +910,7 @@ async function renderCalendario() {
     ].filter(Boolean).join(" ");
 
     const eventos = dodia.map(e => {
-      const hr = new Date(e.data_hora.replace("T"," ").replace(/-/g,"/")).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
+      const hr = parseDateLocal(e.data_hora).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
       return `<div class="cal-evento ${e.status}" onclick='abrirDetalhe(${JSON.stringify(e).replace(/'/g,"&#39;")})'>
         ${hr} ${e.candidato_nome.split(" ")[0]}
       </div>`;
@@ -939,7 +946,7 @@ function renderListaMes(lista, mes, ano) {
     return;
   }
   body.innerHTML = lista.map(e => {
-    const dt  = new Date(e.data_hora.replace("T"," ").replace(/-/g,"/"));
+    const dt  = parseDateLocal(e.data_hora);
     const hr  = dt.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
     const dia = dt.toLocaleDateString("pt-BR",{weekday:"short",day:"2-digit",month:"2-digit"});
     return `<div class="lista-item" onclick='abrirDetalhe(${JSON.stringify(e).replace(/'/g,"&#39;")})'>
@@ -1009,9 +1016,9 @@ async function carregarHorarios() {
     const lista = await buscarEntrevistasMes(Number(m), Number(a));
     const ocupados = new Set(
       lista.filter(e => {
-        const dt = new Date(e.data_hora.replace("T"," ").replace(/-/g,"/"));
+        const dt = parseDateLocal(e.data_hora);
         return dt.getDate()===Number(d) && e.status!=="reprovado";
-      }).map(e => new Date(e.data_hora.replace("T"," ").replace(/-/g,"/")).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}))
+      }).map(e => parseDateLocal(e.data_hora).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}))
     );
 
     grid.innerHTML = HORARIOS.map(h => {
@@ -1072,7 +1079,7 @@ async function confirmarAgendamento() {
 /* ════ MODAL DETALHE ════ */
 function abrirDetalhe(e) {
   if (typeof e === "string") e = JSON.parse(e);
-  const dt    = new Date(e.data_hora.replace("T"," ").replace(/-/g,"/"));
+  const dt    = parseDateLocal(e.data_hora);
   const dtLg  = dt.toLocaleDateString("pt-BR",{weekday:"long",day:"2-digit",month:"long",year:"numeric"});
   const hrStr = dt.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
 
@@ -1182,10 +1189,10 @@ async function carregarHorariosEdicao(idExcluir) {
     const ocupados = new Set(
       lista
         .filter(e => {
-          const dt = new Date(e.data_hora.replace("T"," ").replace(/-/g,"/"));
+          const dt = parseDateLocal(e.data_hora);
           return dt.getDate() === Number(d) && e.status !== "reprovado" && e.id !== entId;
         })
-        .map(e => new Date(e.data_hora.replace("T"," ").replace(/-/g,"/")).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}))
+        .map(e => parseDateLocal(e.data_hora).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}))
     );
 
     grid.innerHTML = HORARIOS.map(h => {
@@ -1450,7 +1457,7 @@ function exportarPDFStatus(status) {
     const lista = todasEntrevistas.filter(e => e.status === status);
     if (!lista.length) { mostrarToast("Nenhum item neste status para exportar.", "warning"); return; }
     linhas = lista.map((e, i) => {
-      const dt  = new Date(e.data_hora.replace("T"," ").replace(/-/g,"/"));
+      const dt  = parseDateLocal(e.data_hora);
       const dia = dt.toLocaleDateString("pt-BR");
       const hr  = dt.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
       if (status === "aprovado" || status === "reprovado") {
