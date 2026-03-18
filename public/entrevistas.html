@@ -493,9 +493,12 @@ const HORARIOS  = ["08:00","08:30","09:00","09:30","10:00","10:30","11:00","11:3
 
 /* ── Parse de data sem conversão de fuso ── */
 function parseDateLocal(str) {
-  // Remove o Z ou offset (+00:00, -03:00 etc) para tratar como horário local
-  const s = str.replace(/Z$/, "").replace(/[+-]\d{2}:\d{2}$/, "");
-  return new Date(s);
+  // Extrai as partes diretamente da string para evitar qualquer conversão de fuso
+  // Formato esperado: "2026-03-20T10:30:00" ou "2026-03-20T10:30:00.000Z"
+  const m = str.match(/(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
+  if (!m) return new Date(str);
+  // new Date(ano, mes-1, dia, hora, min) — sempre local
+  return new Date(Number(m[1]), Number(m[2])-1, Number(m[3]), Number(m[4]), Number(m[5]));
 }
 const MESES_PT  = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho",
                    "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
