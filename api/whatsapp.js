@@ -48,6 +48,7 @@ export function formatarMensagem(template, vars = {}) {
     .replace(/\{data\}/g,        vars.data        || "")
     .replace(/\{hora\}/g,        vars.hora        || "")
     .replace(/\{responsavel\}/g, vars.responsavel || "nosso time")
+    .replace(/\{observacoes\}/g, vars.observacoes || "")
     .replace(/\\n/g, "\n");
 }
 

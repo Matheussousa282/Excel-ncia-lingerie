@@ -10,6 +10,15 @@ const pool = new Pool({
 });
 
 async function lerConfigs(chaves) {
+
+/* Extrai data/hora da string ISO sem converter fuso */
+function parseDateLocal(str) {
+  const m = str.match(/(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
+  if (!m) return new Date(str);
+  return new Date(Number(m[1]), Number(m[2])-1, Number(m[3]), Number(m[4]), Number(m[5]));
+}
+
+async function lerConfigs(chaves) {
   const r = await pool.query(
     "SELECT chave, valor FROM configuracoes WHERE chave = ANY($1)", [chaves]
   );
@@ -82,15 +91,16 @@ export default async function handler(req, res) {
       // WhatsApp: entrevista agendada
       const cand = await pool.query("SELECT nome, telefone FROM candidatos WHERE id=$1", [candidato_id]);
       if (cand.rows.length > 0 && cand.rows[0].telefone) {
-        const dt = new Date(data_hora);
+        const dt = parseDateLocal(data_hora);
         await notificar({
           notifKey: "notif_agendado", msgKey: "msg_agendado",
           telefone: cand.rows[0].telefone,
           vars: {
             nome: cand.rows[0].nome,
             data: dt.toLocaleDateString("pt-BR",{weekday:"long",day:"2-digit",month:"long",year:"numeric"}),
-            hora: dt.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}),
+            hora: hora_local,
             responsavel: responsavel || "nossa equipe",
+            observacoes: observacoes || "",
           },
         });
       }
@@ -120,12 +130,12 @@ export default async function handler(req, res) {
       // WhatsApp por status
       if (status) {
         const row = await pool.query(
-          `SELECT c.nome, c.telefone, e.data_hora, e.responsavel
+          `SELECT c.nome, c.telefone, e.data_hora, e.hora_local, e.observacoes, e.responsavel
            FROM entrevistas e JOIN candidatos c ON c.id=e.candidato_id WHERE e.id=$1`, [id]
         );
         if (row.rows.length && row.rows[0].telefone) {
-          const { nome, telefone, data_hora: dtHr, responsavel: resp } = row.rows[0];
-          const dt = new Date(dtHr);
+          const { nome, telefone, data_hora: dtHr, hora_local: hl, observacoes: obs, responsavel: resp } = row.rows[0];
+          const dt = parseDateLocal(dtHr);
           const mapa = {
             realizada: { notifKey:"notif_realizado", msgKey:"msg_realizado" },
             aprovado:  { notifKey:"notif_aprovado",  msgKey:"msg_aprovado"  },
@@ -136,8 +146,9 @@ export default async function handler(req, res) {
             vars: {
               nome,
               data: dt.toLocaleDateString("pt-BR",{weekday:"long",day:"2-digit",month:"long",year:"numeric"}),
-              hora: dt.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}),
+              hora: hl || dt.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}),
               responsavel: resp || "nossa equipe",
+              observacoes: obs || "",
             },
           });
         }
