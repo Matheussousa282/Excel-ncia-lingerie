@@ -334,6 +334,9 @@ body { font-family: "DM Sans", sans-serif; background: var(--bg); color: var(--t
   <!-- Cards resumo (clicáveis) -->
   <div class="cards" id="cardsResumo"></div>
 
+  <!-- Board Kanban -->
+  <div class="kanban" id="kanbanBoard" style="margin-bottom:22px;"></div>
+
   <!-- Botão calendário -->
   <div style="margin-bottom:18px;">
     <button class="tab active" id="btnCalendario" onclick="toggleCalendario(this)">📅 Ver Calendário</button>
@@ -506,6 +509,9 @@ async function buscarCandidatos() {
     const todos = await r.json();
     candidatos = todos.filter(c => !c.aprovado);
 
+    // Pega apenas os IDs marcados como "selecionados" no banco
+    const idsSelecionados = candidatos.filter(c => c.selecionado).map(c => c.id);
+
     // IDs que já têm entrevista agendada (não reprovada) — não aparecem no select
     const comEntrevista = new Set(
       todasEntrevistas
@@ -513,7 +519,7 @@ async function buscarCandidatos() {
         .map(e => e.candidato_id)
     );
 
-    // Mostra no select: selecionados no banco que ainda não têm entrevista agendada
+    // Mostra no select: selecionados que ainda não têm entrevista agendada
     const disponiveis = candidatos.filter(
       c => c.selecionado && !comEntrevista.has(c.id)
     );
@@ -533,14 +539,11 @@ async function buscarCandidatos() {
 /* ── Retorna candidatos marcados como selecionados no banco
    que ainda NÃO têm entrevista agendada ── */
 function candidatosSelecionadosSemEntrevista() {
-  // IDs que já têm entrevista no banco (qualquer status exceto reprovado)
   const comEntrevista = new Set(
     todasEntrevistas
-      .filter(e => e.status !== "reprovado")
+      .filter(e => e.status === "agendada" || e.status === "aprovado")
       .map(e => e.candidato_id)
   );
-
-  // Candidatos selecionados (pelo banco) que ainda não entraram no kanban
   return candidatos.filter(c => c.selecionado && !comEntrevista.has(c.id));
 }
 
@@ -647,10 +650,14 @@ function cardKanban(e, status) {
 
 /* ── Retorna candidatos marcados para teste (vem do banco via campo em_teste) ── */
 function candidatosEmTeste() {
-  const comEntrevista = new Set(
-    todasEntrevistas.filter(e => e.status !== "reprovado").map(e => e.candidato_id)
+  // Só bloqueia quem ainda está em processo ativo (agendada ou aprovado)
+  // "realizada" não bloqueia — o candidato foi pra teste depois da entrevista realizada
+  const comEntrevistaAtiva = new Set(
+    todasEntrevistas
+      .filter(e => e.status === "agendada" || e.status === "aprovado")
+      .map(e => e.candidato_id)
   );
-  return candidatos.filter(c => c.em_teste && !comEntrevista.has(c.id));
+  return candidatos.filter(c => c.em_teste && !comEntrevistaAtiva.has(c.id));
 }
 
 /* ── Card para candidatos selecionados ainda sem entrevista agendada ── */
@@ -789,7 +796,7 @@ async function aprovarDoTeste(candidatoId) {
       mostrarToast("Candidato aprovado! ✅", "success");
       await Promise.all([buscarCandidatos(), buscarTodasEntrevistas()]);
       renderCards();
-      renderKanban();
+    renderKanban();
     }
   } catch {
     mostrarToast("Erro ao aprovar.", "danger");
@@ -816,6 +823,7 @@ async function reprovarDoTeste(candidatoId) {
       mostrarToast("Candidato reprovado.", "");
       await Promise.all([buscarCandidatos(), buscarTodasEntrevistas()]);
       renderCards();
+    renderKanban();
     }
   } catch {
     mostrarToast("Erro ao reprovar.", "danger");
@@ -1226,6 +1234,7 @@ async function confirmarEdicaoData() {
     mostrarToast("Data alterada com sucesso! ✅", "success");
     await Promise.all([buscarCandidatos(), buscarTodasEntrevistas()]);
     renderCards();
+    renderKanban();
     if (document.getElementById("secao-calendario").style.display !== "none") renderCalendario();
   } catch { mostrarToast("Erro ao alterar data.", "danger"); }
   finally { btn.disabled = false; btn.textContent = "✓ Confirmar alteração"; }
