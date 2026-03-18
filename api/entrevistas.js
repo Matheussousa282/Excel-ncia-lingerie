@@ -9,6 +9,11 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false },
 });
 
+// Garante que todas as queries usam horário de Brasília
+pool.on("connect", (client) => {
+  client.query("SET timezone = 'America/Fortaleza'");
+});
+
 async function lerConfigs(chaves) {
   const r = await pool.query(
     "SELECT chave, valor FROM configuracoes WHERE chave = ANY($1)", [chaves]
@@ -99,7 +104,7 @@ export default async function handler(req, res) {
 
       await pool.query(
         `UPDATE entrevistas SET
-           status=COALESCE($1,status), observacoes=COALESCE($2,observacoes),
+           status=$1, observacoes=COALESCE($2,observacoes),
            data_hora=COALESCE($3,data_hora), responsavel=COALESCE($4,responsavel)
          WHERE id=$5`,
         [status||null, observacoes||null, data_hora||null, responsavel||null, id]
