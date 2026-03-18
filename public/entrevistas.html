@@ -497,6 +497,7 @@ const MESES_PT  = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho",
 async function inicializar() {
   await Promise.all([buscarCandidatos(), buscarTodasEntrevistas()]);
   renderCards();
+  renderKanban();
 }
 
 async function buscarCandidatos() {
@@ -505,9 +506,6 @@ async function buscarCandidatos() {
     const todos = await r.json();
     candidatos = todos.filter(c => !c.aprovado);
 
-    // Pega apenas os IDs marcados como "selecionados" no curriculos.html
-    const idsSelecionados = JSON.parse(localStorage.getItem("selecionados") || "[]");
-
     // IDs que já têm entrevista agendada (não reprovada) — não aparecem no select
     const comEntrevista = new Set(
       todasEntrevistas
@@ -515,9 +513,9 @@ async function buscarCandidatos() {
         .map(e => e.candidato_id)
     );
 
-    // Mostra no select: selecionados que ainda não têm entrevista agendada
+    // Mostra no select: selecionados no banco que ainda não têm entrevista agendada
     const disponiveis = candidatos.filter(
-      c => idsSelecionados.includes(c.id) && !comEntrevista.has(c.id)
+      c => c.selecionado && !comEntrevista.has(c.id)
     );
 
     const sel = document.getElementById("selectCand");
@@ -532,12 +530,9 @@ async function buscarCandidatos() {
   } catch(e) { console.error(e); }
 }
 
-/* ── Retorna candidatos selecionados no curriculos.html (localStorage)
-   que ainda NÃO têm entrevista agendada no banco ── */
+/* ── Retorna candidatos marcados como selecionados no banco
+   que ainda NÃO têm entrevista agendada ── */
 function candidatosSelecionadosSemEntrevista() {
-  const ids = JSON.parse(localStorage.getItem("selecionados") || "[]");
-  if (!ids.length) return [];
-
   // IDs que já têm entrevista no banco (qualquer status exceto reprovado)
   const comEntrevista = new Set(
     todasEntrevistas
@@ -545,8 +540,8 @@ function candidatosSelecionadosSemEntrevista() {
       .map(e => e.candidato_id)
   );
 
-  // Candidatos selecionados que ainda não entraram no kanban
-  return candidatos.filter(c => ids.includes(c.id) && !comEntrevista.has(c.id));
+  // Candidatos selecionados (pelo banco) que ainda não entraram no kanban
+  return candidatos.filter(c => c.selecionado && !comEntrevista.has(c.id));
 }
 
 async function buscarTodasEntrevistas() {
@@ -707,6 +702,7 @@ async function toggleTeste(id, btn, estaEmTeste) {
     // Recarrega para refletir mudança
     await Promise.all([buscarCandidatos(), buscarTodasEntrevistas()]);
     renderCards();
+    renderKanban();
   } catch {
     mostrarToast("Erro ao atualizar.", "danger");
   } finally {
@@ -761,6 +757,7 @@ async function enviarParaTeste(entrevistaId, candidatoId) {
     mostrarToast("Candidato enviado para teste! 🧪", "success");
     await Promise.all([buscarCandidatos(), buscarTodasEntrevistas()]);
     renderCards();
+    renderKanban();
     if (document.getElementById("secao-calendario").style.display !== "none") renderCalendario();
   } catch {
     mostrarToast("Erro ao enviar para teste.", "danger");
@@ -792,6 +789,7 @@ async function aprovarDoTeste(candidatoId) {
       mostrarToast("Candidato aprovado! ✅", "success");
       await Promise.all([buscarCandidatos(), buscarTodasEntrevistas()]);
       renderCards();
+      renderKanban();
     }
   } catch {
     mostrarToast("Erro ao aprovar.", "danger");
@@ -837,13 +835,21 @@ function abrirModalAgendarCandidato(id) {
   }, 60);
 }
 
-/* ── Remove candidato da lista de selecionados (localStorage) ── */
-function removerSelecionado(id) {
-  let ids = JSON.parse(localStorage.getItem("selecionados") || "[]");
-  ids = ids.filter(i => i !== id);
-  localStorage.setItem("selecionados", JSON.stringify(ids));
-  renderCards();
-  mostrarToast("Candidato removido da lista de selecionados.");
+/* ── Remove candidato da lista de selecionados (banco) ── */
+async function removerSelecionado(id) {
+  try {
+    await fetch("/api/candidatos", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, acao: "selecionado", valor: false })
+    });
+    await Promise.all([buscarCandidatos(), buscarTodasEntrevistas()]);
+    renderCards();
+    renderKanban();
+    mostrarToast("Candidato removido da lista de selecionados.");
+  } catch {
+    mostrarToast("Erro ao remover.", "danger");
+  }
 }
 
 /* ════ CALENDÁRIO ════ */
@@ -1048,14 +1054,9 @@ async function confirmarAgendamento() {
     fecharModal("modalAgendar");
     mostrarToast("Entrevista agendada! ✅", "success");
 
-    // Remove o candidato da lista de "selecionados" do localStorage
-    // pois agora ele já está no kanban como "agendado"
-    let ids = JSON.parse(localStorage.getItem("selecionados") || "[]");
-    ids = ids.filter(i => i !== Number(candidatoId));
-    localStorage.setItem("selecionados", JSON.stringify(ids));
-
     await Promise.all([buscarCandidatos(), buscarTodasEntrevistas()]);
     renderCards();
+    renderKanban();
     if (document.getElementById("secao-calendario").style.display !== "none") renderCalendario();
   } catch { mostrarToast("Erro de conexão.", "danger"); }
   finally { btn.disabled = false; btn.textContent = "✓ Confirmar Agendamento"; }
@@ -1103,6 +1104,7 @@ async function mudarStatus(id, novoStatus) {
     mostrarToast(msgs[novoStatus]||"Atualizado!", novoStatus==="aprovado"?"success":"");
     await Promise.all([buscarCandidatos(), buscarTodasEntrevistas()]);
     renderCards();
+    renderKanban();
     if (document.getElementById("secao-calendario").style.display !== "none") renderCalendario();
   } catch { mostrarToast("Erro ao atualizar.", "danger"); }
 }
@@ -1114,6 +1116,7 @@ async function excluir(id) {
     mostrarToast("Entrevista cancelada.");
     await Promise.all([buscarCandidatos(), buscarTodasEntrevistas()]);
     renderCards();
+    renderKanban();
     if (document.getElementById("secao-calendario").style.display !== "none") renderCalendario();
   } catch { mostrarToast("Erro.", "danger"); }
 }
@@ -1256,7 +1259,7 @@ function abrirListaStatus(status) {
   document.getElementById("modalListaTitulo").textContent = cfg.titulo;
   const conteudo = document.getElementById("modalListaConteudo");
 
-  // ── Selecionados: vem do localStorage ──
+  // ── Selecionados: vem do banco ──
   if (status === "selecionado") {
     const lista = candidatosSelecionadosSemEntrevista();
     document.getElementById("modalListaSubtitulo").textContent =
@@ -1294,7 +1297,7 @@ function abrirListaStatus(status) {
       }).join("");
     }
 
-  // ── Em Teste: vem do localStorage ──
+  // ── Em Teste: vem do banco ──
   } else if (status === "teste") {
     const lista = candidatosEmTeste();
     document.getElementById("modalListaSubtitulo").textContent =

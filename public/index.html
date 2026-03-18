@@ -413,6 +413,15 @@ input[type="file"]::file-selector-button:hover {
   100% { opacity: 1;    transform: scale(1);    color: var(--primary); }
 }
 
+/* ── VALIDAÇÃO ── */
+.field-error input { border-color: var(--danger) !important; background: #fff8f8; }
+.field-error input:focus { box-shadow: 0 0 0 3px rgba(220,38,38,0.12) !important; }
+.field-ok input { border-color: var(--success) !important; }
+.field-msg { font-size: 11.5px; margin-top: 5px; display: none; align-items: center; gap: 4px; font-weight: 500; }
+.field-msg.show { display: flex; }
+.field-msg.error { color: var(--danger); }
+.field-msg.ok    { color: var(--success); }
+
 /* ── RESPONSIVE ── */
 @media (max-width: 640px) {
   .page { padding: 0; align-items: flex-start; }
@@ -448,14 +457,17 @@ input[type="file"]::file-selector-button:hover {
           <input id="nome" name="nome" type="text" placeholder="Digite seu nome completo" required>
         </div>
 
-        <div class="field">
-          <label for="telefone">Telefone</label>
-          <input id="telefone" name="telefone" type="tel" placeholder="(XX) XXXXX-XXXX">
+        <div class="field" id="fieldTelefone">
+          <label for="telefone">Telefone (WhatsApp) <span class="req">*</span></label>
+          <input id="telefone" name="telefone" type="tel" placeholder="(XX) XXXXX-XXXX" maxlength="15" inputmode="numeric" required>
+          <span class="field-msg error" id="msgTelefone">⚠ Telefone inválido — use (XX) XXXX-XXXX ou (XX) XXXXX-XXXX</span>
         </div>
 
-        <div class="field">
+        <div class="field" id="fieldEmail">
           <label for="email">E-mail <span class="req">*</span></label>
-          <input id="email" name="email" type="email" placeholder="seu@email.com" required>
+          <input id="email" name="email" type="text" placeholder="seu@email.com" required>
+          <span class="field-msg error" id="msgEmail">⚠ Digite um e-mail válido (ex: nome@dominio.com)</span>
+          <span class="field-msg ok"    id="msgEmailOk">✓ E-mail válido</span>
         </div>
 
         <div class="field">
@@ -565,6 +577,55 @@ let cargosExtrasSelecionados = []; // [{id, nome}]
 let todosCargos = [];
 let cargoOutrosId = null;    // id do cargo "Outros" ou similar
 let cargoCosTureiraId = null; // id do cargo "Costureiro(a)"
+
+/* ════ MÁSCARA DE TELEFONE ════ */
+const inputTelefone = document.getElementById("telefone");
+
+inputTelefone.addEventListener("input", (e) => {
+  let v = e.target.value.replace(/\D/g, "").slice(0, 11);
+  if (!v) { e.target.value = ""; return; }
+  if (v.length <= 2)  { e.target.value = `(${v}`; return; }
+  if (v.length <= 6)  { e.target.value = `(${v.slice(0,2)}) ${v.slice(2)}`; return; }
+  if (v.length <= 10) { e.target.value = `(${v.slice(0,2)}) ${v.slice(2,6)}-${v.slice(6)}`; return; }
+  e.target.value = `(${v.slice(0,2)}) ${v.slice(2,7)}-${v.slice(7)}`;
+});
+
+inputTelefone.addEventListener("blur", validarTelefone);
+
+function validarTelefone() {
+  const val = inputTelefone.value.trim();
+  const field = document.getElementById("fieldTelefone");
+  const msg   = document.getElementById("msgTelefone");
+  const ok = /^\(\d{2}\) \d{4,5}-\d{4}$/.test(val);
+  field.classList.toggle("field-error", !ok);
+  msg.classList.toggle("show", !ok);
+  return ok;
+}
+
+/* ════ VALIDAÇÃO DE E-MAIL ════ */
+const inputEmail = document.getElementById("email");
+
+inputEmail.addEventListener("input", () => {
+  document.getElementById("fieldEmail").classList.remove("field-error", "field-ok");
+  document.getElementById("msgEmail").classList.remove("show");
+  document.getElementById("msgEmailOk").classList.remove("show");
+});
+
+inputEmail.addEventListener("blur", validarEmail);
+
+function validarEmail() {
+  const val = inputEmail.value.trim();
+  const field  = document.getElementById("fieldEmail");
+  const msgErr = document.getElementById("msgEmail");
+  const msgOk  = document.getElementById("msgEmailOk");
+  if (!val) { field.classList.remove("field-error","field-ok"); msgErr.classList.remove("show"); msgOk.classList.remove("show"); return false; }
+  const ok = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(val);
+  field.classList.toggle("field-error", !ok);
+  field.classList.toggle("field-ok", ok);
+  msgErr.classList.toggle("show", !ok);
+  msgOk.classList.toggle("show", ok);
+  return ok;
+}
 
 /* ── Carrega cargos ── */
 async function carregarCargos() {
@@ -746,6 +807,9 @@ instituicaoSelect.addEventListener("change", async () => {
 /* ── Envio do formulário ── */
 document.getElementById("formCandidato").addEventListener("submit", async (e) => {
   e.preventDefault();
+
+  if (!validarTelefone()) { inputTelefone.focus(); return; }
+  if (!validarEmail()) { inputEmail.focus(); return; }
 
   const btn  = document.getElementById("btnEnviar");
   const file = document.getElementById("arquivo").files[0];

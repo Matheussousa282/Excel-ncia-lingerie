@@ -981,7 +981,7 @@ function atualizarTabela(lista) {
   tbody.innerHTML = lista.map(c => {
     const iniciais   = c.nome.split(" ").slice(0,2).map(n => n[0]).join("");
     const dataBR     = new Date(c.data).toLocaleDateString("pt-BR");
-    const isSelecionado = c.selecionado || selecionados.includes(c.id);
+    const isSelecionado = c.selecionado === true;
 
     return `
     <tr>
@@ -1090,36 +1090,42 @@ async function baixarCurriculo(id) {
 }
 
 /* ══ SELECIONADOS ══
-   Ao selecionar, chama PUT /api/candidatos com acao="selecionado"
-   para disparar a mensagem WhatsApp da etapa 1 (se ativo nas configs).
+   Totalmente via banco de dados — campo selecionado na tabela candidatos.
 */
-let selecionados = JSON.parse(localStorage.getItem("selecionados") || "[]");
 
 async function toggleSelecionado(id, btn) {
-  const idx = selecionados.indexOf(id);
-  if (idx === -1) {
-    selecionados.push(id);
-    btn.textContent = "✅ Selecionado";
-    btn.classList.add("selecionado");
+  const jaEsta = btn.classList.contains("selecionado");
+  const novoValor = !jaEsta;
 
-    // Dispara WhatsApp — etapa 1: currículo selecionado
-    try {
-      await fetch("/api/candidatos", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, acao: "selecionado" }),
-      });
-    } catch (err) { console.warn("WhatsApp selecionado:", err); }
+  btn.disabled = true;
+  try {
+    await fetch("/api/candidatos", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, acao: "selecionado", valor: novoValor }),
+    });
 
-    mostrarToast("Candidato selecionado! 📱 Mensagem enviada.", "success");
-  } else {
-    selecionados.splice(idx, 1);
-    btn.textContent = "🎯 Selecionar";
-    btn.classList.remove("selecionado");
-    mostrarToast("Candidato removido da lista.");
+    if (novoValor) {
+      btn.textContent = "✅ Sel.";
+      btn.classList.add("selecionado");
+      mostrarToast("Candidato selecionado! 📱 Mensagem enviada.", "success");
+    } else {
+      btn.textContent = "🎯 Sel.";
+      btn.classList.remove("selecionado");
+      mostrarToast("Candidato removido da seleção.");
+    }
+
+    // Atualiza o objeto local para o resumo refletir
+    const c = curriculos.find(x => x.id === id);
+    if (c) c.selecionado = novoValor;
+    atualizarResumo(curriculos);
+
+  } catch (err) {
+    console.warn("Erro ao selecionar:", err);
+    mostrarToast("Erro ao atualizar seleção.", "danger");
+  } finally {
+    btn.disabled = false;
   }
-  localStorage.setItem("selecionados", JSON.stringify(selecionados));
-  atualizarResumo(curriculos);
 }
 
 /* ── Cards de resumo ── */
@@ -1127,7 +1133,7 @@ function atualizarResumo(lista) {
   const container = document.getElementById("cardsResumo");
   const cargosMap = {};
   lista.forEach(c => { cargosMap[c.cargo] = (cargosMap[c.cargo] || 0) + 1; });
-  const selCount = lista.filter(c => selecionados.includes(c.id)).length;
+  const selCount = lista.filter(c => c.selecionado).length;
 
   const icones = { "TI": "💻", "Administrativo": "🗂️" };
 
