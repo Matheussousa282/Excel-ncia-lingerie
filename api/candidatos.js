@@ -108,6 +108,21 @@ export default async function handler(req, res) {
   // ════════════════════════════════════════
   if (req.method === "GET") {
     try {
+      // GET /api/candidatos?reprovados=1  →  retorna só os reprovados direto no banco
+      if (req.query.reprovados === "1") {
+        const r = await pool.query(`
+          SELECT c.id, c.nome, c.email, c.telefone,
+            ca.nome AS cargo, i.nome AS instituicao, u.nome AS unidade
+          FROM candidatos c
+          JOIN cargos       ca ON ca.id = c.cargo_id
+          JOIN instituicoes i  ON i.id  = c.instituicao_id
+          JOIN unidades     u  ON u.id  = c.unidade_id
+          WHERE c.reprovado = true
+          ORDER BY c.criado_em DESC
+        `);
+        return res.status(200).json(r.rows);
+      }
+
       // GET /api/candidatos?arquivados=1  →  retorna só os arquivados
       if (req.query.arquivados === "1") {
         const r = await pool.query(`
@@ -266,6 +281,37 @@ export default async function handler(req, res) {
       if (acao === "reprovado") {
         await pool.query(
           "UPDATE candidatos SET reprovado = true, em_teste = false, selecionado = false WHERE id = $1", [id]
+        );
+        return res.status(200).json({ success: true });
+      }
+
+      // ── Arquivar candidato
+      if (acao === "arquivar") {
+        const { motivo_arquivamento, arquivado_por } = req.body;
+        await pool.query(
+          `UPDATE candidatos SET
+             arquivado = true,
+             motivo_arquivamento = $1,
+             arquivado_por = $2,
+             arquivado_em = NOW(),
+             selecionado = false,
+             em_teste = false
+           WHERE id = $3`,
+          [motivo_arquivamento || null, arquivado_por || null, id]
+        );
+        return res.status(200).json({ success: true });
+      }
+
+      // ── Restaurar candidato arquivado
+      if (acao === "restaurar") {
+        await pool.query(
+          `UPDATE candidatos SET
+             arquivado = false,
+             motivo_arquivamento = null,
+             arquivado_por = null,
+             arquivado_em = null
+           WHERE id = $1`,
+          [id]
         );
         return res.status(200).json({ success: true });
       }
