@@ -152,6 +152,7 @@ export default async function handler(req, res) {
           c.apresentacao,
           c.arquivo_nome,
           c.aprovado,
+          c.reprovado,
           c.em_teste,
           c.selecionado,
           c.maquinas,
@@ -250,6 +251,22 @@ export default async function handler(req, res) {
           }
         }
 
+        return res.status(200).json({ success: true });
+      }
+
+      // ── Aprovar candidato direto (sem entrevista)
+      if (acao === "aprovado") {
+        await pool.query(
+          "UPDATE candidatos SET aprovado = true, em_teste = false, selecionado = false WHERE id = $1", [id]
+        );
+        return res.status(200).json({ success: true });
+      }
+
+      // ── Reprovar candidato direto (sem entrevista)
+      if (acao === "reprovado") {
+        await pool.query(
+          "UPDATE candidatos SET reprovado = true, em_teste = false, selecionado = false WHERE id = $1", [id]
+        );
         return res.status(200).json({ success: true });
       }
 
