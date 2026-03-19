@@ -251,17 +251,39 @@ async function carregar() {
   tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--muted);">Carregando…</td></tr>`;
 
   try {
-    const res  = await fetch("/api/entrevistas?status=reprovado");
-    const data = await res.json();
-    reprovados = data;
-    document.getElementById("totalReprovados").textContent = data.length;
+    // Busca entrevistas reprovadas e candidatos reprovados direto no banco
+    const [resEnt, resCand] = await Promise.all([
+      fetch("/api/entrevistas?status=reprovado"),
+      fetch("/api/candidatos?reprovados=1")
+    ]);
+    const entrevistas  = await resEnt.json();
+    const candBanco    = await resCand.json();
+
+    // Candidatos reprovados sem entrevista — monta no mesmo formato
+    const idsComEntrevista = new Set(entrevistas.map(e => e.candidato_id));
+    const semEntrevista = candBanco
+      .filter(c => !idsComEntrevista.has(c.id))
+      .map(c => ({
+        candidato_id: c.id,
+        candidato_nome: c.nome,
+        candidato_telefone: c.telefone || "—",
+        cargo: c.cargo,
+        unidade: c.unidade,
+        data_hora: null,
+        observacoes: "Reprovado fora do fluxo de entrevista",
+        responsavel: null,
+      }));
+
+    reprovados = [...entrevistas, ...semEntrevista];
+    document.getElementById("totalReprovados").textContent = reprovados.length;
 
     // Preenche select de cargos
-    const cargos = [...new Set(data.map(e => e.cargo).filter(Boolean))];
+    const cargos = [...new Set(reprovados.map(e => e.cargo).filter(Boolean))];
     const sel = document.getElementById("filtroCargo");
+    sel.innerHTML = '<option value="">Todos os cargos</option>';
     cargos.forEach(c => { sel.innerHTML += `<option value="${c}">${c}</option>`; });
 
-    renderizar(data);
+    renderizar(reprovados);
   } catch (e) {
     console.error(e);
     tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><div class="empty-state-icon">⚠️</div><div class="empty-state-title">Erro ao carregar</div></div></td></tr>`;
