@@ -577,6 +577,10 @@ function renderCards() {
   todasEntrevistas.forEach(e => { if(c[e.status]!==undefined) c[e.status]++; });
   const qtdSelecionados = candidatosSelecionadosSemEntrevista().length;
   const qtdTeste        = candidatosEmTeste().length;
+  // Soma reprovados direto do banco (sem entrevista)
+  const qtdReprovadosBanco = candidatos.filter(c => c.reprovado).length;
+  // Soma aprovados direto do banco (sem entrevista)
+  const qtdAprovadosBanco = candidatos.filter(c => c.aprovado && !todasEntrevistas.find(e => e.candidato_id === c.id && e.status === "aprovado")).length;
 
   const cardHTML = (status, borderColor, iconBg, icon, label, valor, textColor) => `
     <div class="card" style="border-left:4px solid ${borderColor}; padding-bottom:32px;"
@@ -594,8 +598,8 @@ function renderCards() {
     cardHTML("teste",      "#7c3aed",        "#f5f3ff",             "🧪","Em Teste",      qtdTeste,        "#7c3aed") +
     cardHTML("agendada",   "var(--warning)","var(--warning-bg)",   "⏳","Agendadas",     c.agendada,      "var(--warning)") +
     cardHTML("realizada",  "var(--primary)","var(--info-bg)",      "📝","Realizadas",    c.realizada,     "var(--primary)") +
-    cardHTML("aprovado",   "var(--success)","var(--success-bg)",   "✅","Aprovados",     c.aprovado,      "var(--success)") +
-    cardHTML("reprovado",  "var(--danger)", "var(--danger-bg)",    "✕","Reprovados",    c.reprovado,     "var(--danger)");
+    cardHTML("aprovado",   "var(--success)","var(--success-bg)",   "✅","Aprovados",     c.aprovado + qtdAprovadosBanco,      "var(--success)") +
+    cardHTML("reprovado",  "var(--danger)", "var(--danger-bg)",    "✕","Reprovados",    c.reprovado + qtdReprovadosBanco,     "var(--danger)");
 }
 
 /* ════ KANBAN ════ */
@@ -803,8 +807,15 @@ async function aprovarDoTeste(candidatoId) {
     const entrevista = todasEntrevistas
       .filter(e => e.candidato_id === candidatoId)
       .sort((a, b) => new Date(b.data_hora) - new Date(a.data_hora))[0];
-    if (entrevista) await mudarStatus(entrevista.id, "aprovado");
-    else {
+
+    if (entrevista) {
+      await mudarStatus(entrevista.id, "aprovado");
+    } else {
+      await fetch("/api/candidatos", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: candidatoId, acao: "aprovado" })
+      });
       mostrarToast("Candidato aprovado! ✅", "success");
       await Promise.all([buscarCandidatos(), buscarTodasEntrevistas()]);
       renderCards();
@@ -822,8 +833,15 @@ async function reprovarDoTeste(candidatoId) {
     const entrevista = todasEntrevistas
       .filter(e => e.candidato_id === candidatoId)
       .sort((a, b) => new Date(b.data_hora) - new Date(a.data_hora))[0];
-    if (entrevista) await mudarStatus(entrevista.id, "reprovado");
-    else {
+
+    if (entrevista) {
+      await mudarStatus(entrevista.id, "reprovado");
+    } else {
+      await fetch("/api/candidatos", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: candidatoId, acao: "reprovado" })
+      });
       mostrarToast("Candidato reprovado.", "");
       await Promise.all([buscarCandidatos(), buscarTodasEntrevistas()]);
       renderCards();
