@@ -332,8 +332,9 @@ function toggleSenha(inputId, btn) {
 }
 
 /* ── Toggle senha (tabela) ── */
-function toggleSenhaCelula(btn, senhaReal) {
+function toggleSenhaCelula(btn) {
   const display = btn.previousElementSibling;
+  const senhaReal = btn.dataset.senha;
   if (btn.dataset.visible === "1") {
     display.textContent = "••••••••";
     btn.textContent = "👁️";
@@ -361,8 +362,8 @@ async function listarUsuarios() {
             <td>
               <div class="senha-cell">
                 <span class="senha-display">••••••••</span>
-                <button class="btn-toggle-senha" data-visible="0"
-                  onclick="toggleSenhaCelula(this, ${JSON.stringify(u.senha)})">👁️</button>
+                <button class="btn-toggle-senha" data-visible="0" data-senha="${u.senha.replace(/"/g,'&quot;').replace(/'/g,'&#39;')}"
+                  onclick="toggleSenhaCelula(this)">👁️</button>
               </div>
             </td>
             <td class="date-cell">${new Date(u.criado_em).toLocaleString("pt-BR")}</td>
