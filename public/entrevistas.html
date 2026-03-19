@@ -484,6 +484,7 @@ body { font-family: "DM Sans", sans-serif; background: var(--bg); color: var(--t
 /* ── Estado global ── */
 let todasEntrevistas = [];
 let candidatos       = [];
+let todosCandidatos  = [];
 let calAtual         = new Date();
 let horarioSel       = null;
 let statusAtualModal = null; // status do modal de lista aberto atualmente
@@ -519,7 +520,9 @@ async function buscarCandidatos() {
   try {
     const r = await fetch("/api/candidatos");
     const todos = await r.json();
-    candidatos = todos.filter(c => !c.aprovado);
+    // Mantém todos para contar aprovados/reprovados direto do banco
+    todosCandidatos = todos;
+    candidatos = todos.filter(c => !c.aprovado && !c.reprovado);
 
     // IDs que já têm entrevista agendada ou aprovada — não aparecem no select
     const comEntrevista = new Set(
@@ -578,9 +581,8 @@ function renderCards() {
   const qtdSelecionados = candidatosSelecionadosSemEntrevista().length;
   const qtdTeste        = candidatosEmTeste().length;
   // Soma reprovados direto do banco (sem entrevista)
-  const qtdReprovadosBanco = candidatos.filter(c => c.reprovado).length;
-  // Soma aprovados direto do banco (sem entrevista)
-  const qtdAprovadosBanco = candidatos.filter(c => c.aprovado && !todasEntrevistas.find(e => e.candidato_id === c.id && e.status === "aprovado")).length;
+  const qtdReprovadosBanco = todosCandidatos.filter(c => c.reprovado && !todasEntrevistas.find(e => e.candidato_id === c.id && e.status === "reprovado")).length;
+  const qtdAprovadosBanco  = todosCandidatos.filter(c => c.aprovado  && !todasEntrevistas.find(e => e.candidato_id === c.id && e.status === "aprovado")).length;
 
   const cardHTML = (status, borderColor, iconBg, icon, label, valor, textColor) => `
     <div class="card" style="border-left:4px solid ${borderColor}; padding-bottom:32px;"
@@ -1387,7 +1389,16 @@ function abrirListaStatus(status) {
 
   // ── Demais status: vem do banco ──
   } else {
-    const lista = todasEntrevistas.filter(e => e.status === status);
+    const listEntrevistas = todasEntrevistas.filter(e => e.status === status);
+    // Candidatos aprovados/reprovados direto no banco (sem entrevista)
+    const listBanco = (status === "aprovado" || status === "reprovado")
+      ? todosCandidatos.filter(c => c[status] && !todasEntrevistas.find(e => e.candidato_id === c.id && e.status === status))
+      : [];
+    const lista = [...listEntrevistas, ...listBanco.map(c => ({
+      candidato_id: c.id, candidato_nome: c.nome, cargo: c.cargo,
+      unidade: c.unidade, responsavel: null, data_hora: null, observacoes: null,
+      _semEntrevista: true
+    }))];
     document.getElementById("modalListaSubtitulo").textContent =
       `${lista.length} candidato${lista.length !== 1 ? "s" : ""}`;
 
@@ -1396,9 +1407,9 @@ function abrirListaStatus(status) {
     } else {
       conteudo.innerHTML = lista.map(e => {
         const ini   = e.candidato_nome.split(" ").slice(0,2).map(n=>n[0]).join("");
-        const dt    = parseDateLocal(e.data_hora);
-        const dtStr = dataStr(e.data_hora);
-        const hrStr = horaStr(e);
+        const dt    = e.data_hora ? parseDateLocal(e.data_hora) : null;
+        const dtStr = e.data_hora ? dataStr(e.data_hora) : "";
+        const hrStr = e.data_hora ? horaStr(e) : "";
         const avBg  = e.cargo !== "TI"
           ? "background:linear-gradient(135deg,#0da868,#34d399)"
           : "background:linear-gradient(135deg,#0f62fe,#5b9cf6)";
