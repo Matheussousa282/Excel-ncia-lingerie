@@ -12,11 +12,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>RH EXCELENCIA</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-<!-- ✅ reCAPTCHA v3 -->
-<script src="https://www.google.com/recaptcha/api.js?render=6LehqZ4sAAAAAJa7Incal1i_pejg6kOCVSyPxFXU"></script>
-
 <style>
+/* ── Cores originais mantidas: preto → dourado ── */
 :root {
   --primary: #c4a264;
   --primary-dark: #080808;
@@ -42,6 +39,7 @@ body {
   min-height: 100vh;
 }
 
+/* Detalhe decorativo de fundo */
 body::before {
   content: "";
   position: fixed;
@@ -73,6 +71,7 @@ body::before {
   to   { opacity: 1; transform: translateY(0); }
 }
 
+/* ── HEADER ── */
 .card-header {
   background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
   padding: 32px 30px 28px;
@@ -113,8 +112,10 @@ body::before {
   margin: 0 auto;
 }
 
+/* ── BODY ── */
 .card-body { padding: 32px 30px; }
 
+/* ── GRID DO FORM ── */
 form {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -123,6 +124,7 @@ form {
 
 .full { grid-column: span 2; }
 
+/* ── FIELD ── */
 .field { display: flex; flex-direction: column; }
 
 label {
@@ -180,7 +182,10 @@ textarea {
   line-height: 1.55;
 }
 
-.file-input-wrap { position: relative; }
+/* Upload de arquivo */
+.file-input-wrap {
+  position: relative;
+}
 
 input[type="file"] {
   padding: 10px 14px;
@@ -202,10 +207,18 @@ input[type="file"]::file-selector-button {
   transition: background 0.2s;
 }
 
-input[type="file"]::file-selector-button:hover { background: var(--primary-hover); }
+input[type="file"]::file-selector-button:hover {
+  background: var(--primary-hover);
+}
 
-.file-hint { font-size: 12px; color: var(--muted); margin-top: 5px; }
+/* Hint do arquivo */
+.file-hint {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 5px;
+}
 
+/* ── BOTÃO ── */
 .actions { grid-column: span 2; }
 
 .btn-submit {
@@ -232,31 +245,7 @@ input[type="file"]::file-selector-button:hover { background: var(--primary-hover
 .btn-submit:active { transform: translateY(0); }
 .btn-submit:disabled { opacity: 0.65; pointer-events: none; }
 
-.recaptcha-badge-custom {
-  grid-column: span 2;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 14px;
-  background: #f8f9fa;
-  border: 1.5px solid #e5e7eb;
-  border-radius: 8px;
-  font-size: 11.5px;
-  color: var(--muted);
-}
-
-.recaptcha-badge-custom .shield-icon { font-size: 18px; flex-shrink: 0; }
-
-.recaptcha-badge-custom a {
-  color: var(--primary);
-  text-decoration: none;
-  font-weight: 600;
-}
-
-.recaptcha-badge-custom a:hover { text-decoration: underline; }
-
-.grecaptcha-badge { visibility: hidden !important; }
-
+/* ── SUCCESS MESSAGE ── */
 .success-msg {
   display: none;
   flex-direction: column;
@@ -289,6 +278,7 @@ input[type="file"]::file-selector-button:hover { background: var(--primary-hover
 }
 .btn-novo:hover { background: #0a9959; }
 
+/* ── FOOTER ── */
 .footer-card {
   padding: 18px 30px;
   border-top: 1px solid #f0f0f0;
@@ -313,6 +303,7 @@ input[type="file"]::file-selector-button:hover { background: var(--primary-hover
   font-weight: 500;
 }
 
+/* ── CAMPOS DINÂMICOS ── */
 .campo-dinamico {
   display: none;
   grid-column: span 2;
@@ -320,7 +311,18 @@ input[type="file"]::file-selector-button:hover { background: var(--primary-hover
 }
 .campo-dinamico.show { display: flex; flex-direction: column; }
 
-.cargos-pretendidos-wrap { display: flex; flex-direction: column; gap: 10px; }
+/* Cargos pretendidos */
+.cargos-pretendidos-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cargos-pretendidos-label {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 4px;
+}
 
 .cargo-chips {
   display: flex;
@@ -369,16 +371,33 @@ input[type="file"]::file-selector-button:hover { background: var(--primary-hover
 }
 .cargo-chip button:hover { color: #fff; }
 
-.cargo-chips-placeholder { font-size: 13.5px; color: #b0b7c3; align-self: center; }
+.cargo-chips-placeholder {
+  font-size: 13.5px;
+  color: #b0b7c3;
+  align-self: center;
+}
 
-.cargos-dropdown { position: relative; }
-.cargos-dropdown select { width: 100%; }
+.cargos-dropdown {
+  position: relative;
+}
 
-.cargos-limite-aviso { font-size: 12px; color: var(--primary); font-weight: 600; margin-top: 4px; display: none; }
+.cargos-dropdown select {
+  width: 100%;
+}
+
+.cargos-limite-aviso {
+  font-size: 12px;
+  color: var(--primary);
+  font-weight: 600;
+  margin-top: 4px;
+  display: none;
+}
 .cargos-limite-aviso.show { display: block; }
 
+/* Campo máquinas */
 .maquinas-wrap { display: flex; flex-direction: column; }
 
+/* ── LABEL PULSE ── */
 .label-pulse {
   font-size: 14px;
   font-weight: 700;
@@ -394,6 +413,7 @@ input[type="file"]::file-selector-button:hover { background: var(--primary-hover
   100% { opacity: 1;    transform: scale(1);    color: var(--primary); }
 }
 
+/* ── VALIDAÇÃO ── */
 .field-error input { border-color: var(--danger) !important; background: #fff8f8; }
 .field-error input:focus { box-shadow: 0 0 0 3px rgba(220,38,38,0.12) !important; }
 .field-ok input { border-color: var(--success) !important; }
@@ -402,123 +422,17 @@ input[type="file"]::file-selector-button:hover { background: var(--primary-hover
 .field-msg.error { color: var(--danger); }
 .field-msg.ok    { color: var(--success); }
 
+/* ── RESPONSIVE ── */
 @media (max-width: 640px) {
   .page { padding: 0; align-items: flex-start; }
   .card { border-radius: 0; min-height: 100vh; max-width: 100%; }
   form { grid-template-columns: 1fr; }
   .full { grid-column: span 1; }
   .actions { grid-column: span 1; }
-  .recaptcha-badge-custom { grid-column: span 1; }
   .card-body { padding: 24px 20px; }
   .card-header { padding: 26px 20px 22px; }
   input, select, textarea { font-size: 16px; }
   .footer-card { flex-direction: column; text-align: center; }
-}
-
-/* ── MODAL BOT ── */
-.modal-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.85);
-  z-index: 9999;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  backdrop-filter: blur(4px);
-  animation: fadeIn 0.3s ease;
-}
-.modal-overlay.show { display: flex; }
-
-.modal-bot {
-  background: #0a0a0a;
-  border: 1.5px solid #dc2626;
-  border-radius: 16px;
-  padding: 36px 32px;
-  max-width: 460px;
-  width: 100%;
-  text-align: center;
-  box-shadow: 0 0 60px rgba(220,38,38,0.4), 0 0 120px rgba(220,38,38,0.15);
-  animation: shakeModal 0.5s ease;
-}
-
-@keyframes shakeModal {
-  0%,100% { transform: translateX(0); }
-  15%      { transform: translateX(-8px) rotate(-1deg); }
-  30%      { transform: translateX(8px)  rotate(1deg); }
-  45%      { transform: translateX(-6px); }
-  60%      { transform: translateX(6px); }
-  75%      { transform: translateX(-3px); }
-}
-
-.modal-bot .bot-icon {
-  font-size: 52px;
-  display: block;
-  margin-bottom: 12px;
-  animation: pulseRed 1.2s ease-in-out infinite;
-}
-
-@keyframes pulseRed {
-  0%,100% { filter: drop-shadow(0 0 4px #dc2626); }
-  50%     { filter: drop-shadow(0 0 18px #dc2626) drop-shadow(0 0 36px #ff000088); }
-}
-
-.modal-bot .bot-titulo {
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  color: #dc2626;
-  margin-bottom: 10px;
-}
-
-.modal-bot h2 {
-  font-size: 22px;
-  font-weight: 700;
-  color: #fff;
-  margin-bottom: 14px;
-  line-height: 1.3;
-}
-
-.modal-bot p {
-  font-size: 13.5px;
-  color: #9ca3af;
-  line-height: 1.65;
-  margin-bottom: 8px;
-}
-
-.modal-bot .codigo {
-  display: inline-block;
-  font-family: monospace;
-  font-size: 11px;
-  color: #dc2626;
-  background: rgba(220,38,38,0.1);
-  border: 1px solid rgba(220,38,38,0.3);
-  border-radius: 4px;
-  padding: 4px 10px;
-  margin: 10px 0 18px;
-  letter-spacing: 1px;
-}
-
-.modal-bot .btn-fechar-bot {
-  padding: 11px 28px;
-  background: #dc2626;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  font-size: 13.5px;
-  font-weight: 700;
-  font-family: "DM Sans", sans-serif;
-  cursor: pointer;
-  transition: background 0.2s;
-  letter-spacing: 0.3px;
-}
-.modal-bot .btn-fechar-bot:hover { background: #b91c1c; }
-
-.modal-bot .aviso-final {
-  font-size: 11px;
-  color: #4b5563;
-  margin-top: 14px;
 }
 </style>
 </head>
@@ -535,6 +449,7 @@ input[type="file"]::file-selector-button:hover { background: var(--primary-hover
 
     <div class="card-body">
 
+      <!-- Formulário -->
       <form id="formCandidato">
 
         <div class="field">
@@ -562,6 +477,7 @@ input[type="file"]::file-selector-button:hover { background: var(--primary-hover
           </select>
         </div>
 
+        <!-- Campo: Cargos pretendidos (aparece quando cargo = "Outros") -->
         <div class="campo-dinamico" id="campoCargosExtras">
           <label>Cargos pretendidos <span class="req">*</span>
             <span style="font-weight:400;color:var(--muted);font-size:11px;">(selecione até 5)</span>
@@ -579,6 +495,7 @@ input[type="file"]::file-selector-button:hover { background: var(--primary-hover
           </div>
         </div>
 
+        <!-- Campo: Máquinas (aparece quando cargo = "Costureiro(a)") -->
         <div class="campo-dinamico" id="campoCostureira">
           <label for="maquinas">Máquinas que deseja operar ou tem experiência <span class="req">*</span></label>
           <div class="maquinas-wrap">
@@ -617,23 +534,13 @@ input[type="file"]::file-selector-button:hover { background: var(--primary-hover
           <div class="file-hint">📎 Formatos aceitos: PDF, DOC, DOCX, JPG, PNG</div>
         </div>
 
-        <div class="recaptcha-badge-custom">
-          <span class="shield-icon">🛡️</span>
-          <span>
-            Protegido por reCAPTCHA —
-            <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Privacidade</a>
-            e
-            <a href="https://policies.google.com/terms" target="_blank" rel="noopener">Termos</a>
-            do Google se aplicam.
-          </span>
-        </div>
-
         <div class="actions">
           <button type="submit" class="btn-submit" id="btnEnviar">Enviar Currículo</button>
         </div>
 
       </form>
 
+      <!-- Mensagem de sucesso (oculta até o envio) -->
       <div class="success-msg" id="successMsg">
         <div class="icon">🎉</div>
         <h3>Currículo enviado com sucesso!</h3>
@@ -651,28 +558,12 @@ input[type="file"]::file-selector-button:hover { background: var(--primary-hover
   </div>
 </div>
 
-<!-- ── MODAL BOT DETECTADO ── -->
-<div class="modal-overlay" id="modalBot">
-  <div class="modal-bot">
-    <span class="bot-icon">🤖</span>
-    <div class="bot-titulo">⚠ Acesso Bloqueado</div>
-    <h2>Olá, robozinho.<br>Achei que não ia te pegar?</h2>
-    <p>Nosso sistema identificou que esta tentativa de envio <strong style="color:#fff">não foi feita por um ser humano.</strong></p>
-    <p>Seu IP, horário e padrão de acesso foram registrados nos nossos logs.</p>
-    <div class="codigo" id="codigoRastreio">TRACE-ID: gerando...</div>
-    <p style="font-size:12px;color:#6b7280;">Vagas aqui são para <strong style="color:#c4a264">pessoas de verdade</strong>.<br>Bots não precisam de emprego. (Ainda.)</p>
-    <button class="btn-fechar-bot" onclick="fecharModalBot()">Entendido. Sou apenas um bot 🫡</button>
-    <div class="aviso-final">Se você é humano e está vendo isso por engano, recarregue a página e tente novamente.</div>
-  </div>
-</div>
-
 <script>
-const RECAPTCHA_SITE_KEY = "6LehqZ4sAAAAAJa7Incal1i_pejg6kOCVSyPxFXU";
-
 const cargoSelect       = document.getElementById("cargoSelect");
 const instituicaoSelect = document.getElementById("instituicaoSelect");
 const unidadeSelect     = document.getElementById("unidadeSelect");
 
+/* ── Síntese de voz ── */
 function falarMensagem(texto) {
   if ("speechSynthesis" in window) {
     const msg = new SpeechSynthesisUtterance(texto);
@@ -681,11 +572,13 @@ function falarMensagem(texto) {
   }
 }
 
-let cargosExtrasSelecionados = [];
+/* ── Cargos extras selecionados ── */
+let cargosExtrasSelecionados = []; // [{id, nome}]
 let todosCargos = [];
-let cargoOutrosId = null;
-let cargoCosTureiraId = null;
+let cargoOutrosId = null;    // id do cargo "Outros" ou similar
+let cargoCosTureiraId = null; // id do cargo "Costureiro(a)"
 
+/* ════ MÁSCARA DE TELEFONE ════ */
 const inputTelefone = document.getElementById("telefone");
 
 inputTelefone.addEventListener("input", (e) => {
@@ -709,6 +602,7 @@ function validarTelefone() {
   return ok;
 }
 
+/* ════ VALIDAÇÃO DE E-MAIL ════ */
 const inputEmail = document.getElementById("email");
 
 inputEmail.addEventListener("input", () => {
@@ -724,12 +618,7 @@ function validarEmail() {
   const field  = document.getElementById("fieldEmail");
   const msgErr = document.getElementById("msgEmail");
   const msgOk  = document.getElementById("msgEmailOk");
-  if (!val) {
-    field.classList.remove("field-error","field-ok");
-    msgErr.classList.remove("show");
-    msgOk.classList.remove("show");
-    return false;
-  }
+  if (!val) { field.classList.remove("field-error","field-ok"); msgErr.classList.remove("show"); msgOk.classList.remove("show"); return false; }
   const ok = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(val);
   field.classList.toggle("field-error", !ok);
   field.classList.toggle("field-ok", ok);
@@ -738,16 +627,20 @@ function validarEmail() {
   return ok;
 }
 
+/* ── Carrega cargos ── */
 async function carregarCargos() {
   try {
     const res  = await fetch("/api/cargos");
     const data = await res.json();
     todosCargos = data;
+
     cargoSelect.innerHTML = '<option value="">Selecione um cargo</option>';
     data.forEach(c => {
       const o = document.createElement("option");
       o.value = c.id; o.textContent = c.nome;
       cargoSelect.appendChild(o);
+
+      // Detecta "Outros" e "Costureiro(a)" pelo nome (case-insensitive)
       const nome = c.nome.toLowerCase();
       if (nome.includes("outro")) cargoOutrosId = String(c.id);
       if (nome.includes("costurei")) cargoCosTureiraId = String(c.id);
@@ -758,17 +651,23 @@ async function carregarCargos() {
   }
 }
 
+/* ── Ao trocar cargo, exibe campos dinâmicos ── */
 cargoSelect.addEventListener("change", () => {
   const val = cargoSelect.value;
+
   const campoCargosExtras = document.getElementById("campoCargosExtras");
   const campoCostureira   = document.getElementById("campoCostureira");
   const maquinas          = document.getElementById("maquinas");
+
+  // Reseta tudo
   campoCargosExtras.classList.remove("show");
   campoCostureira.classList.remove("show");
   maquinas.required = false;
   maquinas.value    = "";
   cargosExtrasSelecionados = [];
   renderizarChips();
+
+  // Mostra "Outros" ou campo de máquinas direto se Costureiro(a)
   if (val === cargoOutrosId) {
     campoCargosExtras.classList.add("show");
     preencherSelectExtras();
@@ -778,18 +677,20 @@ cargoSelect.addEventListener("change", () => {
   }
 });
 
+/* ── Preenche o select de cargos extras (exclui "Outros" e já selecionados) ── */
 function preencherSelectExtras() {
   const sel = document.getElementById("cargosExtrasSelect");
   sel.innerHTML = '<option value="">＋ Adicionar cargo…</option>';
   todosCargos.forEach(c => {
-    if (String(c.id) === cargoOutrosId) return;
-    if (cargosExtrasSelecionados.find(x => x.id === String(c.id))) return;
+    if (String(c.id) === cargoOutrosId) return; // remove "Outros" da lista
+    if (cargosExtrasSelecionados.find(x => x.id === String(c.id))) return; // já selecionado
     const o = document.createElement("option");
     o.value = c.id; o.textContent = c.nome;
     sel.appendChild(o);
   });
 }
 
+/* ── Adiciona cargo chip ── */
 function adicionarCargoExtra(sel) {
   if (!sel.value) return;
   if (cargosExtrasSelecionados.length >= 5) {
@@ -797,19 +698,23 @@ function adicionarCargoExtra(sel) {
     document.getElementById("limiteAviso").classList.add("show");
     return;
   }
+
   const nome = sel.options[sel.selectedIndex].textContent;
   const id   = sel.value;
+
   cargosExtrasSelecionados.push({ id, nome });
   renderizarChips();
   preencherSelectExtras();
   verificarCostureira();
   sel.value = "";
+
   document.getElementById("limiteAviso").classList.remove("show");
   if (cargosExtrasSelecionados.length >= 5) {
     document.getElementById("limiteAviso").classList.add("show");
   }
 }
 
+/* ── Remove cargo chip ── */
 function removerCargoExtra(id) {
   cargosExtrasSelecionados = cargosExtrasSelecionados.filter(c => c.id !== id);
   renderizarChips();
@@ -818,12 +723,16 @@ function removerCargoExtra(id) {
   document.getElementById("limiteAviso").classList.remove("show");
 }
 
+/* ── Renderiza chips ── */
 function renderizarChips() {
   const wrap = document.getElementById("cargoChips");
+  const placeholder = document.getElementById("chipsPlaceholder");
+
   if (!cargosExtrasSelecionados.length) {
     wrap.innerHTML = '<span class="cargo-chips-placeholder" id="chipsPlaceholder">Selecione os cargos abaixo…</span>';
     return;
   }
+
   wrap.innerHTML = cargosExtrasSelecionados.map(c => `
     <span class="cargo-chip">
       ${c.nome}
@@ -832,6 +741,7 @@ function renderizarChips() {
   `).join("");
 }
 
+/* ── Verifica se Costureiro(a) está nos chips e exibe/esconde campo máquinas ── */
 function verificarCostureira() {
   const campoCostureira = document.getElementById("campoCostureira");
   const maquinas        = document.getElementById("maquinas");
@@ -839,6 +749,7 @@ function verificarCostureira() {
     String(c.id) === cargoCosTureiraId ||
     c.nome.toLowerCase().includes("costurei")
   );
+
   if (temCostureira) {
     campoCostureira.classList.add("show");
     maquinas.required = true;
@@ -849,6 +760,7 @@ function verificarCostureira() {
   }
 }
 
+/* ── Carrega instituições ── */
 async function carregarInstituicoes() {
   try {
     const res  = await fetch("/api/instituicoes");
@@ -865,13 +777,16 @@ async function carregarInstituicoes() {
   }
 }
 
+/* ── Ao trocar instituição, carrega unidades ── */
 instituicaoSelect.addEventListener("change", async () => {
   const id = instituicaoSelect.value;
   unidadeSelect.disabled = !id;
+
   if (!id) {
     unidadeSelect.innerHTML = '<option value="">Selecione uma instituição primeiro</option>';
     return;
   }
+
   try {
     unidadeSelect.innerHTML = '<option value="">Carregando…</option>';
     const res  = await fetch(`/api/unidades?instituicao_id=${id}`);
@@ -889,37 +804,25 @@ instituicaoSelect.addEventListener("change", async () => {
   }
 });
 
+/* ── Envio do formulário ── */
 document.getElementById("formCandidato").addEventListener("submit", async (e) => {
   e.preventDefault();
 
   if (!validarTelefone()) { inputTelefone.focus(); return; }
-  if (!validarEmail())    { inputEmail.focus(); return; }
+  if (!validarEmail()) { inputEmail.focus(); return; }
 
   const btn  = document.getElementById("btnEnviar");
   const file = document.getElementById("arquivo").files[0];
   if (!file) return alert("Selecione um arquivo de currículo.");
 
   btn.disabled = true;
-  btn.textContent = "Verificando segurança…";
+  btn.textContent = "Enviando…";
 
-  try {
-    const recaptchaToken = await new Promise((resolve, reject) => {
-      grecaptcha.ready(() => {
-        grecaptcha.execute(RECAPTCHA_SITE_KEY, { action: "submit_curriculo" })
-          .then(resolve)
-          .catch(reject);
-      });
-    });
+  const reader = new FileReader();
+  reader.onload = async () => {
+    const base64 = reader.result.split(",")[1];
 
-    btn.textContent = "Enviando…";
-
-    const base64 = await new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result.split(",")[1]);
-      reader.onerror = () => reject(new Error("Falha ao ler arquivo"));
-      reader.readAsDataURL(file);
-    });
-
+    // Validação campos dinâmicos
     const cargoVal = document.getElementById("cargoSelect").value;
     if (cargoVal === cargoOutrosId && cargosExtrasSelecionados.length === 0) {
       alert("Selecione pelo menos 1 cargo pretendido.");
@@ -929,66 +832,59 @@ document.getElementById("formCandidato").addEventListener("submit", async (e) =>
     }
 
     const body = {
-      nome:           document.getElementById("nome").value,
-      telefone:       document.getElementById("telefone").value,
-      email:          document.getElementById("email").value,
-      cargo_id:       document.getElementById("cargoSelect").value,
-      instituicao_id: document.getElementById("instituicaoSelect").value,
-      unidade_id:     document.getElementById("unidadeSelect").value,
-      apresentacao:   document.getElementById("apresentacao").value,
+      nome:          document.getElementById("nome").value,
+      telefone:      document.getElementById("telefone").value,
+      email:         document.getElementById("email").value,
+      cargo_id:      document.getElementById("cargoSelect").value,
+      instituicao_id:document.getElementById("instituicaoSelect").value,
+      unidade_id:    document.getElementById("unidadeSelect").value,
+      apresentacao:  document.getElementById("apresentacao").value,
       arquivo_base64: base64,
-      arquivo_nome:   file.name,
+      arquivo_nome:  file.name,
+      // Campos extras
       cargos_pretendidos: cargoVal === cargoOutrosId
         ? cargosExtrasSelecionados.map(c => c.nome).join(", ")
         : null,
       maquinas: (() => {
         const val = document.getElementById("maquinas").value.trim();
+        // Costureiro direto como cargo principal
         if (cargoVal === cargoCosTureiraId && val) return val;
+        // Costureiro dentro dos chips de "Outros"
         const temCostureiro = cargosExtrasSelecionados.some(c =>
           String(c.id) === cargoCosTureiraId || c.nome.toLowerCase().includes("costurei")
         );
         if (temCostureiro && val) return val;
         return null;
       })(),
-      recaptcha_token: recaptchaToken,
     };
 
-    const res = await fetch("/api/candidatos", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body)
-    });
+    try {
+      const res = await fetch("/api/candidatos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
 
-    if (res.ok) {
-      falarMensagem("Seu currículo foi enviado com sucesso. Boa sorte!");
-      document.getElementById("formCandidato").style.display = "none";
-      document.getElementById("successMsg").classList.add("show");
-    } else {
-      if (res.status === 403) {
-        mostrarModalBot();
+      if (res.ok) {
+        falarMensagem("Seu currículo foi enviado com sucesso. Boa sorte!");
+        // Esconde formulário, exibe mensagem de sucesso
+        document.getElementById("formCandidato").style.display = "none";
+        document.getElementById("successMsg").classList.add("show");
       } else {
-        alert("Erro ao enviar. Tente novamente.");
+        const txt = await res.text();
+        alert("Erro ao enviar: " + txt);
       }
+    } catch (err) {
+      console.error(err);
+      alert("Erro de conexão. Tente novamente.");
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Enviar Currículo";
     }
-  } catch (err) {
-    console.error(err);
-    alert("Erro de conexão. Tente novamente.");
-  } finally {
-    btn.disabled = false;
-    btn.textContent = "Enviar Currículo";
-  }
+  };
+
+  reader.readAsDataURL(file);
 });
-
-/* ── Modal Bot ── */
-function mostrarModalBot() {
-  const id = "BOT-" + Date.now().toString(36).toUpperCase() + "-" + Math.random().toString(36).slice(2,6).toUpperCase();
-  document.getElementById("codigoRastreio").textContent = "TRACE-ID: " + id;
-  document.getElementById("modalBot").classList.add("show");
-}
-
-function fecharModalBot() {
-  document.getElementById("modalBot").classList.remove("show");
-}
 
 /* ── Enviar outro currículo ── */
 function novoCadastro() {
@@ -997,6 +893,7 @@ function novoCadastro() {
   document.getElementById("successMsg").classList.remove("show");
   unidadeSelect.disabled = true;
   unidadeSelect.innerHTML = '<option value="">Selecione uma instituição primeiro</option>';
+  // Reset campos dinâmicos
   cargosExtrasSelecionados = [];
   renderizarChips();
   document.getElementById("campoCargosExtras").classList.remove("show");

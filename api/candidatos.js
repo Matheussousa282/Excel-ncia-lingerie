@@ -65,31 +65,8 @@ export default async function handler(req, res) {
         nome, telefone, email,
         cargo_id, instituicao_id, unidade_id,
         apresentacao, arquivo_base64, arquivo_nome,
-        maquinas, cargos_pretendidos,
-        recaptcha_token,                         // ✅ token vindo do front-end
+        maquinas, cargos_pretendidos
       } = req.body;
-
-      // ══════════════════════════════════════
-      // ✅ Verificação reCAPTCHA v3
-      // ══════════════════════════════════════
-      const RECAPTCHA_SECRET = process.env.RECAPTCHA_SECRET_KEY || "6LehqZ4sAAAAAPfpAaKegQ8uSuR6Pi1sjC74hKly";
-
-      if (!recaptcha_token) {
-        return res.status(400).json({ error: "Token de segurança ausente." });
-      }
-
-      const recaptchaRes = await fetch(
-        `https://www.googleapis.com/recaptcha/api/siteverify?secret=${RECAPTCHA_SECRET}&response=${recaptcha_token}`,
-        { method: "POST" }
-      );
-      const recaptchaData = await recaptchaRes.json();
-
-      // score: 1.0 = humano, 0.0 = bot — bloqueamos abaixo de 0.5
-      if (!recaptchaData.success || recaptchaData.score < 0.5) {
-        console.warn("[reCAPTCHA] Bloqueado — score:", recaptchaData.score, recaptchaData);
-        return res.status(403).json({ error: "Verificação de segurança falhou. Tente novamente." });
-      }
-      // ══════════════════════════════════════
 
       if (!arquivo_base64) {
         return res.status(400).json({ error: "Arquivo é obrigatório" });
@@ -207,6 +184,8 @@ export default async function handler(req, res) {
         ORDER BY c.criado_em DESC
       `);
 
+      // Não inclui o campo "arquivo" na listagem geral
+      // O front-end busca o arquivo individualmente via ?arquivo=ID
       return res.status(200).json(result.rows);
 
     } catch (err) {
@@ -253,6 +232,7 @@ export default async function handler(req, res) {
           [novoValor, id]
         );
 
+        // Dispara WhatsApp quando MARCA como em teste (não quando desmarca)
         if (novoValor) {
           const cand = await pool.query(
             "SELECT nome, telefone FROM candidatos WHERE id = $1", [id]
@@ -275,6 +255,7 @@ export default async function handler(req, res) {
           [novoValor, id]
         );
 
+        // Dispara WhatsApp apenas quando SELECIONA
         if (novoValor) {
           const cand = await pool.query(
             "SELECT nome, telefone FROM candidatos WHERE id = $1", [id]
@@ -340,6 +321,7 @@ export default async function handler(req, res) {
         await pool.query(
           "UPDATE candidatos SET aprovado = false WHERE id = $1", [id]
         );
+        // Reverte entrevista mais recente de 'aprovado' para 'realizada'
         await pool.query(
           `UPDATE entrevistas
            SET status = 'realizada'
