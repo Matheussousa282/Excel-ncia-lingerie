@@ -250,6 +250,18 @@ tbody tr:last-child td { border-bottom: none; }
 <div class="toast" id="toast"></div>
 
 <script>
+
+/* ════════════════════════════════════
+   GUARD DE LOGIN
+   ────────────────────────────────────
+   Verifica se há usuário no localStorage.
+   Se não houver, redireciona para login.html.
+   ════════════════════════════════════ */
+const usuarioRaw = localStorage.getItem("usuario");
+if (!usuarioRaw) {
+  window.location.href = "login.html";
+}
+
 let arquivados = [];
 
 async function carregar() {
@@ -382,6 +394,11 @@ function mostrarToast(msg, tipo = "") {
 }
 
 carregar();
+/* ── Logout ── */
+function logout() {
+  localStorage.removeItem("usuario");
+  window.location.href = "login.html";
+}
 </script>
 </body>
 </html>

@@ -481,6 +481,19 @@ body { font-family: "DM Sans", sans-serif; background: var(--bg); color: var(--t
 <div class="toast" id="toast"></div>
 
 <script>
+
+  /* ════════════════════════════════════
+   GUARD DE LOGIN
+   ────────────────────────────────────
+   Verifica se há usuário no localStorage.
+   Se não houver, redireciona para login.html.
+   ════════════════════════════════════ */
+const usuarioRaw = localStorage.getItem("usuario");
+if (!usuarioRaw) {
+  window.location.href = "login.html";
+}
+
+
 /* ── Estado global ── */
 let todasEntrevistas = [];
 let candidatos       = [];
@@ -1560,6 +1573,12 @@ function exportarPDFStatus(status) {
 }
 
 inicializar();
+
+/* ── Logout ── */
+function logout() {
+  localStorage.removeItem("usuario");
+  window.location.href = "login.html";
+}
 </script>
 </body>
 </html>

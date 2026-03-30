@@ -899,13 +899,13 @@ th:last-child { white-space: nowrap; }
    a tela sem precisar de login. Para ATIVAR,
    basta descomentar as linhas abaixo:
    ═══════════════════════════════════════════════ */
-/*
+
 const usuario = localStorage.getItem("usuario");
 if (!usuario) {
   window.location.href = "login.html";
 }
 document.getElementById("usuarioLogado").textContent = usuario;
-*/
+
 
 /* ═══════════════════════════════════════════════
    ESTADO GLOBAL
@@ -1830,6 +1830,12 @@ window.addEventListener("click", e => {
 
 /* ── Inicializa ── */
 carregarCurriculos();
+
+/* ── Logout ── */
+function logout() {
+  localStorage.removeItem("usuario");
+  window.location.href = "login.html";
+}
 </script>
 </body>
 </html>
