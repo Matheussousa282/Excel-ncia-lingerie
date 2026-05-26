@@ -1710,8 +1710,9 @@ async function editCarregarSelects() {
 
     const selCargo = document.getElementById("editCargo");
     selCargo.innerHTML = '<option value="">Selecione…</option>';
-    cargos.filter(c => c.ativo !== false).forEach(c => {
-      selCargo.innerHTML += `<option value="${c.nome}">${c.nome}</option>`;
+    cargos.forEach(c => {
+      const inativo = c.ativo === false;
+      selCargo.innerHTML += `<option value="${c.nome}"${inativo ? ' style="color:#8a94a6;"' : ''}>${c.nome}${inativo ? ' (inativo)' : ''}</option>`;
     });
 
     const selInst = document.getElementById("editInstituicao");
