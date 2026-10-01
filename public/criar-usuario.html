@@ -3,241 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Criar Usuário | RH System</title>
+<title>RH | Usuários e Acessos</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-<style>
-/* ── Cores originais mantidas: preto → dourado ── */
-:root {
-  --primary: #c4a264;
-  --primary-dark: #080808;
-  --primary-hover: #b08d50;
-  --bg: #f3f4f6;
-  --card: #ffffff;
-  --border: #d1d5db;
-  --text: #1f2937;
-  --text-secondary: #4a5568;
-  --muted: #6b7280;
-  --success: #16a34a;
-  --success-bg: #f0fdf4;
-  --danger: #dc2626;
-  --danger-bg: #fef2f2;
-  --warning: #d97706;
-  --warning-bg: #fffbeb;
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.07);
-  --shadow-md: 0 8px 24px rgba(0,0,0,0.12);
-  --radius: 14px;
-  --radius-sm: 9px;
-}
-
-* { box-sizing: border-box; margin: 0; padding: 0; }
-
-body {
-  font-family: "DM Sans", "Segoe UI", sans-serif;
-  background: linear-gradient(135deg, #000000 0%, #c59845 100%);
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 28px 16px 40px;
-  gap: 20px;
-}
-
-/* ── CARD GENÉRICO ── */
-.card {
-  width: 100%;
-  max-width: 760px;
-  background: var(--card);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-md);
-  overflow: hidden;
-  animation: fadeIn 0.35s ease;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(16px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-.card-header {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-  padding: 22px 26px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.card-header h2 {
-  color: #fff;
-  font-size: 17px;
-  font-weight: 700;
-  letter-spacing: -0.2px;
-}
-
-.card-header .header-icon {
-  font-size: 20px;
-}
-
-.card-body { padding: 24px 26px; }
-
-/* ── ALERTA DE SEGURANÇA ── */
-.security-alert {
-  background: var(--warning-bg);
-  border: 1px solid #fde68a;
-  border-radius: var(--radius-sm);
-  padding: 11px 14px;
-  font-size: 12.5px;
-  color: var(--warning);
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  margin-bottom: 20px;
-  line-height: 1.5;
-}
-
-/* ── FORMULÁRIO ── */
-.field { margin-bottom: 16px; }
-
-label {
-  display: block;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text);
-  margin-bottom: 6px;
-}
-
-.input-wrap { position: relative; }
-.input-wrap .input-icon {
-  position: absolute; left: 12px; top: 50%;
-  transform: translateY(-50%);
-  font-size: 14px; color: var(--muted); pointer-events: none;
-}
-
-input {
-  width: 100%;
-  padding: 10px 13px 10px 38px;
-  font-size: 14px;
-  font-family: "DM Sans", sans-serif;
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: #fafafa;
-  color: var(--text);
-  transition: all 0.2s;
-  outline: none;
-}
-
-input:focus {
-  border-color: var(--primary);
-  background: #fff;
-  box-shadow: 0 0 0 3px rgba(196,162,100,0.18);
-}
-
-input::placeholder { color: #b0b7c3; }
-
-.toggle-senha {
-  position: absolute; right: 11px; top: 50%;
-  transform: translateY(-50%);
-  background: none; border: none;
-  cursor: pointer; font-size: 14px;
-  color: var(--muted); transition: color 0.2s;
-}
-.toggle-senha:hover { color: var(--primary); }
-
-/* ── BOTÃO ── */
-.btn-submit {
-  width: 100%;
-  padding: 12px;
-  background: linear-gradient(135deg, var(--primary) 0%, #a8884e 100%);
-  color: #fff;
-  font-size: 15px;
-  font-weight: 700;
-  font-family: "DM Sans", sans-serif;
-  border: none;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: all 0.2s;
-  margin-top: 4px;
-}
-
-.btn-submit:hover {
-  background: linear-gradient(135deg, var(--primary-hover) 0%, #8a6e3a 100%);
-  transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(196,162,100,0.35);
-}
-
-/* ── MSG RESULTADO ── */
-.result-msg {
-  display: none;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 13px;
-  border-radius: var(--radius-sm);
-  font-size: 13.5px;
-  font-weight: 500;
-  margin-top: 14px;
-  animation: fadeIn 0.2s ease;
-}
-.result-msg.show { display: flex; }
-.result-msg.success { background: var(--success-bg); color: var(--success); border: 1px solid #bbf7d0; }
-.result-msg.error   { background: var(--danger-bg);  color: var(--danger);  border: 1px solid #fecaca; }
-
-/* ── TABELA DE USUÁRIOS ── */
-.card-usuarios { max-width: 760px; }
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-th {
-  padding: 10px 14px;
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--muted);
-  background: #f8fafc;
-  border-bottom: 1px solid var(--border);
-  text-align: left;
-}
-
-td {
-  padding: 12px 14px;
-  font-size: 13.5px;
-  border-bottom: 1px solid #f0f4f8;
-  vertical-align: middle;
-}
-
-tbody tr:last-child td { border-bottom: none; }
-tbody tr:hover { background: rgba(196,162,100,0.04); }
-
-/* Senha oculta na tabela */
-.senha-cell {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.senha-display {
-  font-family: monospace;
-  font-size: 13px;
-  letter-spacing: 2px;
-  color: var(--muted);
-}
-
-.btn-toggle-senha {
-  background: none; border: none;
-  cursor: pointer; font-size: 14px;
-  color: var(--muted); transition: color 0.2s;
-  padding: 2px 4px; flex-shrink: 0;
-}
-.btn-toggle-senha:hover { color: var(--primary); }
-
-/* Data formatada */
-.date-cell { font-size: 12px; color: var(--muted); }
-
-/* Loading */
-.loading-row td { text-align: center; color: var(--muted); padding: 24px; font-size: 13px; }
-</style>
 <script>
 /* auth-fetch.js
    Anexa o token do usuário logado em toda chamada para /api/*
@@ -273,139 +40,473 @@ tbody tr:hover { background: rgba(196,162,100,0.04); }
   };
 })();
 </script>
+<style>
+:root {
+  --primary: #c4a264;
+  --primary-hover: #b08d50;
+  --primary-soft: rgba(196,162,100,0.10);
+  --dark: #0f172a;
+  --bg: #f3f4f6;
+  --card: #ffffff;
+  --border: #e5e7eb;
+  --border-strong: #d1d5db;
+  --text: #111827;
+  --text-secondary: #4a5568;
+  --muted: #6b7280;
+  --success: #16a34a;
+  --success-bg: #f0fdf4;
+  --danger: #dc2626;
+  --danger-bg: #fef2f2;
+  --warning: #b45309;
+  --warning-bg: #fffbeb;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.07);
+  --shadow-md: 0 8px 24px rgba(0,0,0,0.08);
+  --radius: 14px;
+  --radius-sm: 9px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: "DM Sans", "Segoe UI", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  padding: 32px 20px 56px;
+}
+
+.container { max-width: 880px; margin: 0 auto; }
+
+/* ── CABEÇALHO ── */
+.page-head { text-align: center; margin-bottom: 24px; }
+.page-head h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.4px; }
+.page-head p  { font-size: 14px; color: var(--muted); margin-top: 6px; }
+
+/* ── ABAS ── */
+.tabs {
+  display: flex; justify-content: center; gap: 6px;
+  background: #e9ebef; padding: 5px; border-radius: 12px;
+  width: fit-content; margin: 0 auto 24px;
+}
+.tab {
+  border: none; background: transparent; cursor: pointer;
+  padding: 10px 22px; border-radius: 9px;
+  font-family: inherit; font-size: 14px; font-weight: 600; color: var(--muted);
+  transition: all 0.2s; display: flex; align-items: center; gap: 8px;
+}
+.tab:hover { color: var(--text); }
+.tab.active { background: #fff; color: var(--text); box-shadow: var(--shadow-sm); }
+.tab .count {
+  background: var(--primary-soft); color: var(--primary-hover);
+  font-size: 11.5px; font-weight: 700; padding: 2px 8px; border-radius: 10px;
+}
+
+.screen { display: none; animation: fadeIn 0.25s ease; }
+.screen.show { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+/* ── CARD ── */
+.card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); box-shadow: var(--shadow-sm); overflow: hidden;
+}
+.card-header {
+  padding: 18px 24px; border-bottom: 1px solid var(--border); background: #fafafa;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  font-size: 15px; font-weight: 700;
+}
+.card-body { padding: 28px; }
+
+/* ── SEÇÕES DO FORMULÁRIO ── */
+.section { margin-bottom: 30px; }
+.section:last-of-type { margin-bottom: 0; }
+.section-title {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  font-size: 12px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.7px; color: var(--muted); margin-bottom: 16px;
+}
+.section-title .num {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--dark); color: var(--primary);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 11.5px; letter-spacing: 0;
+}
+.section-title::before, .section-title::after {
+  content: ""; height: 1px; background: var(--border); flex: 1; max-width: 120px;
+}
+
+.edit-banner {
+  display: none; align-items: center; justify-content: center; gap: 8px;
+  margin-bottom: 22px; padding: 11px 14px; font-size: 13.5px; font-weight: 600;
+  background: var(--warning-bg); border: 1px solid #fde68a; color: var(--warning);
+  border-radius: var(--radius-sm);
+}
+
+/* ── CAMPOS ── */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 640px) { .grid-2 { grid-template-columns: 1fr; } }
+
+label.lbl {
+  display: block; font-size: 12.5px; font-weight: 600; color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+.input-wrap { position: relative; }
+.input-wrap .input-icon {
+  position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+  font-size: 14px; pointer-events: none;
+}
+.input-wrap input[type="text"], .input-wrap input[type="password"] {
+  width: 100%; padding: 11px 40px 11px 38px; font-size: 14px; font-family: inherit;
+  border: 1.5px solid var(--border-strong); border-radius: var(--radius-sm);
+  background: #fafafa; color: var(--text); outline: none; transition: all 0.2s;
+}
+.input-wrap input:focus {
+  border-color: var(--primary); background: #fff;
+  box-shadow: 0 0 0 3px rgba(196,162,100,0.18);
+}
+.input-wrap input:disabled { background: #eef0f3; color: var(--muted); cursor: not-allowed; }
+.input-wrap input::placeholder { color: #b0b7c3; }
+.toggle-senha {
+  position: absolute; right: 11px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; cursor: pointer; font-size: 15px; color: var(--muted);
+}
+
+/* ── NÍVEL DE ACESSO (cartões) ── */
+.opcoes { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 640px) { .opcoes { grid-template-columns: 1fr; } }
+.opcao {
+  position: relative; display: flex; flex-direction: column; align-items: center;
+  text-align: center; gap: 6px; padding: 22px 16px; cursor: pointer;
+  border: 2px solid var(--border); border-radius: var(--radius); background: #fafafa;
+  transition: all 0.2s;
+}
+.opcao:hover { border-color: var(--primary); }
+.opcao input { position: absolute; opacity: 0; pointer-events: none; }
+.opcao .ico { font-size: 26px; }
+.opcao strong { font-size: 14.5px; }
+.opcao small { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+.opcao .marca {
+  position: absolute; top: 10px; right: 10px; width: 20px; height: 20px;
+  border-radius: 50%; border: 2px solid var(--border-strong); background: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; color: transparent; transition: all 0.2s;
+}
+.opcao.sel { border-color: var(--primary); background: var(--primary-soft); }
+.opcao.sel .marca { background: var(--primary); border-color: var(--primary); color: #fff; }
+
+/* ── UNIDADES ── */
+.unid-toolbar {
+  display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+  justify-content: center; margin-bottom: 16px;
+}
+.unid-toolbar .busca { position: relative; flex: 1; min-width: 200px; max-width: 320px; }
+.unid-toolbar .busca input {
+  width: 100%; padding: 9px 12px 9px 34px; font-size: 13.5px; font-family: inherit;
+  border: 1.5px solid var(--border-strong); border-radius: var(--radius-sm);
+  background: #fff; outline: none;
+}
+.unid-toolbar .busca input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(196,162,100,0.18); }
+.unid-toolbar .busca span { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); font-size: 13px; }
+
+.btn-ghost {
+  background: #fff; border: 1.5px solid var(--border-strong); color: var(--text-secondary);
+  padding: 8px 14px; border-radius: var(--radius-sm); font-size: 12.5px; font-weight: 600;
+  font-family: inherit; cursor: pointer; transition: all 0.2s;
+}
+.btn-ghost:hover { border-color: var(--primary); color: var(--text); }
+
+.contador {
+  text-align: center; font-size: 13px; font-weight: 600; color: var(--primary-hover);
+  margin-bottom: 16px;
+}
+
+.inst-card {
+  border: 1.5px solid var(--border); border-radius: var(--radius);
+  background: #fff; margin-bottom: 14px; overflow: hidden;
+}
+.inst-head {
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  padding: 13px 16px; background: #f8fafc; border-bottom: 1px solid var(--border);
+  cursor: pointer; position: relative;
+}
+.inst-head .nome { font-size: 14.5px; font-weight: 700; }
+.inst-head .qtd {
+  font-size: 11.5px; font-weight: 700; color: var(--muted);
+  background: #e9ebef; padding: 2px 9px; border-radius: 10px;
+}
+.inst-head .qtd.on { background: var(--primary-soft); color: var(--primary-hover); }
+.tag-inativa { font-size: 11px; color: var(--muted); font-weight: 500; }
+
+.chips {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 10px; padding: 16px;
+}
+.chip {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  padding: 12px 14px; text-align: center; cursor: pointer; user-select: none;
+  border: 1.5px solid var(--border); border-radius: 10px; background: #fafafa;
+  font-size: 13.5px; font-weight: 500; transition: all 0.18s;
+}
+.chip:hover { border-color: var(--primary); }
+.chip.sel { border-color: var(--primary); background: var(--primary-soft); font-weight: 600; }
+
+/* Caixinha de marcar customizada */
+.chk { position: relative; width: 20px; height: 20px; flex-shrink: 0; display: inline-block; }
+.chk input { position: absolute; inset: 0; opacity: 0; cursor: pointer; margin: 0; }
+.chk .box {
+  position: absolute; inset: 0; border: 2px solid var(--border-strong); border-radius: 6px;
+  background: #fff; display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s; pointer-events: none;
+}
+.chk .box::after {
+  content: ""; width: 5px; height: 10px; border: solid #fff; border-width: 0 2.5px 2.5px 0;
+  transform: rotate(45deg) scale(0); margin-top: -2px; transition: transform 0.15s;
+}
+.chk input:checked + .box { background: var(--primary); border-color: var(--primary); }
+.chk input:checked + .box::after { transform: rotate(45deg) scale(1); }
+.chk input:indeterminate + .box { background: var(--primary); border-color: var(--primary); }
+.chk input:indeterminate + .box::after {
+  width: 10px; height: 0; border-width: 0 0 2.5px 0; transform: none; margin-top: 0;
+}
+.chk input:focus-visible + .box { box-shadow: 0 0 0 3px rgba(196,162,100,0.35); }
+
+.vazio { padding: 28px; text-align: center; color: var(--muted); font-size: 13.5px; }
+
+/* ── BOTÕES ── */
+.acoes { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 30px; }
+.btn-submit {
+  width: 100%; max-width: 340px; padding: 13px; border: none; border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, var(--primary) 0%, #a8884e 100%); color: #fff;
+  font-size: 15px; font-weight: 700; font-family: inherit; cursor: pointer; transition: all 0.2s;
+}
+.btn-submit:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(196,162,100,0.4); }
+.btn-submit:disabled { opacity: 0.7; cursor: not-allowed; transform: none; box-shadow: none; }
+.btn-cancelar {
+  display: none; background: none; border: none; color: var(--muted);
+  font-size: 13.5px; font-weight: 600; font-family: inherit; cursor: pointer;
+}
+.btn-cancelar:hover { color: var(--text); }
+
+.result-msg {
+  display: none; align-items: center; justify-content: center; gap: 8px;
+  padding: 10px 14px; border-radius: var(--radius-sm); font-size: 13.5px; font-weight: 500;
+  margin-top: 18px;
+}
+.result-msg.show { display: flex; }
+.result-msg.success { background: var(--success-bg); color: var(--success); border: 1px solid #bbf7d0; }
+.result-msg.error   { background: var(--danger-bg);  color: var(--danger);  border: 1px solid #fecaca; }
+
+/* ── LISTA ── */
+.lista-top { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: center; }
+.lista-top .busca { position: relative; width: 100%; max-width: 360px; }
+.lista-top input {
+  width: 100%; padding: 10px 12px 10px 36px; font-size: 14px; font-family: inherit;
+  border: 1.5px solid var(--border-strong); border-radius: var(--radius-sm); background: #fafafa; outline: none;
+}
+.lista-top input:focus { border-color: var(--primary); background: #fff; box-shadow: 0 0 0 3px rgba(196,162,100,0.18); }
+.lista-top .busca span { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 14px; }
+
+.tabela-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th {
+  padding: 11px 16px; font-size: 11px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.5px; color: var(--muted); background: #f8fafc;
+  border-bottom: 1px solid var(--border); text-align: left; white-space: nowrap;
+}
+td { padding: 14px 16px; font-size: 14px; border-bottom: 1px solid #f0f4f8; vertical-align: middle; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: #fbfaf7; }
+
+.user-cell { display: flex; align-items: center; gap: 11px; }
+.avatar {
+  width: 34px; height: 34px; border-radius: 50%; background: var(--dark); color: var(--primary);
+  display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; flex-shrink: 0;
+}
+.user-cell small { display: block; color: var(--muted); font-size: 11.5px; }
+
+.senha-cell { display: flex; align-items: center; gap: 8px; }
+.senha-display { font-family: monospace; font-size: 13px; letter-spacing: 2px; color: var(--muted); }
+.btn-toggle-senha { background: none; border: none; cursor: pointer; font-size: 14px; color: var(--muted); }
+
+.badge {
+  display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11.5px;
+  font-weight: 700; white-space: nowrap;
+}
+.badge-total   { background: var(--success-bg); color: var(--success); }
+.badge-unidade { background: var(--warning-bg); color: var(--warning); }
+.unid-mini { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.unid-mini span {
+  font-size: 11px; background: #f1f3f6; color: var(--text-secondary);
+  padding: 2px 8px; border-radius: 6px;
+}
+
+.btn-editar {
+  background: #fff; border: 1.5px solid var(--border-strong); border-radius: 8px;
+  padding: 6px 12px; font-size: 12.5px; font-weight: 600; cursor: pointer;
+  font-family: inherit; color: var(--text-secondary); transition: all 0.2s; white-space: nowrap;
+}
+.btn-editar:hover { border-color: var(--primary); color: var(--primary-hover); }
+.date-cell { font-size: 12.5px; color: var(--muted); white-space: nowrap; }
+</style>
 </head>
 <body>
 
-<!-- ── CARD: CRIAR USUÁRIO ── -->
-<div class="card">
-  <div class="card-header">
-    <span class="header-icon">👥</span>
-    <h2 id="tituloForm">Criar Novo Usuário</h2>
+<div class="container">
+
+  <div class="page-head">
+    <h1>👥 Usuários e Acessos</h1>
+    <p>Crie usuários e defina quais instituições e unidades cada um pode acessar.</p>
   </div>
 
-  <div class="card-body">
+  <div class="tabs">
+    <button class="tab active" id="tabLista" onclick="mostrarTela('lista')">📋 Usuários <span class="count" id="countUsuarios">0</span></button>
+    <button class="tab" id="tabForm" onclick="novoUsuario()">➕ <span id="tabFormTexto">Novo usuário</span></button>
+  </div>
 
-    <!--
-      AVISO DE SEGURANÇA:
-      As senhas são armazenadas em texto puro no banco de dados (sem hash).
-      Para um ambiente de produção, recomenda-se usar bcrypt ou similar
-      no backend (arquivo usuarios.js) antes de gravar no banco.
-    -->
-    <div class="security-alert">
-      ⚠️ <span>As senhas são salvas sem criptografia. Evite senhas pessoais. Para produção, adicione hashing no backend.</span>
+  <!-- ════════ TELA: LISTA ════════ -->
+  <div class="screen show" id="telaLista">
+    <div class="card">
+      <div class="lista-top">
+        <div class="busca">
+          <span>🔎</span>
+          <input type="text" id="buscaUsuario" placeholder="Buscar usuário…" oninput="renderUsuarios()">
+        </div>
+      </div>
+      <div class="tabela-wrap">
+        <table>
+          <thead>
+            <tr><th>Usuário</th><th>Senha</th><th>Acesso</th><th>Criado em</th><th></th></tr>
+          </thead>
+          <tbody id="listaUsuarios">
+            <tr><td colspan="5" class="vazio">Carregando…</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
-
-    <div class="edit-banner" id="editBanner"></div>
-
-    <form id="formUsuario" autocomplete="off">
-
-      <div class="field">
-        <label for="nome">Nome de usuário</label>
-        <div class="input-wrap">
-          <span class="input-icon">👤</span>
-          <input type="text" id="nome" placeholder="Ex: joao.silva" autocomplete="off" required>
-        </div>
-      </div>
-
-      <div class="field">
-        <label for="senha">Senha</label>
-        <div class="input-wrap">
-          <span class="input-icon">🔑</span>
-          <input type="password" id="senha" placeholder="Mínimo 6 caracteres" autocomplete="new-password" required>
-          <button type="button" class="toggle-senha" onclick="toggleSenha('senha', this)">👁️</button>
-        </div>
-      </div>
-
-      <div class="field">
-        <label>Nível de acesso</label>
-        <div class="acesso-opcoes">
-          <label class="radio-card sel" id="cardTotal">
-            <input type="radio" name="acesso" value="total" checked>
-            <span>
-              <strong>Acesso total</strong>
-              <small>Vê todas as instituições e unidades (administração / RH geral).</small>
-            </span>
-          </label>
-          <label class="radio-card" id="cardUnidade">
-            <input type="radio" name="acesso" value="unidade">
-            <span>
-              <strong>Somente unidades selecionadas</strong>
-              <small>Gerente: vê apenas currículos, entrevistas, aprovados, reprovados e arquivados das unidades liberadas.</small>
-            </span>
-          </label>
-        </div>
-      </div>
-
-      <div class="field" id="boxUnidades" style="display:none;">
-        <div class="label-row">
-          <label style="margin-bottom:6px;">Unidades liberadas</label>
-          <span class="cont" id="contUnid">0 selecionada(s)</span>
-        </div>
-        <div class="unid-tree" id="arvoreUnidades"><div class="tree-vazio">Carregando…</div></div>
-      </div>
-
-      <button type="submit" class="btn-submit" id="btnCriar">Criar Usuário</button>
-      <button type="button" class="btn-cancelar" id="btnCancelar" onclick="cancelarEdicao()">Cancelar edição</button>
-
-      <div class="result-msg" id="resultMsg">
-        <span id="resultIcon"></span>
-        <span id="resultText"></span>
-      </div>
-
-    </form>
-  </div>
-</div>
-
-<!-- ── CARD: LISTA DE USUÁRIOS ── -->
-<div class="card card-usuarios">
-  <div class="card-header">
-    <span class="header-icon">📋</span>
-    <h2>Usuários Cadastrados</h2>
   </div>
 
-  <table>
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>Nome</th>
-        <th>Senha</th>
-        <th>Acesso</th>
-        <th>Criado em</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody id="listaUsuarios">
-      <tr class="loading-row"><td colspan="6">Carregando…</td></tr>
-    </tbody>
-  </table>
+  <!-- ════════ TELA: FORMULÁRIO ════════ -->
+  <div class="screen" id="telaForm">
+    <div class="card">
+      <div class="card-header"><span>🔐</span><span id="tituloForm">Novo usuário</span></div>
+      <div class="card-body">
+
+        <div class="edit-banner" id="editBanner"></div>
+
+        <form id="formUsuario" autocomplete="off">
+
+          <!-- 1. DADOS -->
+          <div class="section">
+            <div class="section-title"><span class="num">1</span> Dados de login</div>
+            <div class="grid-2">
+              <div>
+                <label class="lbl" for="nome">Nome de usuário</label>
+                <div class="input-wrap">
+                  <span class="input-icon">👤</span>
+                  <input type="text" id="nome" placeholder="Ex: joao.silva" autocomplete="off" required>
+                </div>
+              </div>
+              <div>
+                <label class="lbl" for="senha">Senha</label>
+                <div class="input-wrap">
+                  <span class="input-icon">🔑</span>
+                  <input type="password" id="senha" placeholder="Mínimo 6 caracteres" autocomplete="new-password" required>
+                  <button type="button" class="toggle-senha" onclick="toggleSenha()" id="btnOlho">👁️</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. NÍVEL -->
+          <div class="section">
+            <div class="section-title"><span class="num">2</span> Nível de acesso</div>
+            <div class="opcoes">
+              <label class="opcao sel" id="opTotal">
+                <input type="radio" name="acesso" value="total" checked>
+                <span class="marca">✓</span>
+                <span class="ico">🌐</span>
+                <strong>Acesso total</strong>
+                <small>Vê todas as instituições e unidades. Indicado para RH geral e administração.</small>
+              </label>
+              <label class="opcao" id="opUnidade">
+                <input type="radio" name="acesso" value="unidade">
+                <span class="marca">✓</span>
+                <span class="ico">🏬</span>
+                <strong>Somente unidades selecionadas</strong>
+                <small>Indicado para gerentes. Vê apenas currículos, entrevistas, aprovados, reprovados e arquivados das unidades liberadas.</small>
+              </label>
+            </div>
+          </div>
+
+          <!-- 3. UNIDADES -->
+          <div class="section" id="secUnidades" style="display:none;">
+            <div class="section-title"><span class="num">3</span> Unidades liberadas</div>
+
+            <div class="unid-toolbar">
+              <div class="busca">
+                <span>🔎</span>
+                <input type="text" id="buscaUnidade" placeholder="Filtrar unidade…" oninput="filtrarUnidades()">
+              </div>
+              <button type="button" class="btn-ghost" onclick="marcarTodas(true)">Marcar todas</button>
+              <button type="button" class="btn-ghost" onclick="marcarTodas(false)">Limpar</button>
+            </div>
+
+            <div class="contador" id="contUnid">0 unidade(s) selecionada(s)</div>
+
+            <div id="arvoreUnidades"><div class="vazio">Carregando…</div></div>
+          </div>
+
+          <div class="acoes">
+            <button type="submit" class="btn-submit" id="btnCriar">Criar usuário</button>
+            <button type="button" class="btn-cancelar" id="btnCancelar" onclick="cancelarEdicao()">Cancelar edição</button>
+          </div>
+
+          <div class="result-msg" id="resultMsg">
+            <span id="resultIcon"></span><span id="resultText"></span>
+          </div>
+
+        </form>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <script>
-/*
-  GUARD DE LOGIN — redireciona para login.html se não houver usuário.
-*/
+/* GUARD DE LOGIN */
 const usuario = localStorage.getItem("usuario");
 if (!usuario) { window.location.href = "login.html"; }
 
 /* ── Estado ── */
-let catalogo        = [];          // [{id, nome, ativo, unidades:[{id,nome,ativo}]}]
-let mapaUnidades    = {};          // id -> "Instituição › Unidade"
-let selecionadas    = new Set();   // ids de unidades marcadas
-let listaAtual      = [];          // usuários carregados
-let editandoId      = null;
+let catalogo     = [];          // [{id, nome, ativo, unidades:[{id,nome,ativo}]}]
+let mapaUnidades = {};          // id -> "Instituição › Unidade"
+let selecionadas = new Set();   // ids de unidades marcadas
+let listaAtual   = [];
+let editandoId   = null;
 
 function esc(v) {
   return String(v ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 }
 
-/* ── Toggle senha (formulário) ── */
-function toggleSenha(inputId, btn) {
-  const input = document.getElementById(inputId);
+/* ── Telas ── */
+function mostrarTela(qual) {
+  const form = qual === "form";
+  document.getElementById("telaLista").classList.toggle("show", !form);
+  document.getElementById("telaForm").classList.toggle("show", form);
+  document.getElementById("tabLista").classList.toggle("active", !form);
+  document.getElementById("tabForm").classList.toggle("active", form);
+}
+
+function novoUsuario() {
+  if (editandoId) cancelarEdicao(); else mostrarTela("form");
+}
+
+/* ── Senha ── */
+function toggleSenha() {
+  const input = document.getElementById("senha");
+  const btn = document.getElementById("btnOlho");
   if (input.type === "password") { input.type = "text"; btn.textContent = "🙈"; }
   else                           { input.type = "password"; btn.textContent = "👁️"; }
 }
-
-/* ── Toggle senha (tabela) ── */
 function toggleSenhaCelula(btn) {
   const display = btn.previousElementSibling;
   if (btn.dataset.visible === "1") {
@@ -415,22 +516,18 @@ function toggleSenhaCelula(btn) {
   }
 }
 
-/* ════════════════════════════════════
-   NÍVEL DE ACESSO + ÁRVORE DE UNIDADES
-   ════════════════════════════════════ */
-function modoAcesso() {
-  return document.querySelector('input[name="acesso"]:checked').value;
-}
+/* ════════════ NÍVEL DE ACESSO ════════════ */
+function modoAcesso() { return document.querySelector('input[name="acesso"]:checked').value; }
 
 function atualizarModo() {
   const restrito = modoAcesso() === "unidade";
-  document.getElementById("boxUnidades").style.display = restrito ? "block" : "none";
-  document.getElementById("cardTotal").classList.toggle("sel", !restrito);
-  document.getElementById("cardUnidade").classList.toggle("sel", restrito);
+  document.getElementById("secUnidades").style.display = restrito ? "block" : "none";
+  document.getElementById("opTotal").classList.toggle("sel", !restrito);
+  document.getElementById("opUnidade").classList.toggle("sel", restrito);
 }
-
 document.querySelectorAll('input[name="acesso"]').forEach(r => r.addEventListener("change", atualizarModo));
 
+/* ════════════ UNIDADES (instituição → unidades) ════════════ */
 async function carregarCatalogo() {
   const box = document.getElementById("arvoreUnidades");
   try {
@@ -449,28 +546,29 @@ async function carregarCatalogo() {
     catalogo.forEach(i => i.unidades.forEach(u => { mapaUnidades[u.id] = `${i.nome} › ${u.nome}`; }));
     renderArvore();
   } catch {
-    box.innerHTML = '<div class="tree-vazio" style="color:var(--danger);">Erro ao carregar instituições e unidades</div>';
+    box.innerHTML = '<div class="vazio" style="color:var(--danger);">Erro ao carregar instituições e unidades</div>';
   }
 }
 
 function renderArvore() {
   const box = document.getElementById("arvoreUnidades");
   if (!catalogo.length) {
-    box.innerHTML = '<div class="tree-vazio">Nenhuma unidade cadastrada ainda</div>';
+    box.innerHTML = '<div class="vazio">Nenhuma unidade cadastrada ainda</div>';
     atualizarContador();
     return;
   }
 
   box.innerHTML = catalogo.map(i => `
-    <div class="inst-bloco">
-      <label class="check">
-        <input type="checkbox" data-inst="${i.id}">
-        <span class="inst-nome">🏢 ${esc(i.nome)}${i.ativo ? "" : ' <span class="tag-inativa">(inativa)</span>'}</span>
+    <div class="inst-card" data-card="${i.id}">
+      <label class="inst-head">
+        <span class="chk"><input type="checkbox" data-inst="${i.id}"><span class="box"></span></span>
+        <span class="nome">🏢 ${esc(i.nome)}${i.ativo ? "" : ' <span class="tag-inativa">(inativa)</span>'}</span>
+        <span class="qtd" id="qtd-${i.id}">0/${i.unidades.length}</span>
       </label>
-      <div class="unid-lista">
+      <div class="chips">
         ${i.unidades.map(u => `
-          <label class="check">
-            <input type="checkbox" data-unid="${u.id}" data-pai="${i.id}" ${selecionadas.has(u.id) ? "checked" : ""}>
+          <label class="chip ${selecionadas.has(u.id) ? "sel" : ""}" data-chip="${u.id}" data-nome="${esc(u.nome.toLowerCase())}">
+            <span class="chk"><input type="checkbox" data-unid="${u.id}" ${selecionadas.has(u.id) ? "checked" : ""}><span class="box"></span></span>
             <span>${esc(u.nome)}${u.ativo ? "" : ' <span class="tag-inativa">(inativa)</span>'}</span>
           </label>`).join("")}
       </div>
@@ -479,130 +577,165 @@ function renderArvore() {
   box.querySelectorAll("input[data-unid]").forEach(cb => cb.addEventListener("change", () => {
     const id = Number(cb.dataset.unid);
     cb.checked ? selecionadas.add(id) : selecionadas.delete(id);
+    cb.closest(".chip").classList.toggle("sel", cb.checked);
     atualizarPais();
   }));
 
   box.querySelectorAll("input[data-inst]").forEach(cb => cb.addEventListener("change", () => {
     const inst = catalogo.find(i => String(i.id) === cb.dataset.inst);
-    inst.unidades.forEach(u => cb.checked ? selecionadas.add(u.id) : selecionadas.delete(u.id));
-    box.querySelectorAll(`input[data-pai="${inst.id}"]`).forEach(c => { c.checked = cb.checked; });
+    inst.unidades.forEach(u => {
+      cb.checked ? selecionadas.add(u.id) : selecionadas.delete(u.id);
+      const chip = box.querySelector(`[data-chip="${u.id}"]`);
+      chip.classList.toggle("sel", cb.checked);
+      chip.querySelector("input").checked = cb.checked;
+    });
     atualizarPais();
   }));
 
   atualizarPais();
+  filtrarUnidades();
 }
 
-/* Marca/desmarca/indetermina o checkbox da instituição conforme as unidades */
 function atualizarPais() {
   catalogo.forEach(i => {
     const cb = document.querySelector(`input[data-inst="${i.id}"]`);
     if (!cb) return;
-    const marcadas = i.unidades.filter(u => selecionadas.has(u.id)).length;
-    cb.checked       = marcadas === i.unidades.length && marcadas > 0;
-    cb.indeterminate = marcadas > 0 && marcadas < i.unidades.length;
+    const n = i.unidades.filter(u => selecionadas.has(u.id)).length;
+    cb.checked = n === i.unidades.length && n > 0;
+    cb.indeterminate = n > 0 && n < i.unidades.length;
+    const q = document.getElementById(`qtd-${i.id}`);
+    q.textContent = `${n}/${i.unidades.length}`;
+    q.classList.toggle("on", n > 0);
   });
   atualizarContador();
 }
 
 function atualizarContador() {
-  document.getElementById("contUnid").textContent = `${selecionadas.size} selecionada(s)`;
+  document.getElementById("contUnid").textContent = `${selecionadas.size} unidade(s) selecionada(s)`;
 }
 
-/* ════════════════════════════════════
-   LISTA DE USUÁRIOS
-   ════════════════════════════════════ */
+function marcarTodas(marcar) {
+  catalogo.forEach(i => i.unidades.forEach(u => marcar ? selecionadas.add(u.id) : selecionadas.delete(u.id)));
+  renderArvore();
+}
+
+function filtrarUnidades() {
+  const termo = document.getElementById("buscaUnidade").value.trim().toLowerCase();
+  document.querySelectorAll(".inst-card").forEach(card => {
+    let visiveis = 0;
+    card.querySelectorAll(".chip").forEach(chip => {
+      const ok = !termo || chip.dataset.nome.includes(termo);
+      chip.style.display = ok ? "" : "none";
+      if (ok) visiveis++;
+    });
+    card.style.display = visiveis ? "" : "none";
+  });
+}
+
+/* ════════════ LISTA DE USUÁRIOS ════════════ */
 function badgeAcesso(u) {
-  if (u.acesso_total !== false) return '<span class="badge-acesso badge-total">Total</span>';
+  if (u.acesso_total !== false) return '<span class="badge badge-total">🌐 Acesso total</span>';
   const nomes = (u.unidades || []).map(id => mapaUnidades[id] || `Unidade #${id}`);
-  const titulo = esc(nomes.join("\n"));
-  return `<span class="badge-acesso badge-unidade" title="${titulo}">${nomes.length} unidade(s)</span>`;
+  const curtos = nomes.slice(0, 3).map(n => `<span>${esc(n.split(" › ").pop())}</span>`).join("");
+  const mais = nomes.length > 3 ? `<span>+${nomes.length - 3}</span>` : "";
+  return `<span class="badge badge-unidade">🏬 ${nomes.length} unidade(s)</span><div class="unid-mini">${curtos}${mais}</div>`;
 }
 
 function renderUsuarios() {
-  const tbody = document.getElementById("listaUsuarios");
-  tbody.innerHTML = listaAtual.length
-    ? listaAtual.map(u => `
+  const termo = (document.getElementById("buscaUsuario")?.value || "").trim().toLowerCase();
+  const itens = listaAtual.filter(u => !termo || u.nome.toLowerCase().includes(termo));
+  document.getElementById("countUsuarios").textContent = listaAtual.length;
+
+  document.getElementById("listaUsuarios").innerHTML = itens.length
+    ? itens.map(u => `
         <tr>
-          <td style="color:var(--muted);font-size:12px;">${u.id}</td>
-          <td><strong>${esc(u.nome)}</strong></td>
+          <td>
+            <div class="user-cell">
+              <div class="avatar">${esc(u.nome.charAt(0).toUpperCase())}</div>
+              <div><strong>${esc(u.nome)}</strong><small>ID ${u.id}</small></div>
+            </div>
+          </td>
           <td>
             <div class="senha-cell">
               <span class="senha-display">••••••••</span>
-              <button class="btn-toggle-senha" data-visible="0" data-senha="${esc(u.senha)}"
-                onclick="toggleSenhaCelula(this)">👁️</button>
+              <button class="btn-toggle-senha" data-visible="0" data-senha="${esc(u.senha)}" onclick="toggleSenhaCelula(this)">👁️</button>
             </div>
           </td>
           <td>${badgeAcesso(u)}</td>
-          <td class="date-cell">${new Date(u.criado_em).toLocaleString("pt-BR")}</td>
-          <td><button class="btn-editar" onclick="editarUsuario(${u.id})">✏️ Acesso</button></td>
+          <td class="date-cell">${new Date(u.criado_em).toLocaleDateString("pt-BR")}</td>
+          <td><button class="btn-editar" onclick="editarUsuario(${u.id})">✏️ Editar acesso</button></td>
         </tr>`).join("")
-    : `<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--muted);">Nenhum usuário cadastrado</td></tr>`;
+    : `<tr><td colspan="5" class="vazio">${listaAtual.length ? "Nenhum usuário encontrado" : "Nenhum usuário cadastrado"}</td></tr>`;
 }
 
 async function listarUsuarios() {
-  const tbody = document.getElementById("listaUsuarios");
   try {
     const res = await fetch("/api/usuarios");
     if (!res.ok) throw new Error();
     listaAtual = await res.json();
     renderUsuarios();
   } catch {
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--danger);">Erro ao carregar usuários</td></tr>`;
+    document.getElementById("listaUsuarios").innerHTML =
+      `<tr><td colspan="5" class="vazio" style="color:var(--danger);">Erro ao carregar usuários</td></tr>`;
   }
 }
 
-/* ════════════════════════════════════
-   EDIÇÃO DE ACESSO DE USUÁRIO EXISTENTE
-   ════════════════════════════════════ */
+/* ════════════ EDIÇÃO ════════════ */
 function editarUsuario(id) {
   const u = listaAtual.find(x => x.id === id);
   if (!u) return;
   editandoId = id;
 
-  document.getElementById("tituloForm").textContent = "Editar Acesso";
+  document.getElementById("tituloForm").textContent = "Editar acesso";
+  document.getElementById("tabFormTexto").textContent = "Editando usuário";
   const banner = document.getElementById("editBanner");
-  banner.textContent = `Editando: ${u.nome}`;
-  banner.style.display = "block";
+  banner.textContent = `✏️ Editando: ${u.nome}`;
+  banner.style.display = "flex";
 
   const nome = document.getElementById("nome");
   nome.value = u.nome; nome.disabled = true;
-
   const senha = document.getElementById("senha");
   senha.value = ""; senha.required = false;
-  senha.placeholder = "Deixe em branco para manter a senha atual";
+  senha.placeholder = "Deixe em branco para manter";
 
   const total = u.acesso_total !== false;
   document.querySelector(`input[name="acesso"][value="${total ? "total" : "unidade"}"]`).checked = true;
   selecionadas = new Set((u.unidades || []).map(Number));
+  document.getElementById("buscaUnidade").value = "";
   renderArvore();
   atualizarModo();
 
   document.getElementById("btnCriar").textContent = "Salvar alterações";
   document.getElementById("btnCancelar").style.display = "block";
+  document.getElementById("resultMsg").classList.remove("show");
+  mostrarTela("form");
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-function cancelarEdicao() {
+function resetarFormulario() {
   editandoId = null;
   document.getElementById("formUsuario").reset();
-  document.getElementById("tituloForm").textContent = "Criar Novo Usuário";
+  document.getElementById("tituloForm").textContent = "Novo usuário";
+  document.getElementById("tabFormTexto").textContent = "Novo usuário";
   document.getElementById("editBanner").style.display = "none";
-
-  const nome = document.getElementById("nome"); nome.disabled = false;
+  document.getElementById("nome").disabled = false;
   const senha = document.getElementById("senha");
   senha.required = true; senha.placeholder = "Mínimo 6 caracteres";
-
+  document.getElementById("buscaUnidade").value = "";
   selecionadas = new Set();
   renderArvore();
   atualizarModo();
-
-  document.getElementById("btnCriar").textContent = "Criar Usuário";
+  document.getElementById("btnCriar").textContent = "Criar usuário";
   document.getElementById("btnCancelar").style.display = "none";
 }
 
-/* ════════════════════════════════════
-   SALVAR (criar ou atualizar)
-   ════════════════════════════════════ */
+function cancelarEdicao() {
+  resetarFormulario();
+  document.getElementById("resultMsg").classList.remove("show");
+  mostrarTela("lista");
+}
+
+/* ════════════ SALVAR ════════════ */
 document.getElementById("formUsuario").addEventListener("submit", async (e) => {
   e.preventDefault();
 
@@ -610,7 +743,6 @@ document.getElementById("formUsuario").addEventListener("submit", async (e) => {
   const msg  = document.getElementById("resultMsg");
   const icon = document.getElementById("resultIcon");
   const text = document.getElementById("resultText");
-  const textoBtn = editandoId ? "Salvar alterações" : "Criar Usuário";
 
   msg.classList.remove("show", "success", "error");
 
@@ -622,44 +754,31 @@ document.getElementById("formUsuario").addEventListener("submit", async (e) => {
     return;
   }
 
-  btn.textContent = editandoId ? "Salvando…" : "Criando…";
+  const eraEdicao = !!editandoId;
+  btn.textContent = eraEdicao ? "Salvando…" : "Criando…";
   btn.disabled = true;
 
-  const payload = {
-    acesso_total: !restrito,
-    unidades: restrito ? [...selecionadas] : []
-  };
+  const payload = { acesso_total: !restrito, unidades: restrito ? [...selecionadas] : [] };
 
   try {
     let res;
-    if (editandoId) {
+    if (eraEdicao) {
       payload.id = editandoId;
-      const senha = document.getElementById("senha").value;
-      if (senha) payload.senha = senha;
-      res = await fetch("/api/usuarios", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
+      const s = document.getElementById("senha").value;
+      if (s) payload.senha = s;
+      res = await fetch("/api/usuarios", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
     } else {
-      payload.nome  = document.getElementById("nome").value;
+      payload.nome  = document.getElementById("nome").value.trim();
       payload.senha = document.getElementById("senha").value;
-      res = await fetch("/api/usuarios", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
+      res = await fetch("/api/usuarios", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
     }
 
     const data = await res.json();
 
     if (res.ok) {
-      const foiEdicao = !!editandoId;
-      if (foiEdicao) cancelarEdicao(); else { e.target.reset(); selecionadas = new Set(); renderArvore(); atualizarModo(); }
-      icon.textContent = "✓";
-      text.textContent = foiEdicao ? "Acesso atualizado com sucesso!" : "Usuário criado com sucesso!";
-      msg.classList.add("show", "success");
-      listarUsuarios();
+      resetarFormulario();
+      await listarUsuarios();
+      mostrarTela("lista");
     } else {
       icon.textContent = "⚠️";
       text.textContent = data.error || "Erro ao salvar usuário";
@@ -670,8 +789,8 @@ document.getElementById("formUsuario").addEventListener("submit", async (e) => {
     text.textContent = "Erro de conexão. Tente novamente.";
     msg.classList.add("show", "error");
   } finally {
-    btn.textContent = editandoId ? "Salvar alterações" : "Criar Usuário";
     btn.disabled = false;
+    btn.textContent = editandoId ? "Salvar alterações" : "Criar usuário";
   }
 });
 
@@ -681,7 +800,7 @@ function logout() {
   window.location.href = "login.html";
 }
 
-/* Carrega catálogo primeiro (para os nomes das unidades na tabela) */
+/* Catálogo primeiro (nomes das unidades na lista), depois usuários */
 (async () => { await carregarCatalogo(); await listarUsuarios(); })();
 </script>
 
