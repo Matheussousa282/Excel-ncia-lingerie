@@ -3,6 +3,7 @@
 
 import { Pool } from "pg";
 import { enviarWhatsApp, formatarMensagem } from "./whatsapp.js";
+import { obterAcesso, filtroUnidades, candidatoPermitido, entrevistaPermitida } from "./_acesso.js";
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL || process.env.DATABASE_URL_RH,
@@ -33,6 +34,11 @@ export default async function handler(req, res) {
   try {
     const { method } = req;
 
+    // Todas as operações exigem login e respeitam o acesso por unidade
+    const acesso = await obterAcesso(pool, req);
+    if (!acesso) return res.status(401).json({ error: "Não autenticado" });
+    const filtro = filtroUnidades(acesso); // null = tudo | [ids]
+
     if (method === "GET") {
       const { mes, ano, candidato_id, status } = req.query;
       let q = `
@@ -47,6 +53,7 @@ export default async function handler(req, res) {
         JOIN unidades u     ON u.id  = c.unidade_id
         WHERE 1=1`;
       const params = [];
+      if (filtro) { params.push(filtro); q += ` AND c.unidade_id = ANY($${params.length}::int[])`; }
       if (status) { params.push(status); q += ` AND e.status=$${params.length}`; }
       if (mes && ano) {
         params.push(Number(ano), Number(mes));
@@ -63,6 +70,9 @@ export default async function handler(req, res) {
       const { candidato_id, data_hora, responsavel, observacoes } = req.body;
       if (!candidato_id || !data_hora)
         return res.status(400).json({ error: "candidato_id e data_hora são obrigatórios" });
+
+      if (!(await candidatoPermitido(pool, acesso, candidato_id)))
+        return res.status(403).json({ error: "Sem permissão para este candidato" });
 
       const conflito = await pool.query(
         "SELECT id FROM entrevistas WHERE data_hora=$1 AND status!='reprovado'", [data_hora]
@@ -97,6 +107,9 @@ export default async function handler(req, res) {
     if (method === "PUT") {
       const { id, status, observacoes, data_hora, responsavel } = req.body;
       if (!id) return res.status(400).json({ error: "id é obrigatório" });
+
+      if (!(await entrevistaPermitida(pool, acesso, id)))
+        return res.status(403).json({ error: "Sem permissão para esta entrevista" });
 
       await pool.query(
         `UPDATE entrevistas SET
@@ -143,6 +156,8 @@ export default async function handler(req, res) {
     if (method === "DELETE") {
       const { id } = req.query;
       if (!id) return res.status(400).json({ error: "id é obrigatório" });
+      if (!(await entrevistaPermitida(pool, acesso, id)))
+        return res.status(403).json({ error: "Sem permissão para esta entrevista" });
       await pool.query("DELETE FROM entrevistas WHERE id=$1", [id]);
       return res.json({ success: true });
     }

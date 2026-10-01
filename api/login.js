@@ -1,4 +1,5 @@
 import pkg from "pg";
+import { carregarAcesso, gerarToken } from "./_acesso.js";
 
 const { Pool } = pkg;
 
@@ -58,11 +59,24 @@ export default async function handler(req, res) {
       });
     }
 
+    // Permissões (acesso total ou somente unidades vinculadas)
+    const acesso = await carregarAcesso(pool, user.id);
+
+    if (!acesso.total && acesso.unidades.length === 0) {
+      return res.status(403).json({
+        success: false,
+        error: "Seu usuário não tem nenhuma unidade liberada. Fale com o administrador.",
+      });
+    }
+
     return res.status(200).json({
       success: true,
       usuario: {
         id: user.id,
         nome: user.nome,
+        acesso_total: acesso.total,
+        unidades: acesso.unidades,
+        token: gerarToken(user.id),
       },
     });
 

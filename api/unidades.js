@@ -1,4 +1,5 @@
 import { Pool } from "pg";
+import { obterAcesso } from "./_acesso.js";
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -8,6 +9,13 @@ const pool = new Pool({
 export default async function handler(req, res) {
   try {
     const { method } = req;
+
+    // Sem token = formulário público (lista completa). Com token de gerente
+    // restrito: só enxerga as suas unidades e não pode criar/editar.
+    const acesso = await obterAcesso(pool, req);
+    if (acesso && !acesso.total && method !== "GET") {
+      return res.status(403).json({ error: "Sem permissão" });
+    }
 
     // LISTAR
     if (method === "GET") {
@@ -25,11 +33,17 @@ export default async function handler(req, res) {
       `;
 
       const params = [];
+      const where  = [];
 
       if (instituicao_id) {
-        query += " WHERE u.instituicao_id = $1";
         params.push(instituicao_id);
+        where.push(`u.instituicao_id = $${params.length}`);
       }
+      if (acesso && !acesso.total) {
+        params.push(acesso.unidades);
+        where.push(`u.id = ANY($${params.length}::int[])`);
+      }
+      if (where.length) query += " WHERE " + where.join(" AND ");
 
       query += " ORDER BY u.nome";
 

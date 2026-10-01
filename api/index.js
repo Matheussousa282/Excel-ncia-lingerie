@@ -1,4 +1,5 @@
 import { Pool } from "pg";
+import { obterAcesso, filtroUnidades } from "./_acesso.js";
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -9,6 +10,10 @@ export default async function handler(req, res) {
   if (req.method !== "GET") return res.status(405).send("Método não permitido");
 
   try {
+    const acesso = await obterAcesso(pool, req);
+    if (!acesso) return res.status(401).send("Não autenticado");
+    const filtro = filtroUnidades(acesso);
+
     const query = `
       SELECT 
         c.id,
@@ -26,10 +31,11 @@ export default async function handler(req, res) {
       JOIN cargos ca ON c.cargo_id = ca.id
       JOIN instituicoes i ON c.instituicao_id = i.id
       JOIN unidades u ON c.unidade_id = u.id
+      WHERE ($1::int[] IS NULL OR c.unidade_id = ANY($1::int[]))
       ORDER BY c.criado_em DESC
     `;
 
-    const result = await pool.query(query);
+    const result = await pool.query(query, [filtro]);
 
     // Transformando arquivo BYTEA em Base64 para download
     const curriculos = result.rows.map(c => ({

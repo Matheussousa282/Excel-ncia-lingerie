@@ -4,6 +4,7 @@
 // PUT  → ações: "selecionado" (dispara WhatsApp) | "desfazer_aprovacao"
 
 import { Pool } from "pg";
+import { obterAcesso, filtroUnidades, unidadePermitida, candidatoPermitido } from "./_acesso.js";
 
 const connectionString = process.env.DATABASE_URL || process.env.DATABASE_URL_RH;
 if (!connectionString) throw new Error("DATABASE_URL não configurada");
@@ -104,6 +105,21 @@ export default async function handler(req, res) {
   }
 
   // ════════════════════════════════════════
+  // GET/PUT exigem login e respeitam o acesso por unidade
+  // ════════════════════════════════════════
+  let acesso = null;
+  if (req.method === "GET" || req.method === "PUT") {
+    try {
+      acesso = await obterAcesso(pool, req);
+    } catch (err) {
+      console.error("ERRO acesso candidatos:", err);
+      return res.status(500).json({ error: "Erro ao validar acesso" });
+    }
+    if (!acesso) return res.status(401).json({ error: "Não autenticado" });
+  }
+  const filtro = acesso ? filtroUnidades(acesso) : null; // null = tudo | [ids] = só essas unidades
+
+  // ════════════════════════════════════════
   // GET — lista candidatos ou busca arquivo
   // ════════════════════════════════════════
   if (req.method === "GET") {
@@ -118,8 +134,9 @@ export default async function handler(req, res) {
           JOIN instituicoes i  ON i.id  = c.instituicao_id
           JOIN unidades     u  ON u.id  = c.unidade_id
           WHERE c.reprovado = true
+            AND ($1::int[] IS NULL OR c.unidade_id = ANY($1::int[]))
           ORDER BY c.criado_em DESC
-        `);
+        `, [filtro]);
         return res.status(200).json(r.rows);
       }
 
@@ -135,8 +152,9 @@ export default async function handler(req, res) {
           JOIN instituicoes i  ON i.id  = c.instituicao_id
           JOIN unidades     u  ON u.id  = c.unidade_id
           WHERE c.arquivado = true
+            AND ($1::int[] IS NULL OR c.unidade_id = ANY($1::int[]))
           ORDER BY c.arquivado_em DESC
-        `);
+        `, [filtro]);
         return res.status(200).json(r.rows);
       }
 
@@ -144,10 +162,13 @@ export default async function handler(req, res) {
       if (req.query.arquivo) {
         const id = Number(req.query.arquivo);
         const r  = await pool.query(
-          "SELECT arquivo, arquivo_nome FROM candidatos WHERE id = $1", [id]
+          "SELECT arquivo, arquivo_nome, unidade_id FROM candidatos WHERE id = $1", [id]
         );
         if (!r.rows.length || !r.rows[0].arquivo) {
           return res.status(404).json({ error: "Arquivo não encontrado" });
+        }
+        if (!unidadePermitida(acesso, r.rows[0].unidade_id)) {
+          return res.status(403).json({ error: "Sem permissão para este candidato" });
         }
         const { arquivo, arquivo_nome } = r.rows[0];
         const base64 = Buffer.from(arquivo).toString("base64");
@@ -181,8 +202,9 @@ export default async function handler(req, res) {
         JOIN instituicoes i  ON i.id  = c.instituicao_id
         JOIN unidades     u  ON u.id  = c.unidade_id
         WHERE c.arquivado IS NOT TRUE
+          AND ($1::int[] IS NULL OR c.unidade_id = ANY($1::int[]))
         ORDER BY c.criado_em DESC
-      `);
+      `, [filtro]);
 
       // Não inclui o campo "arquivo" na listagem geral
       // O front-end busca o arquivo individualmente via ?arquivo=ID
@@ -205,12 +227,20 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: "id e acao são obrigatórios" });
       }
 
+      // Gerente só mexe em candidatos da própria unidade
+      if (!(await candidatoPermitido(pool, acesso, id))) {
+        return res.status(403).json({ error: "Sem permissão para este candidato" });
+      }
+
       // ── Editar cargo, instituição e unidade
       if (acao === "editar") {
         const { cargo_id, inst_id, unidade_id } = req.body;
 
         if (!cargo_id || !inst_id || !unidade_id) {
           return res.status(400).json({ error: "cargo_id, inst_id e unidade_id são obrigatórios" });
+        }
+        if (!unidadePermitida(acesso, unidade_id)) {
+          return res.status(403).json({ error: "Sem permissão para esta unidade" });
         }
 
         await pool.query(
