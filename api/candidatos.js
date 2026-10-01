@@ -113,7 +113,7 @@ export default async function handler(req, res) {
       acesso = await obterAcesso(pool, req);
     } catch (err) {
       console.error("ERRO acesso candidatos:", err);
-      return res.status(500).json({ error: "Erro ao validar acesso" });
+      return res.status(500).json({ error: "Erro ao validar acesso", details: err.message });
     }
     if (!acesso) return res.status(401).json({ error: "Não autenticado" });
   }
