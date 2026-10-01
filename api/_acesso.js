@@ -29,6 +29,12 @@ export function garantirEstrutura(pool) {
         await pool.query(
           "ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS acesso_total BOOLEAN NOT NULL DEFAULT true"
         );
+        await pool.query(
+          "ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS codigo_primeiro_acesso TEXT"
+        );
+        await pool.query(
+          "ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS tentativas_codigo INTEGER NOT NULL DEFAULT 0"
+        );
         await pool.query(`
           CREATE TABLE IF NOT EXISTS usuario_unidades (
             usuario_id INTEGER NOT NULL,

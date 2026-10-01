@@ -52,6 +52,13 @@ export default async function handler(req, res) {
 
     const user = result.rows[0];
 
+    if (!user.senha) {
+      return res.status(403).json({
+        success: false,
+        error: "Senha ainda não criada. Use \"Criar minha senha\" com o código do administrador.",
+      });
+    }
+
     if (user.senha !== senha) {
       return res.status(401).json({
         success: false,
