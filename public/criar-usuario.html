@@ -346,6 +346,29 @@ tbody tr:hover { background: #fbfaf7; }
 }
 .btn-editar:hover { border-color: var(--primary); color: var(--primary-hover); }
 .date-cell { font-size: 12.5px; color: var(--muted); white-space: nowrap; }
+
+.hint { font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.4; }
+
+.banner-codigo {
+  display: none; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap;
+  margin-bottom: 18px; padding: 14px 18px; text-align: center;
+  background: var(--success-bg); border: 1px solid #bbf7d0; color: var(--success);
+  border-radius: var(--radius); font-size: 14px;
+}
+.banner-codigo.show { display: flex; }
+.banner-codigo .cod {
+  font-family: monospace; font-size: 22px; font-weight: 700; letter-spacing: 4px;
+  background: #fff; border: 1.5px dashed var(--success); border-radius: 8px; padding: 4px 14px;
+}
+.banner-codigo button { background: none; border: none; cursor: pointer; font-size: 16px; color: var(--success); }
+
+.pendente { display: flex; flex-direction: column; gap: 3px; }
+.pendente .tag {
+  align-self: flex-start; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 6px;
+  background: var(--warning-bg); color: var(--warning);
+}
+.pendente .cod { font-family: monospace; font-size: 13px; letter-spacing: 2px; color: var(--text-secondary); }
+.acoes-linha { display: flex; gap: 6px; flex-wrap: wrap; }
 </style>
 </head>
 <body>
@@ -364,6 +387,7 @@ tbody tr:hover { background: #fbfaf7; }
 
   <!-- ════════ TELA: LISTA ════════ -->
   <div class="screen show" id="telaLista">
+    <div class="banner-codigo" id="bannerCodigo"></div>
     <div class="card">
       <div class="lista-top">
         <div class="busca">
@@ -409,9 +433,10 @@ tbody tr:hover { background: #fbfaf7; }
                 <label class="lbl" for="senha">Senha</label>
                 <div class="input-wrap">
                   <span class="input-icon">🔑</span>
-                  <input type="password" id="senha" placeholder="Mínimo 6 caracteres" autocomplete="new-password" required>
+                  <input type="password" id="senha" placeholder="Opcional" autocomplete="new-password">
                   <button type="button" class="toggle-senha" onclick="toggleSenha()" id="btnOlho">👁️</button>
                 </div>
+                <div class="hint" id="hintSenha">Deixe em branco para o usuário criar a própria senha no primeiro acesso (você recebe um código).</div>
               </div>
             </div>
           </div>
@@ -656,14 +681,21 @@ function renderUsuarios() {
             </div>
           </td>
           <td>
-            <div class="senha-cell">
-              <span class="senha-display">••••••••</span>
-              <button class="btn-toggle-senha" data-visible="0" data-senha="${esc(u.senha)}" onclick="toggleSenhaCelula(this)">👁️</button>
-            </div>
+            ${u.pendente
+              ? `<div class="pendente"><span class="tag">⏳ Aguardando criar senha</span>${u.codigo ? `<span class="cod">Código: ${esc(u.codigo)}</span>` : '<span class="cod" style="letter-spacing:0;">Código bloqueado — gere outro</span>'}</div>`
+              : `<div class="senha-cell">
+                  <span class="senha-display">••••••••</span>
+                  <button class="btn-toggle-senha" data-visible="0" data-senha="${esc(u.senha)}" onclick="toggleSenhaCelula(this)">👁️</button>
+                </div>`}
           </td>
           <td>${badgeAcesso(u)}</td>
           <td class="date-cell">${new Date(u.criado_em).toLocaleDateString("pt-BR")}</td>
-          <td><button class="btn-editar" onclick="editarUsuario(${u.id})">✏️ Editar acesso</button></td>
+          <td>
+            <div class="acoes-linha">
+              <button class="btn-editar" onclick="editarUsuario(${u.id})">✏️ Editar acesso</button>
+              <button class="btn-editar" data-nome="${esc(u.nome)}" onclick="redefinirSenha(${u.id}, this.dataset.nome)">🔄 ${u.pendente ? "Novo código" : "Redefinir senha"}</button>
+            </div>
+          </td>
         </tr>`).join("")
     : `<tr><td colspan="5" class="vazio">${listaAtual.length ? "Nenhum usuário encontrado" : "Nenhum usuário cadastrado"}</td></tr>`;
 }
@@ -677,6 +709,35 @@ async function listarUsuarios() {
   } catch {
     document.getElementById("listaUsuarios").innerHTML =
       `<tr><td colspan="5" class="vazio" style="color:var(--danger);">Erro ao carregar usuários</td></tr>`;
+  }
+}
+
+/* ════════════ CÓDIGO DE PRIMEIRO ACESSO ════════════ */
+function mostrarCodigo(nome, codigo) {
+  const b = document.getElementById("bannerCodigo");
+  b.innerHTML = `
+    <span>✅ Código de primeiro acesso de <strong>${esc(nome)}</strong>:</span>
+    <span class="cod">${esc(codigo)}</span>
+    <span style="font-size:12.5px;">Passe ao usuário: na tela de login, "Criar minha senha".</span>
+    <button type="button" title="Fechar" onclick="this.parentElement.classList.remove('show')">✕</button>`;
+  b.classList.add("show");
+}
+
+async function redefinirSenha(id, nome) {
+  if (!confirm(`Redefinir a senha de "${nome}"?\nA senha atual deixa de funcionar e um novo código será gerado.`)) return;
+  try {
+    const res = await fetch("/api/usuarios", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, redefinir: true })
+    });
+    const data = await res.json();
+    if (!res.ok) { alert(data.error || "Erro ao redefinir senha"); return; }
+    await listarUsuarios();
+    mostrarCodigo(nome, data.codigo);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  } catch {
+    alert("Erro de conexão. Tente novamente.");
   }
 }
 
@@ -697,6 +758,7 @@ function editarUsuario(id) {
   const senha = document.getElementById("senha");
   senha.value = ""; senha.required = false;
   senha.placeholder = "Deixe em branco para manter";
+  document.getElementById("hintSenha").style.display = "none";
 
   const total = u.acesso_total !== false;
   document.querySelector(`input[name="acesso"][value="${total ? "total" : "unidade"}"]`).checked = true;
@@ -720,7 +782,8 @@ function resetarFormulario() {
   document.getElementById("editBanner").style.display = "none";
   document.getElementById("nome").disabled = false;
   const senha = document.getElementById("senha");
-  senha.required = true; senha.placeholder = "Mínimo 6 caracteres";
+  senha.required = false; senha.placeholder = "Opcional";
+  document.getElementById("hintSenha").style.display = "";
   document.getElementById("buscaUnidade").value = "";
   selecionadas = new Set();
   renderArvore();
@@ -776,9 +839,11 @@ document.getElementById("formUsuario").addEventListener("submit", async (e) => {
     const data = await res.json();
 
     if (res.ok) {
+      const nomeCriado = payload.nome;
       resetarFormulario();
       await listarUsuarios();
       mostrarTela("lista");
+      if (data.codigo) mostrarCodigo(nomeCriado, data.codigo);
     } else {
       icon.textContent = "⚠️";
       text.textContent = data.error || "Erro ao salvar usuário";

@@ -213,6 +213,27 @@ input::placeholder { color: #b0b7c3; }
 
 .error-box.show { display: flex; }
 
+/* ── LINKS / AVISOS ── */
+.link-alt {
+  display: block; width: 100%; text-align: center; margin-top: 16px;
+  background: none; border: none; cursor: pointer;
+  font-family: "DM Sans", sans-serif; font-size: 13.5px; font-weight: 600;
+  color: #8a6e3a; transition: color 0.2s;
+}
+.link-alt:hover { color: var(--primary); text-decoration: underline; }
+
+.ok-box {
+  display: none; align-items: center; gap: 8px;
+  background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px;
+  padding: 10px 13px; margin-bottom: 18px;
+  font-size: 13.5px; color: #16a34a;
+}
+.ok-box.show { display: flex; }
+
+.hint { font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.4; }
+.view { display: none; }
+.view.show { display: block; }
+
 /* ── FOOTER ── */
 .footer {
   text-align: center;
@@ -229,11 +250,15 @@ input::placeholder { color: #b0b7c3; }
 <div class="card">
   <div class="card-header">
     <div class="header-icon">🔐</div>
-    <h1>Área Administrativa</h1>
-    <p>Faça login para acessar o dashboard</p>
+    <h1 id="tituloCard">Área Administrativa</h1>
+    <p id="subtituloCard">Faça login para acessar o dashboard</p>
   </div>
 
   <div class="card-body">
+    <!-- ═══════ TELA: LOGIN ═══════ -->
+    <div class="view show" id="viewLogin">
+    <div class="ok-box" id="okMsg"><span>✅</span><span id="okText"></span></div>
+
     <form id="loginForm" autocomplete="off">
 
       <div class="field">
@@ -261,6 +286,58 @@ input::placeholder { color: #b0b7c3; }
       </div>
     </form>
 
+    <button type="button" class="link-alt" onclick="mostrarCriar()">🔑 Primeiro acesso? Criar minha senha</button>
+    </div>
+
+    <!-- ═══════ TELA: CRIAR SENHA ═══════ -->
+    <div class="view" id="viewCriar">
+    <form id="criarForm" autocomplete="off">
+
+      <div class="field">
+        <label for="cNome">Usuário</label>
+        <div class="input-wrap">
+          <span class="input-icon">👤</span>
+          <input type="text" id="cNome" placeholder="Usuário informado pelo administrador" required autocomplete="off">
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="cCodigo">Código de primeiro acesso</label>
+        <div class="input-wrap">
+          <span class="input-icon">🎫</span>
+          <input type="text" id="cCodigo" placeholder="6 dígitos" inputmode="numeric" maxlength="6" required autocomplete="off">
+        </div>
+        <div class="hint">O código é gerado pelo administrador quando seu usuário é criado.</div>
+      </div>
+
+      <div class="field">
+        <label for="cSenha">Nova senha</label>
+        <div class="input-wrap">
+          <span class="input-icon">🔑</span>
+          <input type="password" id="cSenha" placeholder="Mínimo 6 caracteres" required autocomplete="new-password">
+          <button type="button" class="toggle-senha" onclick="toggleCriar()" id="toggleCriarBtn" title="Mostrar senha">👁️</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="cSenha2">Confirmar senha</label>
+        <div class="input-wrap">
+          <span class="input-icon">🔒</span>
+          <input type="password" id="cSenha2" placeholder="Repita a senha" required autocomplete="new-password">
+        </div>
+      </div>
+
+      <button type="submit" class="btn-submit" id="btnCriarSenha">Criar senha</button>
+
+      <div class="error-box" id="cErrorMsg">
+        <span>⚠️</span>
+        <span id="cErrorText"></span>
+      </div>
+    </form>
+
+    <button type="button" class="link-alt" onclick="mostrarLogin()">← Voltar para o login</button>
+    </div>
+
     <div class="footer">
       © 2026 • Sistema de Recrutamento — Excelência Lingerie
     </div>
@@ -280,6 +357,101 @@ function toggleSenha() {
     btn.textContent = "👁️";
   }
 }
+
+/* ── Alternar entre as telas ── */
+function mostrarCriar() {
+  document.getElementById("viewLogin").classList.remove("show");
+  document.getElementById("viewCriar").classList.add("show");
+  document.getElementById("tituloCard").textContent = "Criar minha senha";
+  document.getElementById("subtituloCard").textContent = "Use o código fornecido pelo administrador";
+  document.getElementById("cErrorMsg").classList.remove("show");
+}
+
+function mostrarLogin(msgOk, nomeUsuario) {
+  document.getElementById("viewCriar").classList.remove("show");
+  document.getElementById("viewLogin").classList.add("show");
+  document.getElementById("tituloCard").textContent = "Área Administrativa";
+  document.getElementById("subtituloCard").textContent = "Faça login para acessar o dashboard";
+
+  const ok = document.getElementById("okMsg");
+  if (msgOk) {
+    document.getElementById("okText").textContent = msgOk;
+    ok.classList.add("show");
+  } else {
+    ok.classList.remove("show");
+  }
+  if (nomeUsuario) {
+    document.getElementById("nome").value = nomeUsuario;
+    document.getElementById("senha").value = "";
+    document.getElementById("senha").focus();
+  }
+}
+
+function toggleCriar() {
+  const a = document.getElementById("cSenha");
+  const b = document.getElementById("cSenha2");
+  const btn = document.getElementById("toggleCriarBtn");
+  const mostrar = a.type === "password";
+  a.type = b.type = mostrar ? "text" : "password";
+  btn.textContent = mostrar ? "🙈" : "👁️";
+}
+
+/* ── Criar senha (primeiro acesso) ── */
+document.getElementById("criarForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const nome   = document.getElementById("cNome").value.trim();
+  const codigo = document.getElementById("cCodigo").value.trim();
+  const senha  = document.getElementById("cSenha").value;
+  const senha2 = document.getElementById("cSenha2").value;
+  const errorBox  = document.getElementById("cErrorMsg");
+  const errorText = document.getElementById("cErrorText");
+  const btn = document.getElementById("btnCriarSenha");
+
+  errorBox.classList.remove("show");
+
+  if (senha.length < 6) {
+    errorText.textContent = "A senha precisa ter no mínimo 6 caracteres";
+    errorBox.classList.add("show");
+    return;
+  }
+  if (senha !== senha2) {
+    errorText.textContent = "As senhas não conferem";
+    errorBox.classList.add("show");
+    return;
+  }
+
+  btn.classList.add("loading");
+  btn.textContent = "Salvando…";
+
+  try {
+    const res = await fetch("/api/primeiro-acesso", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nome, codigo, senha })
+    });
+
+    let data = {};
+    try { data = await res.json(); } catch {}
+
+    if (!res.ok) {
+      errorText.textContent = data.error || "Não foi possível criar a senha";
+      errorBox.classList.add("show");
+      return;
+    }
+
+    document.getElementById("criarForm").reset();
+    mostrarLogin("Senha criada com sucesso! Agora é só entrar.", nome);
+
+  } catch (err) {
+    console.error(err);
+    errorText.textContent = "Erro de conexão. Tente novamente.";
+    errorBox.classList.add("show");
+  } finally {
+    btn.classList.remove("loading");
+    btn.textContent = "Criar senha";
+  }
+});
 
 document.getElementById("loginForm").addEventListener("submit", async (e) => {
   e.preventDefault();
