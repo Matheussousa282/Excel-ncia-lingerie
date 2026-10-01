@@ -45,7 +45,7 @@ body {
 /* ── CARD GENÉRICO ── */
 .card {
   width: 100%;
-  max-width: 520px;
+  max-width: 760px;
   background: var(--card);
   border-radius: var(--radius);
   box-shadow: var(--shadow-md);
@@ -181,7 +181,7 @@ input::placeholder { color: #b0b7c3; }
 .result-msg.error   { background: var(--danger-bg);  color: var(--danger);  border: 1px solid #fecaca; }
 
 /* ── TABELA DE USUÁRIOS ── */
-.card-usuarios { max-width: 520px; }
+.card-usuarios { max-width: 760px; }
 
 table {
   width: 100%;
@@ -238,6 +238,7 @@ tbody tr:hover { background: rgba(196,162,100,0.04); }
 /* Loading */
 .loading-row td { text-align: center; color: var(--muted); padding: 24px; font-size: 13px; }
 </style>
+<script src="auth-fetch.js"></script>
 </head>
 <body>
 
@@ -245,7 +246,7 @@ tbody tr:hover { background: rgba(196,162,100,0.04); }
 <div class="card">
   <div class="card-header">
     <span class="header-icon">👥</span>
-    <h2>Criar Novo Usuário</h2>
+    <h2 id="tituloForm">Criar Novo Usuário</h2>
   </div>
 
   <div class="card-body">
@@ -259,6 +260,8 @@ tbody tr:hover { background: rgba(196,162,100,0.04); }
     <div class="security-alert">
       ⚠️ <span>As senhas são salvas sem criptografia. Evite senhas pessoais. Para produção, adicione hashing no backend.</span>
     </div>
+
+    <div class="edit-banner" id="editBanner"></div>
 
     <form id="formUsuario" autocomplete="off">
 
@@ -279,7 +282,36 @@ tbody tr:hover { background: rgba(196,162,100,0.04); }
         </div>
       </div>
 
+      <div class="field">
+        <label>Nível de acesso</label>
+        <div class="acesso-opcoes">
+          <label class="radio-card sel" id="cardTotal">
+            <input type="radio" name="acesso" value="total" checked>
+            <span>
+              <strong>Acesso total</strong>
+              <small>Vê todas as instituições e unidades (administração / RH geral).</small>
+            </span>
+          </label>
+          <label class="radio-card" id="cardUnidade">
+            <input type="radio" name="acesso" value="unidade">
+            <span>
+              <strong>Somente unidades selecionadas</strong>
+              <small>Gerente: vê apenas currículos, entrevistas, aprovados, reprovados e arquivados das unidades liberadas.</small>
+            </span>
+          </label>
+        </div>
+      </div>
+
+      <div class="field" id="boxUnidades" style="display:none;">
+        <div class="label-row">
+          <label style="margin-bottom:6px;">Unidades liberadas</label>
+          <span class="cont" id="contUnid">0 selecionada(s)</span>
+        </div>
+        <div class="unid-tree" id="arvoreUnidades"><div class="tree-vazio">Carregando…</div></div>
+      </div>
+
       <button type="submit" class="btn-submit" id="btnCriar">Criar Usuário</button>
+      <button type="button" class="btn-cancelar" id="btnCancelar" onclick="cancelarEdicao()">Cancelar edição</button>
 
       <div class="result-msg" id="resultMsg">
         <span id="resultIcon"></span>
@@ -303,80 +335,240 @@ tbody tr:hover { background: rgba(196,162,100,0.04); }
         <th>#</th>
         <th>Nome</th>
         <th>Senha</th>
+        <th>Acesso</th>
         <th>Criado em</th>
+        <th></th>
       </tr>
     </thead>
     <tbody id="listaUsuarios">
-      <tr class="loading-row"><td colspan="4">Carregando…</td></tr>
+      <tr class="loading-row"><td colspan="6">Carregando…</td></tr>
     </tbody>
   </table>
 </div>
 
 <script>
 /*
-  GUARD DE LOGIN — descomente para ativar proteção por login.
+  GUARD DE LOGIN — redireciona para login.html se não houver usuário.
 */
-
 const usuario = localStorage.getItem("usuario");
 if (!usuario) { window.location.href = "login.html"; }
 
+/* ── Estado ── */
+let catalogo        = [];          // [{id, nome, ativo, unidades:[{id,nome,ativo}]}]
+let mapaUnidades    = {};          // id -> "Instituição › Unidade"
+let selecionadas    = new Set();   // ids de unidades marcadas
+let listaAtual      = [];          // usuários carregados
+let editandoId      = null;
+
+function esc(v) {
+  return String(v ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
 
 /* ── Toggle senha (formulário) ── */
 function toggleSenha(inputId, btn) {
   const input = document.getElementById(inputId);
-  if (input.type === "password") {
-    input.type = "text"; btn.textContent = "🙈";
-  } else {
-    input.type = "password"; btn.textContent = "👁️";
-  }
+  if (input.type === "password") { input.type = "text"; btn.textContent = "🙈"; }
+  else                           { input.type = "password"; btn.textContent = "👁️"; }
 }
 
 /* ── Toggle senha (tabela) ── */
 function toggleSenhaCelula(btn) {
   const display = btn.previousElementSibling;
-  const senhaReal = btn.dataset.senha;
   if (btn.dataset.visible === "1") {
-    display.textContent = "••••••••";
-    btn.textContent = "👁️";
-    btn.dataset.visible = "0";
+    display.textContent = "••••••••"; btn.textContent = "👁️"; btn.dataset.visible = "0";
   } else {
-    display.textContent = senhaReal;
-    btn.textContent = "🙈";
-    btn.dataset.visible = "1";
+    display.textContent = btn.dataset.senha; btn.textContent = "🙈"; btn.dataset.visible = "1";
   }
 }
 
-/* ── Lista usuários ── */
+/* ════════════════════════════════════
+   NÍVEL DE ACESSO + ÁRVORE DE UNIDADES
+   ════════════════════════════════════ */
+function modoAcesso() {
+  return document.querySelector('input[name="acesso"]:checked').value;
+}
+
+function atualizarModo() {
+  const restrito = modoAcesso() === "unidade";
+  document.getElementById("boxUnidades").style.display = restrito ? "block" : "none";
+  document.getElementById("cardTotal").classList.toggle("sel", !restrito);
+  document.getElementById("cardUnidade").classList.toggle("sel", restrito);
+}
+
+document.querySelectorAll('input[name="acesso"]').forEach(r => r.addEventListener("change", atualizarModo));
+
+async function carregarCatalogo() {
+  const box = document.getElementById("arvoreUnidades");
+  try {
+    const [rI, rU] = await Promise.all([fetch("/api/instituicoes"), fetch("/api/unidades")]);
+    if (!rI.ok || !rU.ok) throw new Error();
+    const insts = await rI.json();
+    const unids = await rU.json();
+
+    catalogo = insts.map(i => ({
+      id: i.id, nome: i.nome, ativo: i.ativo !== false,
+      unidades: unids.filter(u => Number(u.instituicao_id) === Number(i.id))
+                     .map(u => ({ id: Number(u.id), nome: u.nome, ativo: u.ativo !== false }))
+    })).filter(i => i.unidades.length);
+
+    mapaUnidades = {};
+    catalogo.forEach(i => i.unidades.forEach(u => { mapaUnidades[u.id] = `${i.nome} › ${u.nome}`; }));
+    renderArvore();
+  } catch {
+    box.innerHTML = '<div class="tree-vazio" style="color:var(--danger);">Erro ao carregar instituições e unidades</div>';
+  }
+}
+
+function renderArvore() {
+  const box = document.getElementById("arvoreUnidades");
+  if (!catalogo.length) {
+    box.innerHTML = '<div class="tree-vazio">Nenhuma unidade cadastrada ainda</div>';
+    atualizarContador();
+    return;
+  }
+
+  box.innerHTML = catalogo.map(i => `
+    <div class="inst-bloco">
+      <label class="check">
+        <input type="checkbox" data-inst="${i.id}">
+        <span class="inst-nome">🏢 ${esc(i.nome)}${i.ativo ? "" : ' <span class="tag-inativa">(inativa)</span>'}</span>
+      </label>
+      <div class="unid-lista">
+        ${i.unidades.map(u => `
+          <label class="check">
+            <input type="checkbox" data-unid="${u.id}" data-pai="${i.id}" ${selecionadas.has(u.id) ? "checked" : ""}>
+            <span>${esc(u.nome)}${u.ativo ? "" : ' <span class="tag-inativa">(inativa)</span>'}</span>
+          </label>`).join("")}
+      </div>
+    </div>`).join("");
+
+  box.querySelectorAll("input[data-unid]").forEach(cb => cb.addEventListener("change", () => {
+    const id = Number(cb.dataset.unid);
+    cb.checked ? selecionadas.add(id) : selecionadas.delete(id);
+    atualizarPais();
+  }));
+
+  box.querySelectorAll("input[data-inst]").forEach(cb => cb.addEventListener("change", () => {
+    const inst = catalogo.find(i => String(i.id) === cb.dataset.inst);
+    inst.unidades.forEach(u => cb.checked ? selecionadas.add(u.id) : selecionadas.delete(u.id));
+    box.querySelectorAll(`input[data-pai="${inst.id}"]`).forEach(c => { c.checked = cb.checked; });
+    atualizarPais();
+  }));
+
+  atualizarPais();
+}
+
+/* Marca/desmarca/indetermina o checkbox da instituição conforme as unidades */
+function atualizarPais() {
+  catalogo.forEach(i => {
+    const cb = document.querySelector(`input[data-inst="${i.id}"]`);
+    if (!cb) return;
+    const marcadas = i.unidades.filter(u => selecionadas.has(u.id)).length;
+    cb.checked       = marcadas === i.unidades.length && marcadas > 0;
+    cb.indeterminate = marcadas > 0 && marcadas < i.unidades.length;
+  });
+  atualizarContador();
+}
+
+function atualizarContador() {
+  document.getElementById("contUnid").textContent = `${selecionadas.size} selecionada(s)`;
+}
+
+/* ════════════════════════════════════
+   LISTA DE USUÁRIOS
+   ════════════════════════════════════ */
+function badgeAcesso(u) {
+  if (u.acesso_total !== false) return '<span class="badge-acesso badge-total">Total</span>';
+  const nomes = (u.unidades || []).map(id => mapaUnidades[id] || `Unidade #${id}`);
+  const titulo = esc(nomes.join("\n"));
+  return `<span class="badge-acesso badge-unidade" title="${titulo}">${nomes.length} unidade(s)</span>`;
+}
+
+function renderUsuarios() {
+  const tbody = document.getElementById("listaUsuarios");
+  tbody.innerHTML = listaAtual.length
+    ? listaAtual.map(u => `
+        <tr>
+          <td style="color:var(--muted);font-size:12px;">${u.id}</td>
+          <td><strong>${esc(u.nome)}</strong></td>
+          <td>
+            <div class="senha-cell">
+              <span class="senha-display">••••••••</span>
+              <button class="btn-toggle-senha" data-visible="0" data-senha="${esc(u.senha)}"
+                onclick="toggleSenhaCelula(this)">👁️</button>
+            </div>
+          </td>
+          <td>${badgeAcesso(u)}</td>
+          <td class="date-cell">${new Date(u.criado_em).toLocaleString("pt-BR")}</td>
+          <td><button class="btn-editar" onclick="editarUsuario(${u.id})">✏️ Acesso</button></td>
+        </tr>`).join("")
+    : `<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--muted);">Nenhum usuário cadastrado</td></tr>`;
+}
+
 async function listarUsuarios() {
   const tbody = document.getElementById("listaUsuarios");
   try {
-    const res      = await fetch("/api/usuarios");
+    const res = await fetch("/api/usuarios");
     if (!res.ok) throw new Error();
-    const usuarios = await res.json();
-
-    tbody.innerHTML = usuarios.length
-      ? usuarios.map(u => `
-          <tr>
-            <td style="color:var(--muted);font-size:12px;">${u.id}</td>
-            <td><strong>${u.nome}</strong></td>
-            <td>
-              <div class="senha-cell">
-                <span class="senha-display">••••••••</span>
-                <button class="btn-toggle-senha" data-visible="0" data-senha="${u.senha.replace(/"/g,'&quot;').replace(/'/g,'&#39;')}"
-                  onclick="toggleSenhaCelula(this)">👁️</button>
-              </div>
-            </td>
-            <td class="date-cell">${new Date(u.criado_em).toLocaleString("pt-BR")}</td>
-          </tr>
-        `).join("")
-      : `<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--muted);">Nenhum usuário cadastrado</td></tr>`;
-
-  } catch (err) {
-    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--danger);">Erro ao carregar usuários</td></tr>`;
+    listaAtual = await res.json();
+    renderUsuarios();
+  } catch {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--danger);">Erro ao carregar usuários</td></tr>`;
   }
 }
 
-/* ── Criar usuário ── */
+/* ════════════════════════════════════
+   EDIÇÃO DE ACESSO DE USUÁRIO EXISTENTE
+   ════════════════════════════════════ */
+function editarUsuario(id) {
+  const u = listaAtual.find(x => x.id === id);
+  if (!u) return;
+  editandoId = id;
+
+  document.getElementById("tituloForm").textContent = "Editar Acesso";
+  const banner = document.getElementById("editBanner");
+  banner.textContent = `Editando: ${u.nome}`;
+  banner.style.display = "block";
+
+  const nome = document.getElementById("nome");
+  nome.value = u.nome; nome.disabled = true;
+
+  const senha = document.getElementById("senha");
+  senha.value = ""; senha.required = false;
+  senha.placeholder = "Deixe em branco para manter a senha atual";
+
+  const total = u.acesso_total !== false;
+  document.querySelector(`input[name="acesso"][value="${total ? "total" : "unidade"}"]`).checked = true;
+  selecionadas = new Set((u.unidades || []).map(Number));
+  renderArvore();
+  atualizarModo();
+
+  document.getElementById("btnCriar").textContent = "Salvar alterações";
+  document.getElementById("btnCancelar").style.display = "block";
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function cancelarEdicao() {
+  editandoId = null;
+  document.getElementById("formUsuario").reset();
+  document.getElementById("tituloForm").textContent = "Criar Novo Usuário";
+  document.getElementById("editBanner").style.display = "none";
+
+  const nome = document.getElementById("nome"); nome.disabled = false;
+  const senha = document.getElementById("senha");
+  senha.required = true; senha.placeholder = "Mínimo 6 caracteres";
+
+  selecionadas = new Set();
+  renderArvore();
+  atualizarModo();
+
+  document.getElementById("btnCriar").textContent = "Criar Usuário";
+  document.getElementById("btnCancelar").style.display = "none";
+}
+
+/* ════════════════════════════════════
+   SALVAR (criar ou atualizar)
+   ════════════════════════════════════ */
 document.getElementById("formUsuario").addEventListener("submit", async (e) => {
   e.preventDefault();
 
@@ -384,32 +576,59 @@ document.getElementById("formUsuario").addEventListener("submit", async (e) => {
   const msg  = document.getElementById("resultMsg");
   const icon = document.getElementById("resultIcon");
   const text = document.getElementById("resultText");
+  const textoBtn = editandoId ? "Salvar alterações" : "Criar Usuário";
 
   msg.classList.remove("show", "success", "error");
-  btn.textContent = "Criando…";
+
+  const restrito = modoAcesso() === "unidade";
+  if (restrito && selecionadas.size === 0) {
+    icon.textContent = "⚠️";
+    text.textContent = "Selecione ao menos uma unidade para este usuário.";
+    msg.classList.add("show", "error");
+    return;
+  }
+
+  btn.textContent = editandoId ? "Salvando…" : "Criando…";
   btn.disabled = true;
 
+  const payload = {
+    acesso_total: !restrito,
+    unidades: restrito ? [...selecionadas] : []
+  };
+
   try {
-    const res = await fetch("/api/usuarios", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        nome:  document.getElementById("nome").value,
-        senha: document.getElementById("senha").value
-      })
-    });
+    let res;
+    if (editandoId) {
+      payload.id = editandoId;
+      const senha = document.getElementById("senha").value;
+      if (senha) payload.senha = senha;
+      res = await fetch("/api/usuarios", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+    } else {
+      payload.nome  = document.getElementById("nome").value;
+      payload.senha = document.getElementById("senha").value;
+      res = await fetch("/api/usuarios", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+    }
 
     const data = await res.json();
 
     if (res.ok) {
+      const foiEdicao = !!editandoId;
+      if (foiEdicao) cancelarEdicao(); else { e.target.reset(); selecionadas = new Set(); renderArvore(); atualizarModo(); }
       icon.textContent = "✓";
-      text.textContent = "Usuário criado com sucesso!";
+      text.textContent = foiEdicao ? "Acesso atualizado com sucesso!" : "Usuário criado com sucesso!";
       msg.classList.add("show", "success");
-      e.target.reset();
       listarUsuarios();
     } else {
       icon.textContent = "⚠️";
-      text.textContent = data.error || "Erro ao criar usuário";
+      text.textContent = data.error || "Erro ao salvar usuário";
       msg.classList.add("show", "error");
     }
   } catch {
@@ -417,7 +636,7 @@ document.getElementById("formUsuario").addEventListener("submit", async (e) => {
     text.textContent = "Erro de conexão. Tente novamente.";
     msg.classList.add("show", "error");
   } finally {
-    btn.textContent = "Criar Usuário";
+    btn.textContent = editandoId ? "Salvar alterações" : "Criar Usuário";
     btn.disabled = false;
   }
 });
@@ -428,7 +647,8 @@ function logout() {
   window.location.href = "login.html";
 }
 
-listarUsuarios();
+/* Carrega catálogo primeiro (para os nomes das unidades na tabela) */
+(async () => { await carregarCatalogo(); await listarUsuarios(); })();
 </script>
 
 </body>

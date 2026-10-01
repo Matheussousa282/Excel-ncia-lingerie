@@ -87,6 +87,12 @@ body {
   color: var(--primary);
 }
 
+.sidebar-user-acesso {
+  font-size: 11.5px;
+  color: rgba(255,255,255,0.45);
+  margin-top: 3px;
+}
+
 /* Seção do menu */
 .sidebar-section-label {
   font-size: 10px;
@@ -246,6 +252,7 @@ body {
   <div class="sidebar-user">
     <div class="sidebar-user-label">Logado como</div>
     <div class="sidebar-user-name" id="usuarioLogado">—</div>
+    <div class="sidebar-user-acesso" id="usuarioAcesso"></div>
   </div>
 
   <div class="menu">
@@ -332,7 +339,26 @@ if (!usuarioRaw) {
 }
 
 const dadosUsuario = JSON.parse(usuarioRaw);
+
+/* Sessão antiga (sem token) → pede login de novo para carregar as permissões */
+if (!dadosUsuario.token) {
+  localStorage.removeItem("usuario");
+  window.location.href = "login.html";
+}
+
 document.getElementById("usuarioLogado").textContent = dadosUsuario.nome;
+
+/* Mostra o alcance do acesso */
+const acessoTotal = dadosUsuario.acesso_total !== false;
+document.getElementById("usuarioAcesso").textContent = acessoTotal
+  ? "Acesso a todas as unidades"
+  : "Acesso restrito (" + (dadosUsuario.unidades || []).length + " unidade(s))";
+
+/* Gerente com acesso restrito não vê as telas de cadastro geral */
+if (!acessoTotal) {
+  document.getElementById("link-cadastros").style.display = "none";
+  document.getElementById("link-inst").style.display = "none";
+}
 
 /* ════════════════════════════════════
    CONTROLE DE ACESSO
@@ -341,7 +367,7 @@ document.getElementById("usuarioLogado").textContent = dadosUsuario.nome;
    o usuário com nome "Matheus".
    Adapte a lógica se precisar de roles.
    ════════════════════════════════════ */
-if (dadosUsuario.nome === "Matheus") {
+if (dadosUsuario.nome === "Matheus" && acessoTotal) {
   document.getElementById("link-usuarios").style.display = "flex";
   document.getElementById("link-configuracoes").style.display = "flex";
 }
