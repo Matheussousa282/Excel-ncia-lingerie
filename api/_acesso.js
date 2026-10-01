@@ -18,22 +18,31 @@ const SECRET =
   process.env.DATABASE_URL_RH ||
   "";
 
-let estruturaOk = false;
+let estruturaPromise = null;
 
-/* Cria coluna/tabela necessárias (idempotente, roda 1x por instância) */
-export async function garantirEstrutura(pool) {
-  if (estruturaOk) return;
-  await pool.query(
-    "ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS acesso_total BOOLEAN NOT NULL DEFAULT true"
-  );
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS usuario_unidades (
-      usuario_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
-      unidade_id INTEGER NOT NULL REFERENCES unidades(id) ON DELETE CASCADE,
-      PRIMARY KEY (usuario_id, unidade_id)
-    )
-  `);
-  estruturaOk = true;
+/* Cria coluna/tabela necessárias (idempotente; chamadas simultâneas dividem a mesma execução).
+   Se falhar, apenas registra o erro: as consultas seguintes mostram o problema real. */
+export function garantirEstrutura(pool) {
+  if (!estruturaPromise) {
+    estruturaPromise = (async () => {
+      try {
+        await pool.query(
+          "ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS acesso_total BOOLEAN NOT NULL DEFAULT true"
+        );
+        await pool.query(`
+          CREATE TABLE IF NOT EXISTS usuario_unidades (
+            usuario_id INTEGER NOT NULL,
+            unidade_id INTEGER NOT NULL,
+            PRIMARY KEY (usuario_id, unidade_id)
+          )
+        `);
+      } catch (err) {
+        console.error("[acesso] falha ao preparar estrutura:", err.message);
+        estruturaPromise = null; // tenta de novo na próxima requisição
+      }
+    })();
+  }
+  return estruturaPromise;
 }
 
 function assinar(payload) {
