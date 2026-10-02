@@ -350,12 +350,14 @@ document.getElementById("usuarioLogado").textContent = dadosUsuario.nome;
 
 /* Mostra o alcance do acesso */
 const acessoTotal = dadosUsuario.acesso_total !== false;
-document.getElementById("usuarioAcesso").textContent = acessoTotal
-  ? "Acesso a todas as unidades"
-  : "Acesso restrito (" + (dadosUsuario.unidades || []).length + " unidade(s))";
+const todosCargos = dadosUsuario.todos_cargos !== false;
+document.getElementById("usuarioAcesso").textContent =
+  (acessoTotal ? "Todas as unidades" : (dadosUsuario.unidades || []).length + " unidade(s)") +
+  " • " +
+  (todosCargos ? "todos os cargos" : (dadosUsuario.cargos || []).length + " cargo(s)");
 
 /* Gerente com acesso restrito não vê as telas de cadastro geral */
-if (!acessoTotal) {
+if (!acessoTotal || !todosCargos) {
   document.getElementById("link-cadastros").style.display = "none";
   document.getElementById("link-inst").style.display = "none";
 }
@@ -367,7 +369,7 @@ if (!acessoTotal) {
    o usuário com nome "Matheus".
    Adapte a lógica se precisar de roles.
    ════════════════════════════════════ */
-if (dadosUsuario.nome === "Matheus" && acessoTotal) {
+if (dadosUsuario.nome === "Matheus" && acessoTotal && todosCargos) {
   document.getElementById("link-usuarios").style.display = "flex";
   document.getElementById("link-configuracoes").style.display = "flex";
 }

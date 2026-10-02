@@ -124,6 +124,9 @@ body {
   font-size: 12px; font-weight: 700; text-transform: uppercase;
   letter-spacing: 0.7px; color: var(--muted); margin-bottom: 16px;
 }
+form#formUsuario { counter-reset: sec; }
+.section { counter-increment: sec; }
+.section-title .num::before { content: counter(sec); }
 .section-title .num {
   width: 22px; height: 22px; border-radius: 50%;
   background: var(--dark); color: var(--primary);
@@ -420,7 +423,7 @@ tbody tr:hover { background: #fbfaf7; }
 
           <!-- 1. DADOS -->
           <div class="section">
-            <div class="section-title"><span class="num">1</span> Dados de login</div>
+            <div class="section-title"><span class="num"></span> Dados de login</div>
             <div class="grid-2">
               <div>
                 <label class="lbl" for="nome">Nome de usuário</label>
@@ -443,7 +446,7 @@ tbody tr:hover { background: #fbfaf7; }
 
           <!-- 2. NÍVEL -->
           <div class="section">
-            <div class="section-title"><span class="num">2</span> Nível de acesso</div>
+            <div class="section-title"><span class="num"></span> Acesso às unidades</div>
             <div class="opcoes">
               <label class="opcao sel" id="opTotal">
                 <input type="radio" name="acesso" value="total" checked>
@@ -464,7 +467,7 @@ tbody tr:hover { background: #fbfaf7; }
 
           <!-- 3. UNIDADES -->
           <div class="section" id="secUnidades" style="display:none;">
-            <div class="section-title"><span class="num">3</span> Unidades liberadas</div>
+            <div class="section-title"><span class="num"></span> Unidades liberadas</div>
 
             <div class="unid-toolbar">
               <div class="busca">
@@ -478,6 +481,43 @@ tbody tr:hover { background: #fbfaf7; }
             <div class="contador" id="contUnid">0 unidade(s) selecionada(s)</div>
 
             <div id="arvoreUnidades"><div class="vazio">Carregando…</div></div>
+          </div>
+
+          <!-- CARGOS -->
+          <div class="section" id="secCargos">
+            <div class="section-title"><span class="num"></span> Cargos que pode ver</div>
+            <div class="opcoes">
+              <label class="opcao sel" id="opCargoTodos">
+                <input type="radio" name="cargos_modo" value="todos" checked>
+                <span class="marca">✓</span>
+                <span class="ico">📂</span>
+                <strong>Todos os cargos</strong>
+                <small>Vê currículos de qualquer cargo.</small>
+              </label>
+              <label class="opcao" id="opCargoSel">
+                <input type="radio" name="cargos_modo" value="selecionados">
+                <span class="marca">✓</span>
+                <span class="ico">🎯</span>
+                <strong>Somente cargos selecionados</strong>
+                <small>Vê apenas currículos, entrevistas, aprovados, reprovados e arquivados dos cargos marcados.</small>
+              </label>
+            </div>
+
+            <div id="boxCargos" style="display:none; margin-top:22px;">
+              <div class="unid-toolbar">
+                <div class="busca">
+                  <span>🔎</span>
+                  <input type="text" id="buscaCargo" placeholder="Filtrar cargo…" oninput="filtrarCargos()">
+                </div>
+                <button type="button" class="btn-ghost" onclick="selecionarCargosLoja()" title="Operador de caixa, Outros cargos não especificados, Vendedor(a), Serviços Gerais e Fiscal de Loja">⭐ Cargos de loja</button>
+                <button type="button" class="btn-ghost" onclick="marcarTodosCargos(true)">Marcar todos</button>
+                <button type="button" class="btn-ghost" onclick="marcarTodosCargos(false)">Limpar</button>
+              </div>
+              <div class="contador" id="contCargos">0 cargo(s) selecionado(s)</div>
+              <div class="inst-card">
+                <div class="chips" id="gradeCargos"><div class="vazio" style="grid-column:1/-1;">Carregando…</div></div>
+              </div>
+            </div>
           </div>
 
           <div class="acoes">
@@ -507,6 +547,9 @@ let mapaUnidades = {};          // id -> "Instituição › Unidade"
 let selecionadas = new Set();   // ids de unidades marcadas
 let listaAtual   = [];
 let editandoId   = null;
+let cargosCat    = [];          // [{id, nome, ativo}]
+let mapaCargos   = {};          // id -> nome
+let cargosSel    = new Set();   // ids de cargos marcados
 
 function esc(v) {
   return String(v ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -657,9 +700,100 @@ function filtrarUnidades() {
   });
 }
 
+/* ════════════ CARGOS ════════════ */
+function modoCargos() { return document.querySelector('input[name="cargos_modo"]:checked').value; }
+
+function atualizarModoCargos() {
+  const sel = modoCargos() === "selecionados";
+  document.getElementById("boxCargos").style.display = sel ? "block" : "none";
+  document.getElementById("opCargoTodos").classList.toggle("sel", !sel);
+  document.getElementById("opCargoSel").classList.toggle("sel", sel);
+}
+document.querySelectorAll('input[name="cargos_modo"]').forEach(r => r.addEventListener("change", atualizarModoCargos));
+
+async function carregarCargos() {
+  const grade = document.getElementById("gradeCargos");
+  try {
+    const res = await fetch("/api/cargos");
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+    cargosCat = data.map(c => ({ id: Number(c.id), nome: c.nome, ativo: c.ativo !== false }));
+    mapaCargos = {};
+    cargosCat.forEach(c => { mapaCargos[c.id] = c.nome; });
+    renderCargos();
+  } catch {
+    grade.innerHTML = '<div class="vazio" style="grid-column:1/-1;color:var(--danger);">Erro ao carregar cargos</div>';
+  }
+}
+
+function renderCargos() {
+  const grade = document.getElementById("gradeCargos");
+  if (!cargosCat.length) {
+    grade.innerHTML = '<div class="vazio" style="grid-column:1/-1;">Nenhum cargo cadastrado ainda</div>';
+    atualizarContCargos();
+    return;
+  }
+  grade.innerHTML = cargosCat.map(c => `
+    <label class="chip ${cargosSel.has(c.id) ? "sel" : ""}" data-cargo="${c.id}" data-nome="${esc(c.nome.toLowerCase())}">
+      <span class="chk"><input type="checkbox" data-cid="${c.id}" ${cargosSel.has(c.id) ? "checked" : ""}><span class="box"></span></span>
+      <span>${esc(c.nome)}${c.ativo ? "" : ' <span class="tag-inativa">(inativo)</span>'}</span>
+    </label>`).join("");
+
+  grade.querySelectorAll("input[data-cid]").forEach(cb => cb.addEventListener("change", () => {
+    const id = Number(cb.dataset.cid);
+    cb.checked ? cargosSel.add(id) : cargosSel.delete(id);
+    cb.closest(".chip").classList.toggle("sel", cb.checked);
+    atualizarContCargos();
+  }));
+  atualizarContCargos();
+  filtrarCargos();
+}
+
+function atualizarContCargos() {
+  document.getElementById("contCargos").textContent = `${cargosSel.size} cargo(s) selecionado(s)`;
+}
+
+function marcarTodosCargos(marcar) {
+  cargosCat.forEach(c => marcar ? cargosSel.add(c.id) : cargosSel.delete(c.id));
+  renderCargos();
+}
+
+function filtrarCargos() {
+  const termo = document.getElementById("buscaCargo").value.trim().toLowerCase();
+  document.querySelectorAll("#gradeCargos .chip").forEach(chip => {
+    chip.style.display = (!termo || chip.dataset.nome.includes(termo)) ? "" : "none";
+  });
+}
+
+/* Atalho: marca os cargos de loja (compara ignorando acentos e maiúsculas) */
+function normalizar(t) {
+  return String(t).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+}
+function selecionarCargosLoja() {
+  const alvos = ["operador de caixa", "outros cargos", "vendedor", "servicos gerais", "fiscal de loja"];
+  const achados = cargosCat.filter(c => alvos.some(a => normalizar(c.nome).includes(a)));
+  achados.forEach(c => cargosSel.add(c.id));
+  renderCargos();
+  if (achados.length < alvos.length) {
+    alert(`Foram marcados ${achados.length} de ${alvos.length} cargos de loja.\nConfira se os nomes estão cadastrados e marque manualmente os que faltarem.`);
+  }
+}
+
 /* ════════════ LISTA DE USUÁRIOS ════════════ */
+function badgeCargos(u) {
+  if (u.todos_cargos !== false) return '<div class="unid-mini"><span>📂 Todos os cargos</span></div>';
+  const nomes = (u.cargos || []).map(id => mapaCargos[id] || `Cargo #${id}`);
+  const curtos = nomes.slice(0, 3).map(n => `<span>🎯 ${esc(n)}</span>`).join("");
+  const mais = nomes.length > 3 ? `<span>+${nomes.length - 3}</span>` : "";
+  return `<div class="unid-mini">${curtos}${mais}</div>`;
+}
+
 function badgeAcesso(u) {
-  if (u.acesso_total !== false) return '<span class="badge badge-total">🌐 Acesso total</span>';
+  return badgeUnidades(u) + badgeCargos(u);
+}
+
+function badgeUnidades(u) {
+  if (u.acesso_total !== false) return '<span class="badge badge-total">🌐 Todas as unidades</span>';
   const nomes = (u.unidades || []).map(id => mapaUnidades[id] || `Unidade #${id}`);
   const curtos = nomes.slice(0, 3).map(n => `<span>${esc(n.split(" › ").pop())}</span>`).join("");
   const mais = nomes.length > 3 ? `<span>+${nomes.length - 3}</span>` : "";
@@ -767,6 +901,13 @@ function editarUsuario(id) {
   renderArvore();
   atualizarModo();
 
+  const todosCg = u.todos_cargos !== false;
+  document.querySelector(`input[name="cargos_modo"][value="${todosCg ? "todos" : "selecionados"}"]`).checked = true;
+  cargosSel = new Set((u.cargos || []).map(Number));
+  document.getElementById("buscaCargo").value = "";
+  renderCargos();
+  atualizarModoCargos();
+
   document.getElementById("btnCriar").textContent = "Salvar alterações";
   document.getElementById("btnCancelar").style.display = "block";
   document.getElementById("resultMsg").classList.remove("show");
@@ -788,6 +929,10 @@ function resetarFormulario() {
   selecionadas = new Set();
   renderArvore();
   atualizarModo();
+  cargosSel = new Set();
+  document.getElementById("buscaCargo").value = "";
+  renderCargos();
+  atualizarModoCargos();
   document.getElementById("btnCriar").textContent = "Criar usuário";
   document.getElementById("btnCancelar").style.display = "none";
 }
@@ -817,11 +962,24 @@ document.getElementById("formUsuario").addEventListener("submit", async (e) => {
     return;
   }
 
+  const cargosRestritos = modoCargos() === "selecionados";
+  if (cargosRestritos && cargosSel.size === 0) {
+    icon.textContent = "⚠️";
+    text.textContent = "Selecione ao menos um cargo para este usuário.";
+    msg.classList.add("show", "error");
+    return;
+  }
+
   const eraEdicao = !!editandoId;
   btn.textContent = eraEdicao ? "Salvando…" : "Criando…";
   btn.disabled = true;
 
-  const payload = { acesso_total: !restrito, unidades: restrito ? [...selecionadas] : [] };
+  const payload = {
+    acesso_total: !restrito,
+    unidades: restrito ? [...selecionadas] : [],
+    todos_cargos: !cargosRestritos,
+    cargos: cargosRestritos ? [...cargosSel] : []
+  };
 
   try {
     let res;
@@ -866,7 +1024,7 @@ function logout() {
 }
 
 /* Catálogo primeiro (nomes das unidades na lista), depois usuários */
-(async () => { await carregarCatalogo(); await listarUsuarios(); })();
+(async () => { await Promise.all([carregarCatalogo(), carregarCargos()]); await listarUsuarios(); })();
 </script>
 
 </body>
