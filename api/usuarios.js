@@ -1,7 +1,7 @@
 // /pages/api/usuarios.js
 // GET  → lista usuários (com tipo de acesso e unidades liberadas)
 // POST → cria usuário { nome, senha?, acesso_total, unidades:[ids] } (sem senha = gera código de primeiro acesso)
-// PUT  → atualiza acesso { id, acesso_total, unidades:[ids], senha? } | { id, redefinir:true }
+// PUT  → atualiza acesso { id, acesso_total, unidades:[ids], todos_cargos, cargos:[ids], senha? } | { id, redefinir:true }
 // Somente usuários com acesso total podem usar esta API.
 
 import crypto from "crypto";
@@ -22,6 +22,17 @@ function gerarCodigo() {
 function listaIds(v) {
   if (!Array.isArray(v)) return [];
   return [...new Set(v.map(Number).filter(Number.isInteger))];
+}
+
+async function gravarCargos(client, usuarioId, todos, cargos) {
+  await client.query("DELETE FROM usuario_cargos WHERE usuario_id = $1", [usuarioId]);
+  if (todos) return;
+  for (const cid of cargos) {
+    await client.query(
+      "INSERT INTO usuario_cargos (usuario_id, cargo_id) VALUES ($1, $2)",
+      [usuarioId, cid]
+    );
+  }
 }
 
 async function gravarUnidades(client, usuarioId, total, unidades) {
@@ -47,11 +58,15 @@ export default async function handler(req, res) {
     if (req.method === "GET") {
       // Sem GROUP BY: funciona mesmo se a tabela usuarios não tiver PRIMARY KEY em id
       const result = await pool.query(`
-        SELECT u.id, u.nome, u.senha, u.criado_em, u.acesso_total, u.codigo_primeiro_acesso AS codigo,
+        SELECT u.id, u.nome, u.senha, u.criado_em, u.acesso_total, u.acesso_todos_cargos, u.codigo_primeiro_acesso AS codigo,
                COALESCE(
                  (SELECT array_agg(uu.unidade_id) FROM usuario_unidades uu WHERE uu.usuario_id = u.id),
                  '{}'
-               ) AS unidades
+               ) AS unidades,
+               COALESCE(
+                 (SELECT array_agg(uc.cargo_id) FROM usuario_cargos uc WHERE uc.usuario_id = u.id),
+                 '{}'
+               ) AS cargos
         FROM usuarios u
         ORDER BY u.id ASC
       `);
@@ -60,7 +75,9 @@ export default async function handler(req, res) {
           ...r,
           pendente: !r.senha,
           codigo: !r.senha ? r.codigo : null,
-          unidades: (r.unidades || []).map(Number)
+          todos_cargos: r.acesso_todos_cargos !== false,
+          unidades: (r.unidades || []).map(Number),
+          cargos: (r.cargos || []).map(Number)
         }))
       );
     }
@@ -70,12 +87,17 @@ export default async function handler(req, res) {
       const { nome, senha } = req.body;
       const total    = req.body.acesso_total !== false && req.body.acesso_total !== "false";
       const unidades = listaIds(req.body.unidades);
+      const todosCargos = req.body.todos_cargos !== false && req.body.todos_cargos !== "false";
+      const cargos      = listaIds(req.body.cargos);
 
       if (!nome) {
         return res.status(400).json({ error: "Nome é obrigatório" });
       }
       if (!total && unidades.length === 0) {
         return res.status(400).json({ error: "Selecione ao menos uma unidade para este usuário" });
+      }
+      if (!todosCargos && cargos.length === 0) {
+        return res.status(400).json({ error: "Selecione ao menos um cargo para este usuário" });
       }
 
       const existe = await pool.query("SELECT id FROM usuarios WHERE nome = $1", [nome]);
@@ -90,10 +112,11 @@ export default async function handler(req, res) {
       try {
         await client.query("BEGIN");
         const ins = await client.query(
-          "INSERT INTO usuarios (nome, senha, acesso_total, codigo_primeiro_acesso) VALUES ($1, $2, $3, $4) RETURNING id",
-          [nome, senha || "", total, codigo]
+          "INSERT INTO usuarios (nome, senha, acesso_total, acesso_todos_cargos, codigo_primeiro_acesso) VALUES ($1, $2, $3, $4, $5) RETURNING id",
+          [nome, senha || "", total, todosCargos, codigo]
         );
         await gravarUnidades(client, ins.rows[0].id, total, unidades);
+        await gravarCargos(client, ins.rows[0].id, todosCargos, cargos);
         await client.query("COMMIT");
       } catch (e) {
         await client.query("ROLLBACK");
@@ -125,20 +148,28 @@ export default async function handler(req, res) {
 
       const total    = req.body.acesso_total !== false && req.body.acesso_total !== "false";
       const unidades = listaIds(req.body.unidades);
+      const todosCargos = req.body.todos_cargos !== false && req.body.todos_cargos !== "false";
+      const cargos      = listaIds(req.body.cargos);
 
       if (!id) return res.status(400).json({ error: "id é obrigatório" });
       if (!total && unidades.length === 0) {
         return res.status(400).json({ error: "Selecione ao menos uma unidade para este usuário" });
       }
+      if (!todosCargos && cargos.length === 0) {
+        return res.status(400).json({ error: "Selecione ao menos um cargo para este usuário" });
+      }
       // Evita o admin se trancar para fora
-      if (Number(id) === acesso.id && !total) {
+      if (Number(id) === acesso.id && (!total || !todosCargos)) {
         return res.status(400).json({ error: "Você não pode restringir o seu próprio acesso" });
       }
 
       const client = await pool.connect();
       try {
         await client.query("BEGIN");
-        await client.query("UPDATE usuarios SET acesso_total = $1 WHERE id = $2", [total, id]);
+        await client.query(
+          "UPDATE usuarios SET acesso_total = $1, acesso_todos_cargos = $2 WHERE id = $3",
+          [total, todosCargos, id]
+        );
         if (senha) {
           await client.query(
             "UPDATE usuarios SET senha = $1, codigo_primeiro_acesso = NULL, tentativas_codigo = 0 WHERE id = $2",
@@ -146,6 +177,7 @@ export default async function handler(req, res) {
           );
         }
         await gravarUnidades(client, id, total, unidades);
+        await gravarCargos(client, id, todosCargos, cargos);
         await client.query("COMMIT");
       } catch (e) {
         await client.query("ROLLBACK");

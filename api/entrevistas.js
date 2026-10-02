@@ -3,7 +3,7 @@
 
 import { Pool } from "pg";
 import { enviarWhatsApp, formatarMensagem } from "./whatsapp.js";
-import { obterAcesso, filtroUnidades, candidatoPermitido, entrevistaPermitida } from "./_acesso.js";
+import { obterAcesso, filtroUnidades, filtroCargos, candidatoPermitido, entrevistaPermitida } from "./_acesso.js";
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL || process.env.DATABASE_URL_RH,
@@ -38,6 +38,7 @@ export default async function handler(req, res) {
     const acesso = await obterAcesso(pool, req);
     if (!acesso) return res.status(401).json({ error: "Não autenticado" });
     const filtro = filtroUnidades(acesso); // null = tudo | [ids]
+    const filtroCargo = filtroCargos(acesso); // null = todos | [ids]
 
     if (method === "GET") {
       const { mes, ano, candidato_id, status } = req.query;
@@ -54,6 +55,7 @@ export default async function handler(req, res) {
         WHERE 1=1`;
       const params = [];
       if (filtro) { params.push(filtro); q += ` AND c.unidade_id = ANY($${params.length}::int[])`; }
+      if (filtroCargo) { params.push(filtroCargo); q += ` AND c.cargo_id = ANY($${params.length}::int[])`; }
       if (status) { params.push(status); q += ` AND e.status=$${params.length}`; }
       if (mes && ano) {
         params.push(Number(ano), Number(mes));

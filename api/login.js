@@ -76,6 +76,13 @@ export default async function handler(req, res) {
       });
     }
 
+    if (!acesso.todosCargos && acesso.cargos.length === 0) {
+      return res.status(403).json({
+        success: false,
+        error: "Seu usuário não tem nenhum cargo liberado. Fale com o administrador.",
+      });
+    }
+
     return res.status(200).json({
       success: true,
       usuario: {
@@ -83,6 +90,8 @@ export default async function handler(req, res) {
         nome: user.nome,
         acesso_total: acesso.total,
         unidades: acesso.unidades,
+        todos_cargos: acesso.todosCargos,
+        cargos: acesso.cargos,
         token: gerarToken(user.id),
       },
     });

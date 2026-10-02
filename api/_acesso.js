@@ -35,6 +35,16 @@ export function garantirEstrutura(pool) {
         await pool.query(
           "ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS tentativas_codigo INTEGER NOT NULL DEFAULT 0"
         );
+        await pool.query(
+          "ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS acesso_todos_cargos BOOLEAN NOT NULL DEFAULT true"
+        );
+        await pool.query(`
+          CREATE TABLE IF NOT EXISTS usuario_cargos (
+            usuario_id INTEGER NOT NULL,
+            cargo_id   INTEGER NOT NULL,
+            PRIMARY KEY (usuario_id, cargo_id)
+          )
+        `);
         await pool.query(`
           CREATE TABLE IF NOT EXISTS usuario_unidades (
             usuario_id INTEGER NOT NULL,
@@ -76,7 +86,7 @@ function lerUsuarioIdDoToken(req) {
 export async function carregarAcesso(pool, usuarioId) {
   await garantirEstrutura(pool);
   const u = await pool.query(
-    "SELECT id, nome, acesso_total FROM usuarios WHERE id = $1",
+    "SELECT id, nome, acesso_total, acesso_todos_cargos FROM usuarios WHERE id = $1",
     [usuarioId]
   );
   if (!u.rows.length) return null;
@@ -90,7 +100,18 @@ export async function carregarAcesso(pool, usuarioId) {
     );
     unidades = r.rows.map(x => Number(x.unidade_id));
   }
-  return { id: u.rows[0].id, nome: u.rows[0].nome, total, unidades };
+
+  const todosCargos = u.rows[0].acesso_todos_cargos !== false;
+  let cargos = [];
+  if (!todosCargos) {
+    const r = await pool.query(
+      "SELECT cargo_id FROM usuario_cargos WHERE usuario_id = $1",
+      [usuarioId]
+    );
+    cargos = r.rows.map(x => Number(x.cargo_id));
+  }
+
+  return { id: u.rows[0].id, nome: u.rows[0].nome, total, unidades, todosCargos, cargos };
 }
 
 /* Lê o token da requisição → { id, nome, total, unidades } ou null */
@@ -105,22 +126,35 @@ export function filtroUnidades(acesso) {
   return acesso.total ? null : acesso.unidades;
 }
 
+/* Cargos: null = todos | array = só esses cargos */
+export function filtroCargos(acesso) {
+  return acesso.todosCargos ? null : acesso.cargos;
+}
+
+export function cargoPermitido(acesso, cargoId) {
+  return acesso.todosCargos || acesso.cargos.includes(Number(cargoId));
+}
+
 export function unidadePermitida(acesso, unidadeId) {
   return acesso.total || acesso.unidades.includes(Number(unidadeId));
 }
 
 export async function candidatoPermitido(pool, acesso, candidatoId) {
-  if (acesso.total) return true;
-  const r = await pool.query("SELECT unidade_id FROM candidatos WHERE id = $1", [candidatoId]);
-  return r.rows.length > 0 && unidadePermitida(acesso, r.rows[0].unidade_id);
+  if (acesso.total && acesso.todosCargos) return true;
+  const r = await pool.query("SELECT unidade_id, cargo_id FROM candidatos WHERE id = $1", [candidatoId]);
+  return r.rows.length > 0
+    && unidadePermitida(acesso, r.rows[0].unidade_id)
+    && cargoPermitido(acesso, r.rows[0].cargo_id);
 }
 
 export async function entrevistaPermitida(pool, acesso, entrevistaId) {
-  if (acesso.total) return true;
+  if (acesso.total && acesso.todosCargos) return true;
   const r = await pool.query(
-    `SELECT c.unidade_id FROM entrevistas e
+    `SELECT c.unidade_id, c.cargo_id FROM entrevistas e
      JOIN candidatos c ON c.id = e.candidato_id WHERE e.id = $1`,
     [entrevistaId]
   );
-  return r.rows.length > 0 && unidadePermitida(acesso, r.rows[0].unidade_id);
+  return r.rows.length > 0
+    && unidadePermitida(acesso, r.rows[0].unidade_id)
+    && cargoPermitido(acesso, r.rows[0].cargo_id);
 }

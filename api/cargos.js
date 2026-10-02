@@ -1,4 +1,5 @@
 import { Pool } from "pg";
+import { obterAcesso, filtroCargos } from "./_acesso.js";
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -9,11 +10,22 @@ export default async function handler(req, res) {
   try {
     const { method } = req;
 
+    // Sem token = formulário público (lista completa). Com token: gerente com
+    // cargos restritos só enxerga os seus cargos e nenhum usuário restrito edita cargos.
+    const acesso = await obterAcesso(pool, req);
+    if (acesso && (!acesso.total || !acesso.todosCargos) && method !== "GET") {
+      return res.status(403).json({ error: "Sem permissão" });
+    }
+
     // LISTAR (ativos)
     if (method === "GET") {
-      const result = await pool.query(
-        "SELECT id, nome, ativo FROM cargos ORDER BY nome"
-      );
+      const filtroCargo = acesso ? filtroCargos(acesso) : null;
+      const result = filtroCargo
+        ? await pool.query(
+            "SELECT id, nome, ativo FROM cargos WHERE id = ANY($1::int[]) ORDER BY nome",
+            [filtroCargo]
+          )
+        : await pool.query("SELECT id, nome, ativo FROM cargos ORDER BY nome");
       return res.status(200).json(result.rows);
     }
 

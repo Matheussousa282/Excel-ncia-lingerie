@@ -4,7 +4,7 @@
 // PUT  → ações: "selecionado" (dispara WhatsApp) | "desfazer_aprovacao"
 
 import { Pool } from "pg";
-import { obterAcesso, filtroUnidades, unidadePermitida, candidatoPermitido } from "./_acesso.js";
+import { obterAcesso, filtroUnidades, filtroCargos, unidadePermitida, cargoPermitido, candidatoPermitido } from "./_acesso.js";
 
 const connectionString = process.env.DATABASE_URL || process.env.DATABASE_URL_RH;
 if (!connectionString) throw new Error("DATABASE_URL não configurada");
@@ -117,7 +117,8 @@ export default async function handler(req, res) {
     }
     if (!acesso) return res.status(401).json({ error: "Não autenticado" });
   }
-  const filtro = acesso ? filtroUnidades(acesso) : null; // null = tudo | [ids] = só essas unidades
+  const filtro = acesso ? filtroUnidades(acesso) : null;       // null = tudo | [ids] = só essas unidades
+  const filtroCargo = acesso ? filtroCargos(acesso) : null;     // null = todos | [ids] = só esses cargos
 
   // ════════════════════════════════════════
   // GET — lista candidatos ou busca arquivo
@@ -135,8 +136,9 @@ export default async function handler(req, res) {
           JOIN unidades     u  ON u.id  = c.unidade_id
           WHERE c.reprovado = true
             AND ($1::int[] IS NULL OR c.unidade_id = ANY($1::int[]))
+            AND ($2::int[] IS NULL OR c.cargo_id = ANY($2::int[]))
           ORDER BY c.criado_em DESC
-        `, [filtro]);
+        `, [filtro, filtroCargo]);
         return res.status(200).json(r.rows);
       }
 
@@ -153,8 +155,9 @@ export default async function handler(req, res) {
           JOIN unidades     u  ON u.id  = c.unidade_id
           WHERE c.arquivado = true
             AND ($1::int[] IS NULL OR c.unidade_id = ANY($1::int[]))
+            AND ($2::int[] IS NULL OR c.cargo_id = ANY($2::int[]))
           ORDER BY c.arquivado_em DESC
-        `, [filtro]);
+        `, [filtro, filtroCargo]);
         return res.status(200).json(r.rows);
       }
 
@@ -162,12 +165,12 @@ export default async function handler(req, res) {
       if (req.query.arquivo) {
         const id = Number(req.query.arquivo);
         const r  = await pool.query(
-          "SELECT arquivo, arquivo_nome, unidade_id FROM candidatos WHERE id = $1", [id]
+          "SELECT arquivo, arquivo_nome, unidade_id, cargo_id FROM candidatos WHERE id = $1", [id]
         );
         if (!r.rows.length || !r.rows[0].arquivo) {
           return res.status(404).json({ error: "Arquivo não encontrado" });
         }
-        if (!unidadePermitida(acesso, r.rows[0].unidade_id)) {
+        if (!unidadePermitida(acesso, r.rows[0].unidade_id) || !cargoPermitido(acesso, r.rows[0].cargo_id)) {
           return res.status(403).json({ error: "Sem permissão para este candidato" });
         }
         const { arquivo, arquivo_nome } = r.rows[0];
@@ -203,8 +206,9 @@ export default async function handler(req, res) {
         JOIN unidades     u  ON u.id  = c.unidade_id
         WHERE c.arquivado IS NOT TRUE
           AND ($1::int[] IS NULL OR c.unidade_id = ANY($1::int[]))
+            AND ($2::int[] IS NULL OR c.cargo_id = ANY($2::int[]))
         ORDER BY c.criado_em DESC
-      `, [filtro]);
+      `, [filtro, filtroCargo]);
 
       // Não inclui o campo "arquivo" na listagem geral
       // O front-end busca o arquivo individualmente via ?arquivo=ID
@@ -241,6 +245,9 @@ export default async function handler(req, res) {
         }
         if (!unidadePermitida(acesso, unidade_id)) {
           return res.status(403).json({ error: "Sem permissão para esta unidade" });
+        }
+        if (!cargoPermitido(acesso, cargo_id)) {
+          return res.status(403).json({ error: "Sem permissão para este cargo" });
         }
 
         await pool.query(
